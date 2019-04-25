@@ -23,18 +23,20 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 class ViewportVisualization:
 
-	implErrorMessage = 'Method required and needs to be implemented.'
+    IMPL_ERROR_MESSAGE = 'Method required and needs to be implemented.'
 
-	def __init__(self):
-		pass
-		
-	def setIconProperties(self, iconwidth, iconheight, iconcolor, iconhighlight):
-		raise NotImplementedError(self.implErrorMessage)
+    def __init__(self):
+        pass
 
-	def setJumplength(self, jumplength):
-		raise NotImplementedError(self.implErrorMessage)
+    def set_icon_properties(self, iconwidth, iconheight,
+                          iconcolor, iconhighlight):
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
-	def setViewport(self, viewport):
-		raise NotImplementedError(self.implErrorMessage)
+    def set_jumplength(self, jumplength):
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
+
+    def set_viewport(self, viewport):
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)

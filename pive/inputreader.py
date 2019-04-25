@@ -30,8 +30,8 @@ from collections import OrderedDict
 
 def load_input_source(input_source):
     """Load data from an arbitrary input source. Currently supported:
-	JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
-	is available."""
+        JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
+        is available."""
     input_data = []
     try:
         input_data = load_json_from_file(input_source)
@@ -87,14 +87,14 @@ def load_json_string(json_input):
 
 def load_csv_string(csv_input):
     """Load a CSV-String."""
-    inputstring = csv_input.split('\n')
+    input_string = csv_input.split('\n')
     data = []
     dialect = csv.Sniffer().sniff(csv_input)
-    delimiterchar = dialect.delimiter
-    inputdata = csv.DictReader(inputstring)
-    header = inputdata.fieldnames
+    delimiter_char = dialect.delimiter
+    input_data = csv.DictReader(input_string)
+    header = input_data.fieldnames
 
-    for row in inputdata:
+    for row in input_data:
         od = OrderedDict()
 
         for item in header:
@@ -107,23 +107,23 @@ def load_csv_string(csv_input):
 
 def load_csv_from_file(csv_input):
     """Loads the input from a csv file and returns
-	a list of ordered dictionaries for further processing."""
+        a list of ordered dictionaries for further processing."""
     data = []
-    csvfile = open(csv_input)
-    csvfile.seek(0)
-    dialect = csv.Sniffer().sniff(csvfile.read())
-    csvfile.seek(0)
-    isHeader = csv.Sniffer().has_header(csvfile.read())
-    csvfile.seek(0)
+    csv_file = open(csv_input)
+    csv_file.seek(0)
+    dialect = csv.Sniffer().sniff(csv_file.read())
+    csv_file.seek(0)
+    is_header = csv.Sniffer().has_header(csv_file.read())
+    csv_file.seek(0)
     # The delimiter used in the dialect.
-    delimiterchar = dialect.delimiter
+    delimiter_char = dialect.delimiter
     # Opens the input file with the determined delimiter.
-    dictreader = csv.DictReader(csvfile, dialect=dialect)
+    dict_reader = csv.DictReader(csv_file, dialect=dialect)
 
-    header = dictreader.fieldnames
+    header = dict_reader.fieldnames
 
-    #Translate the data into a list of dictionaries.
-    for row in dictreader:
+    # Translate the data into a list of dictionaries.
+    for row in dict_reader:
 
         ordered_data = OrderedDict()
         for item in header:
@@ -136,6 +136,7 @@ def load_csv_from_file(csv_input):
 
 
 def parse_value_type(value):
+    """Parses the passed value to either int or float representation."""
     if is_int(value):
         value = int(value)
     elif is_float(value):
@@ -144,6 +145,7 @@ def parse_value_type(value):
 
 
 def is_float(value):
+    """Checks if the passed value is a float value."""
     try:
         number = float(value)
     except ValueError:
@@ -153,6 +155,7 @@ def is_float(value):
 
 
 def is_int(value):
+    """Checks if the passed value is an int value."""
     try:
         num_a = float(value)
         num_b = int(num_a)

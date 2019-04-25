@@ -29,17 +29,23 @@ from collections import OrderedDict
 from .visualization import defaults as default
 import os
 
-config_path = default.config_path
+CONFIG_PATH = default.config_path
 # The directory in which pive was installed.
-realpath = os.path.dirname(os.path.realpath(__file__))
-internal_config_path = '%s%s' % (realpath, config_path)
+REAL_PATH = os.path.dirname(os.path.realpath(__file__))
+INTERNAL_CONFIG_PATH = '{}{}'.format(REAL_PATH, CONFIG_PATH)
+
+NUMBER_OF_DATAPOINTS = 0
+NUMBER_OF_VARIABLES = 1
+DATESUPPORT = 2
+LIST_VIZTYPES = 3
+LEXICOGRAPHIC_ORDER = 4
 
 
 def open_config_files(default_config_path):
     """Opens all json-config files in a directory and
     returns a list of each files content."""
     configs = []
-    for filename in glob(internal_config_path + '*.json'):
+    for filename in glob(INTERNAL_CONFIG_PATH + '*.json'):
         fp = open(filename, 'r')
         conf = json.load(fp, object_pairs_hook=OrderedDict)
         configs.append(conf)
@@ -85,19 +91,17 @@ def types_matching_data_requirements(given_types, required_types):
     i = 0
 
     for item in given_types:
-        #print ("item: %r     req: %r" % (item, required_types[i]))
-
         if item not in required_types[i]:
             matches = False
         i += 1
     return matches
 
 
-def is_multiple_data_consistent(given_types, singleDataLength):
+def is_multiple_data_consistent(given_types, single_data_length):
     """Verifies if the multiple data elements following
     the last single data element are consistent."""
     consistent = True
-    last_index = singleDataLength - 1
+    last_index = single_data_length - 1
     last_element = given_types[last_index]
 
     for item in given_types[last_index:]:
@@ -135,7 +139,8 @@ def is_data_value_descending(dataset):
 def is_data_in_lexicographic_order(dataset):
     """Checks if the data is ascending or descending."""
     lexicographic = True
-    if not (is_data_value_descending(dataset) or is_data_value_ascending(dataset)):
+    if not (is_data_value_descending(dataset)
+            or is_data_value_ascending(dataset)):
         lexicographic = False
     return lexicographic
 
@@ -146,7 +151,7 @@ def check_possibilities(property_list):
     with the supported charts."""
     result = []
     props = property_list
-    conf = open_config_files(config_path)
+    conf = open_config_files(CONFIG_PATH)
 
     for item in conf:
         item_type = item['title']
@@ -157,80 +162,82 @@ def check_possibilities(property_list):
             # The dataset should contain at
             # least the minimum required datapoints.
             if elem == 'min_datapoints':
-                if props[0] < item[elem]:
+                if props[NUMBER_OF_DATAPOINTS] < item[elem]:
                     is_possible = False
-            #The dataset should not contain more
-            #than the maximum number off supported
-            #datapoints.
+            # The dataset should not contain more
+            # than the maximum number off supported
+            # datapoints.
             if elem == 'max_datapoints':
                 if item[elem] != 'inf':
-                    if (props[0] > item[elem]):
+                    if (props[NUMBER_OF_DATAPOINTS] > item[elem]):
                         is_possible = False
 
-            #If the data contains a date, the visualization
-            #has to support date-types.
+            # If the data contains a date, the visualization
+            # has to support date-types.
             if elem == 'datesupport':
-                if props[2]:
-                    if item[elem] != props[2]:
+                if props[DATESUPPORT]:
+                    if item[elem] != props[DATESUPPORT]:
                         is_possible = False
             if elem == 'multiple_data':
                 supports_multi_data = item[elem]
 
             if elem == 'lexical_required':
-                if item[elem] == True:
-                    if not props[4]:
+                if item[elem] is True:
+                    if not props[LEXICOGRAPHIC_ORDER]:
                         is_possible = False
 
-            #Checks if the input order of the desired viz-types matches
-            #the requirements.
+            # Checks if the input order of the desired viz-types matches
+            # the requirements.
             if ((elem == 'vistypes') and is_possible):
-                is_possible = checkInputOrder(elem, item, props, supports_multi_data)
+                is_possible = check_input_order(
+                    elem, item, props, supports_multi_data)
         if is_possible:
             result.append(item_type)
     return result
 
 
-def checkInputOrder(elem, item, props, supportsMultiData):
+def check_input_order(elem, item, props, supports_multi_data):
     """Checks if the input vistypes match the requirements."""
-    isPossible = True
+    is_possible = True
     req_vtypes = []
     for i in item[elem]:
         for j in i:
             req_vtypes.append(i[j])
 
     # Length required to render a single dataset.
-    singleDataLength = len(req_vtypes)
+    single_data_length = len(req_vtypes)
 
-    eachValCount = len(req_vtypes) - 1
-    dataValCount = len(props[3]) - 1
-    if ((dataValCount % eachValCount) != 0):
-        isPossible = False
+    each_val_count = len(req_vtypes) - 1
+    data_val_count = len(props[LIST_VIZTYPES]) - 1
+    if ((data_val_count % each_val_count) != 0):
+        is_possible = False
 
     # Determines the given types.
-    if (len(props[3]) >= singleDataLength):
-        given_types = props[3][:singleDataLength]
+    if (len(props[LIST_VIZTYPES]) >= single_data_length):
+        given_types = props[LIST_VIZTYPES][:single_data_length]
     else:
-        given_types = props[3]
+        given_types = props[LIST_VIZTYPES]
 
-    datalength = len(props[3])
-    requiredlength = len(req_vtypes)
+    data_length = len(props[LIST_VIZTYPES])
+    required_length = len(req_vtypes)
 
     # If the data is larger than the single length it must match the
     # requirements for multiple datasets.
     data_matches = types_matching_data_requirements(given_types, req_vtypes)
 
     if not data_matches:
-        isPossible = False
+        is_possible = False
 
-    if (datalength > requiredlength):
-        if supportsMultiData:
+    if (data_length > required_length):
+        if supports_multi_data:
             # All points in multiple datasets must be consistent.
-            multi_consistent = is_multiple_data_consistent(given_types, singleDataLength)
+            multi_consistent = is_multiple_data_consistent(
+                given_types, single_data_length)
             if not multi_consistent:
-                isPossible = False
+                is_possible = False
         else:
-            isPossible = False
-    elif (datalength < requiredlength):
-        isPossible = False
+            is_possible = False
+    elif (data_length < required_length):
+        is_possible = False
 
-    return isPossible
+    return is_possible

@@ -23,35 +23,37 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 def get_datapoint_types(datapoint):
     """Determines the datas visualization-types of a given datapoint.
-	Valid visualization-types are 'number', 'string' and 'time'"""
+        Valid visualization-types are 'number', 'string' and 'time'"""
     types = []
     for key in list(datapoint.keys()):
 
         item = datapoint[key]
-        if str(key).endswith("date") or str(key).endswith("time"):
-            types.append("time")
+        if str(key).endswith('date') or str(key).endswith('time'):
+            types.append('time')
 
         elif is_float(item) or is_int(item):
-            types.append("number")
+            types.append('number')
 
         # Python 3 string determination.
         elif isinstance(item, (str)):
-            types.append("string")
+            types.append('string')
         # Python 2.7 workaround to determine strings.
         # Basestring was deprecated in Python 3.
-        else:
-            try:
-                if isinstance(item, basestring):
-                    types.append("string")
-            except TypeError:
-                pass
+        # else:
+        #    try:
+        #        if isinstance(item, basestring):
+        #            types.append('string')
+        #    except TypeError:
+        #        pass
 
     return types
 
 
 def is_float(value):
+    """Checks if the passed value is a float value."""
     try:
         number = float(value)
     except ValueError:
@@ -61,6 +63,7 @@ def is_float(value):
 
 
 def is_int(value):
+    """Checks if the passed value is an int value."""
     try:
         num_a = float(value)
         num_b = int(num_a)
@@ -72,7 +75,7 @@ def is_int(value):
 
 def is_dataset_consistent(input_data):
     """Checks the consistency of the dataset. Each item
-	must contain the exact datapoint-type as the other."""
+        must contain the exact datapoint-type as the other."""
     if input_data:
         current = get_datapoint_types(input_data[0])
         for item in input_data[1:]:
@@ -81,4 +84,3 @@ def is_dataset_consistent(input_data):
             if previous != current:
                 return False
     return True
-

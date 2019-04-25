@@ -33,7 +33,8 @@ def count_keys_in_raw_data(raw_dataset):
         try:
             keyset = tuple(item.keys())
         except AttributeError as e:
-            print ('Key counting failed. "%s" is not a key/value pair. Error: %s' % (item, e.args[0]))
+            print('Key counting failed. "{}" '.format(item)
+                  + 'is not a key/value pair. Error: {}'.format(e.args[0]))
             return {}
         else:
             # For each new keyset occurence,
@@ -48,7 +49,7 @@ def count_keys_in_raw_data(raw_dataset):
 
 def validate_data_keys(keyset_occurences):
     """Checks the dataset for valid keysets. The last contained keyset
-	with the most occurences will be assumed to be valid."""
+        with the most occurences will be assumed to be valid."""
     valid_tuple = ()
     validkeys = []
     maxcount = 0
@@ -75,28 +76,28 @@ def generate_valid_dataset(valid_keyset, raw_dataset):
 
 def get_all_keys_in_dataset(raw_dataset):
     """Determines if there are keys shared by
-	the whole dataset"""
-    allKeys = []
+        the whole dataset"""
+    all_keys = []
     for item in raw_dataset:
         for elem in list(item.keys()):
-            if elem not in allKeys:
-                allKeys.append(elem)
-    return allKeys
+            if elem not in all_keys:
+                all_keys.append(elem)
+    return all_keys
 
 
 def determine_shared_keys_in_dataset(all_keys, raw_dataset):
     """Determines if there are keys shared by
-	the whole dataset."""
-    evenKeys = all_keys
+        the whole dataset."""
+    even_keys = all_keys
     for item in raw_dataset:
         # Intersection of two lists.
-        evenKeys = list(set(evenKeys) & set(list(item.keys())))
-    return evenKeys
+        even_keys = list(set(even_keys) & set(list(item.keys())))
+    return even_keys
 
 
 def generate_valid_dataset_from_shared_keys(even_keyset, raw_dataset):
     """Generates a valid dataset based on the keys shared by
-	the whole dataset."""
+        the whole dataset."""
     valid_data = []
     for item in raw_dataset:
         datapoint = OrderedDict({})

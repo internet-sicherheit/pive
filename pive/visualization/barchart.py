@@ -32,6 +32,8 @@ from pive.visualization import viewportvisualization as vv
 
 
 class Chart(bv.BaseVisualization, vv.ViewportVisualization):
+    """Chart class for viewport driven data."""
+
     def __init__(self,
                  dataset,
                  template_name,
@@ -40,6 +42,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
                  padding=default.padding,
                  viewport=default.viewport,
                  jumplength=default.jumplength):
+        """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interfaces.
         bv.BaseVisualization.__init__(self)
@@ -49,11 +52,10 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         self._title = 'barchart'
         self.__template_name = 'barchart'
         self.__dataset = dataset
-        realpath = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '%s%s' % (realpath, default.template_path)
+        real_path = os.path.dirname(os.path.realpath(__file__))
+        self.__template_url = '{}{}'.format(real_path, default.template_path)
         self.__datakeys = []
         self.__version = default.p_version
-
 
         # Visualization properties.
         self.__width = width
@@ -81,27 +83,33 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         self.__verticalscale = 'linear'
 
     def set_title(self, title):
+        """Basic Method."""
         self._title = title
 
     def set_threshold(self, threshold):
+        """Setting the threshold for data in this barchart."""
         self.__threshold = threshold
 
-    def getViewport(self):
+    def get_viewport(self):
+        """Basic method for viewport driven data."""
         return self.__viewport
 
     def set_labels(self, labels):
+        """Basic Method."""
         self.__xlabel = labels[0]
         self.__ylabel = labels[1]
 
-    def setDataKeys(self, datakeys):
-        self.__datakeys = datakeys;
+    def set_data_keys(self, datakeys):
+        """Setting the data keys for the visualization."""
+        self.__datakeys = datakeys
 
-    def setTimeProperties(self, timelabel, timeformat):
+    def set_time_properties(self, timelabel, timeformat):
         """Basic Method for time supporting visualizations."""
         self.__timeformat = timeformat
         self.__timelabel = timelabel
 
-    def setIconProperties(self, iconwidth, iconheight, iconcolor, iconhighlight):
+    def set_icon_properties(self, iconwidth, iconheight,
+                            iconcolor, iconhighlight):
         """Basic Method for viewport driven data.
         Defines the icon properties. All arguments required."""
         self.__iconwidth = iconwidth
@@ -115,154 +123,177 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
-        visdataset = []
+        vis_dataset = []
 
         for datapoint in dataset:
-            visdatapoint = {}
+            vis_datapoint = {}
             points = list(datapoint.keys())
-            visdatapoint['value'] = datapoint[points[0]]
-            visdatapoint['label'] = datapoint[points[1]]
-            visdataset.append(visdatapoint)
-        return visdataset
+            vis_datapoint['value'] = datapoint[points[0]]
+            vis_datapoint['label'] = datapoint[points[1]]
+            vis_dataset.append(vis_datapoint)
+        return vis_dataset
 
     def write_dataset_file(self, dataset, destination_url, filename):
-        dest_file = '%s%s' % (destination_url, filename)
+        """Basic Method."""
+        dest_file = '{}{}'.format(destination_url, filename)
         outp = open(dest_file, 'w')
         json.dump(dataset, outp, indent=2)
         outp.close()
-        print ('Writing: %s' % (dest_file))
+        print('Writing: {}'.format(dest_file))
 
-    def setVerticalScale(self, scale):
+    def set_vertical_scale(self, scale):
+        """Setting the scale of the vertical axis."""
         self.__verticalscale = scale
 
     def create_html(self, template):
-        templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
+        """Basic Method."""
+        template_vars = {'t_title': self._title,
+                         't_div_hook': self._div_hook}
 
-        outputText = template.render(templateVars)
-        return outputText
+        output_text = template.render(template_vars)
+        return output_text
 
     def create_js(self, template, dataset_url):
-        templateVars = {'t_width': self.__width,
-                        't_height': self.__height,
-                        't_padding': self.__padding,
-                        't_viewport': self.__viewport,
-                        't_jumplength': self.__jumplength,
-                        't_xlabel': self.__xlabel,
-                        't_ylabel': self.__ylabel,
-                        't_iconwidth': self.__iconwidth,
-                        't_iconheight': self.__iconheight,
-                        't_iconcolor': self.__iconcolor,
-                        't_iconhighlight': self.__iconhighlight,
-                        't_datakeys': self.__datakeys,
-                        't_url': dataset_url,
-                        't_colors': self.__colors,
-                        't_barwidth': self.__barwidth,
-                        't_verticalscale': self.__verticalscale,
-                        't_threshold' : self.__threshold,
-                        't_div_hook': self._div_hook,
-                        't_font_size': self.__font_size,
-                        't_shape_rendering': self.__shape_rendering,
-                        't_line_stroke': self.__line_stroke,
-                        't_pive_version' : self.__version,
-                        't_axis_label_size' : self.__label_size}
+        """Basic Method. Creates the JavaScript code based on the template."""
+        template_vars = {'t_width': self.__width,
+                         't_height': self.__height,
+                         't_padding': self.__padding,
+                         't_viewport': self.__viewport,
+                         't_jumplength': self.__jumplength,
+                         't_xlabel': self.__xlabel,
+                         't_ylabel': self.__ylabel,
+                         't_iconwidth': self.__iconwidth,
+                         't_iconheight': self.__iconheight,
+                         't_iconcolor': self.__iconcolor,
+                         't_iconhighlight': self.__iconhighlight,
+                         't_datakeys': self.__datakeys,
+                         't_url': dataset_url,
+                         't_colors': self.__colors,
+                         't_barwidth': self.__barwidth,
+                         't_verticalscale': self.__verticalscale,
+                         't_threshold': self.__threshold,
+                         't_div_hook': self._div_hook,
+                         't_font_size': self.__font_size,
+                         't_shape_rendering': self.__shape_rendering,
+                         't_line_stroke': self.__line_stroke,
+                         't_pive_version': self.__version,
+                         't_axis_label_size': self.__label_size}
 
-        outputText = template.render(templateVars)
-        return outputText
+        output_text = template.render(template_vars)
+        return output_text
 
     def write_file(self, output, destination_url, filename):
-
-        dest_file = '%s%s' % (destination_url, filename)
+        """Basic Method."""
+        dest_file = '{}{}'.format(destination_url, filename)
 
         if not os.path.exists(destination_url):
-            print ("Folder does not exist. Creating folder '%s'. " % (destination_url))
+            print('Folder does not exist. '
+                  + 'Creating folder "{}". '.format(destination_url))
             os.makedirs(destination_url)
 
         f = open(dest_file, 'w')
 
-        print ('Writing: %s' % (dest_file))
+        print('Writing: {}'.format(dest_file))
 
         for line in output:
-            #f.write(line.encode('utf-8'))
+            # f.write(line.encode('utf-8'))
             f.write(line)
 
         f.close()
 
-
     def get_js_code(self):
-        dataset_url = '%s.json' % (self._title)
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
+        """Basic Method."""
+        dataset_url = '{}.json'.format(self._title)
+        js_template = self.load_template_file(
+            '{}{}.jinja'.format(self.__template_url, self.__template_name))
         js = self.create_js(js_template, dataset_url)
         return js
 
-
     def get_json_dataset(self):
+        """Basic Method."""
         return self.generate_visualization_dataset(self.__dataset)
 
-
     def create_visualization_files(self, destination_url):
-        html_template = self.load_template_file('%shtml.jinja' % (self.__template_url))
-        #css_template = self.load_template_file('%s/css.jinja' % (self.__template_url))
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
+        """Basic Method."""
+        html_template = self.load_template_file(
+            '{}html.jinja'.format(self.__template_url))
 
-        dataset_url = '%s.json' % (self._title)
+        js_template = self.load_template_file(
+            '{}{}.jinja'.format(self.__template_url, self.__template_name))
+
+        dataset_url = '{}.json'.format(self._title)
         js = self.create_js(js_template, dataset_url)
         html = self.create_html(html_template)
-        #css = self.create_css(css_template)
 
-        self.write_file(html, destination_url, '/%s.html' % (self._title))
-        #self.write_file(css, destination_url, '/%s.css' % (self.__title))
-        self.write_file(js, destination_url, '/%s.js' % (self._title))
+        self.write_file(html, destination_url, '/{}.html'.format(self._title))
+        self.write_file(js, destination_url, '/{}.js'.format(self._title))
 
-        visdata = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(visdata, destination_url, '/%s.json' % (self._title))
+        vis_data = self.generate_visualization_dataset(self.__dataset)
+        self.write_dataset_file(
+            vis_data,
+            destination_url,
+            '/{}.json'.format(self._title))
 
-    def setJumplength(self, jumplength):
+    def set_jumplength(self, jumplength):
         """Basic Method for viewport driven data."""
         if not isinstance(jumplength, int):
-            raise ValueError("Integer expected, got %s instead." % (type(jumplength)))
+            raise ValueError(
+                'Integer expected, got {} instead.'.format(type(jumplength)))
         if (jumplength <= 0):
-            print ("Warning: Negative or zero jumplength parameter. Using default settings instead.")
+            print(
+                'Warning: Negative or zero jumplength parameter. '
+                + 'Using default settings instead.')
             jumplength = default.jumplength
 
         self.__jumplength = jumplength
 
-    def setViewport(self, viewport):
+    def set_viewport(self, viewport):
         """Basic method for viewport driven data."""
         if not isinstance(viewport, int):
-            raise ValueError("Integer expected, got %s instead." % (type(viewport)))
+            raise ValueError(
+                'Integer expected, got {} instead.'.format(type(viewport)))
         if (viewport <= 0):
-            print ("Warning: Negative or zero viewport parameter. Using default settings instead.")
+            print(
+                'Warning: Negative or zero viewport parameter. '
+                + 'Using default settings instead.')
             viewport = default.viewport
         self.__viewport = viewport
 
     def set_height(self, height):
         """Basic method for height driven data."""
         if not isinstance(height, int):
-            raise ValueError("Integer expected, got %s instead." % (type(height)))
+            raise ValueError(
+                'Integer expected, got {} instead.'.format(type(height)))
         if (height <= 0):
-            print ("Warning: Negative or zero height parameter. Using default settings instead.")
+            print(
+                'Warning: Negative or zero height parameter. '
+                + 'Using default settings instead.')
             height = default.height
         self.__height = height
 
     def set_width(self, width):
         """Basic method for width driven data."""
         if not isinstance(width, int):
-            raise ValueError("Integer expected, got %s instead." % (type(width)))
+            raise ValueError(
+                'Integer expected, got {} instead.'.format(type(width)))
         if (width <= 0):
-            print ("Warning: Negative or zero width parameter. Using default settings instead.")
+            print(
+                'Warning: Negative or zero width parameter. '
+                + 'Using default settings instead.')
             width = default.width
         self.__width = width
 
     def set_dimension(self, width, height):
+        """Basic Method."""
         self.set_width(width)
         self.set_height(height)
 
     def load_template_file(self, template_url):
-        templateLoader = jinja2.FileSystemLoader(searchpath=[default.template_path, '/'])
-        print ("Opening template: %s" % (template_url))
+        """Basic Method."""
+        template_loader = jinja2.FileSystemLoader(
+            searchpath=[default.template_path, '/'])
+        print('Opening template: {}'.format(template_url))
 
-        templateEnv = jinja2.Environment(loader=templateLoader)
-        TEMPLATE_FILE = template_url
-        template = templateEnv.get_template(TEMPLATE_FILE)
+        template_env = jinja2.Environment(loader=template_loader)
+        template = template_env.get_template(template_url)
         return template

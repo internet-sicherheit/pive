@@ -25,8 +25,9 @@
 from . import defaults as default
 import types
 
+
 class BaseVisualization:
-    implErrorMessage = 'Method required and needs to be implemented.'
+    IMPL_ERROR_MESSAGE = 'Method required and needs to be implemented.'
 
     def __init__(self):
         self._div_hook = default.div_hook
@@ -36,53 +37,53 @@ class BaseVisualization:
         self._div_hook = div_hook
 
     def get_js_code(self):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def get_json_dataset(self):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def set_title(self, title):
         assert isinstance(title, str)
         self._title = title
 
     def set_labels(self, labels):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def set_dataset(self, dataset):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def set_chart_colors(self, colors):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def generate_visualization_dataset(self, dataset):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def write_dataset_file(self, dataset, destination_url, filename):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def create_css(self, template):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def create_html(self, template):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def create_js(self, template, dataset_url):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def write_file(self, output, destination_url, filename):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def create_visualization_files(self, destination_url):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def set_height(self, height):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def set_width(self, width):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def set_dimension(self, width, height):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
 
     def load_template_file(self, template_url):
-        raise NotImplementedError(self.implErrorMessage)
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)

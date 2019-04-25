@@ -23,12 +23,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 class CustomScalesVisualization:
 
-	implErrorMessage = 'Method required and needs to be implemented.'
+    IMPL_ERROR_MESSAGE = 'Method required and needs to be implemented.'
 
-	def __init__(self):
-		pass
-		
-	def setScales(self, scales):
-		raise NotImplementedError(self.implErrorMessage)
+    def __init__(self):
+        pass
+
+    def set_scales(self, scales):
+        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)

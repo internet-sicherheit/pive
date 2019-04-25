@@ -41,6 +41,8 @@ CHART_PIE = 'piechart'
 CHART_CHORD = 'chordchart'
 
 # Bundles all essential access methods to render visualizations.
+
+
 class Environment(object):
     """Contains all suitable visualizations. Only those
     visualizations are imported and it is not
@@ -54,7 +56,6 @@ class Environment(object):
     __has_datefields = False
 
     __datakeys = []
-
 
     def __init__(self, inputmanager=None, outputpath=default.output_path):
         """ The Environment needs an input manager instance to work, but is
@@ -75,11 +76,11 @@ class Environment(object):
     def load(self, source):
         """Loads data from a source."""
         try:
-            inputdata = self.__inputmanager.read(source)
-            self.__suitables = self.__inputmanager.map(inputdata)
-            self.__data = inputdata
+            input_data = self.__inputmanager.read(source)
+            self.__suitables = self.__inputmanager.map(input_data)
+            self.__data = input_data
         except ValueError as e:
-            print ("Failed to load the dataset: %s" % e)
+            print('Failed to load the dataset: {}'.format(e))
             raise
 
         self.__modules = self.import_suitable_visualizations(self.__suitables)
@@ -94,14 +95,14 @@ class Environment(object):
 
         mods = []
         for item in suitable_visualization_list:
-            mod = '.%s' % item
+            mod = '.{}'.format(item)
             mods.append(mod)
 
         modules = []
 
         for item in mods:
-            modules.append(importlib.import_module(item,
-                                                   package=default.module_path))
+            modules.append(importlib.import_module(
+                item, package=default.module_path))
 
         return modules
 
@@ -109,7 +110,7 @@ class Environment(object):
     def choose(self, chart):
         """Choose a chart from the suitable visualizations."""
         if chart not in self.__suitables:
-            raise ValueError("Visualization not possible.")
+            raise ValueError('Visualization not possible.')
 
         # Automatically create the chart instance and
         # return it to the user.
@@ -117,7 +118,7 @@ class Environment(object):
         modname = self.__suitables[index]
         module = self.__modules[index]
 
-        class_ = getattr(module, "Chart")
+        class_ = getattr(module, 'Chart')
 
         # When dates occur the constructor is called differently.
         if self.__has_datefields:
@@ -125,9 +126,8 @@ class Environment(object):
         else:
             chart_decision = class_(self.__data, modname)
 
-        chart_decision.setDataKeys(self.__datakeys)
+        chart_decision.set_data_keys(self.__datakeys)
         return chart_decision
-
 
     def render(self, chart):
         """Renders the chart and creates
