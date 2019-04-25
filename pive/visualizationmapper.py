@@ -23,11 +23,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import json
 from glob import glob
 from collections import OrderedDict
+
 from .visualization import defaults as default
-import os
 
 CONFIG_PATH = default.config_path
 # The directory in which pive was installed.

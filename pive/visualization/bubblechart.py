@@ -23,9 +23,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import jinja2
 import os
 import json
+
+import jinja2
+
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
 from pive.visualization import viewportvisualization as vv
@@ -116,7 +118,7 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization,
         self.__circleopacity = opacity
 
     def set_highlight_factor(self, factor):
-        """TO-DO."""
+        """Setting the highlighting factor for the circles."""
         self.__highlightfactor = factor
 
     def set_min_radius(self, radius):

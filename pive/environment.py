@@ -28,6 +28,7 @@
  relies on a given input manager to read data before
  processing the visualizations. """
 import importlib
+
 from .visualization import defaults as default
 
 # Accessor to choose the charts. Corresponding with

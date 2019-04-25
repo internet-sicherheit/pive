@@ -23,8 +23,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from pive.visualization import colorthemes
 import sys
+
+from pive.visualization import colorthemes
 
 ####################
 #  Meta Data #######

@@ -23,9 +23,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import jinja2
 import os
 import json
+
+import jinja2
+
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
 from pive.visualization import viewportvisualization as vv
