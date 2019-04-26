@@ -48,8 +48,11 @@ def count_keys_in_raw_data(raw_dataset):
 
 
 def validate_data_keys(keyset_occurences):
-    """Checks the dataset for valid keysets. The last contained keyset
-        with the most occurences will be assumed to be valid."""
+    """Checks the dataset for valid keysets.
+
+    The last contained keyset with the most occurences
+    will be assumed to be valid.
+    """
     valid_tuple = ()
     validkeys = []
     maxcount = 0

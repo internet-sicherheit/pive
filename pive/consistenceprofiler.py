@@ -26,7 +26,9 @@
 
 def get_datapoint_types(datapoint):
     """Determines the datas visualization-types of a given datapoint.
-        Valid visualization-types are 'number', 'string' and 'time'"""
+
+    Valid visualization-types are 'number', 'string' and 'time'.
+    """
     types = []
     for key in list(datapoint.keys()):
 
@@ -74,8 +76,10 @@ def is_int(value):
 
 
 def is_dataset_consistent(input_data):
-    """Checks the consistency of the dataset. Each item
-        must contain the exact datapoint-type as the other."""
+    """Checks the consistency of the dataset.
+
+    Each item must contain the exact datapoint-type as the other.
+    """
     if input_data:
         current = get_datapoint_types(input_data[0])
         for item in input_data[1:]:

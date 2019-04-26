@@ -45,9 +45,11 @@ CHART_CHORD = 'chordchart'
 
 
 class Environment(object):
-    """Contains all suitable visualizations. Only those
-    visualizations are imported and it is not
-    allowed to render unsuited visualizations."""
+    """Contains all suitable visualizations.
+
+    Only those visualizations are imported and it is not
+    allowed to render unsuited visualizations.
+    """
     __suitables = []
     __data = []
 
@@ -59,9 +61,11 @@ class Environment(object):
     __datakeys = []
 
     def __init__(self, inputmanager=None, outputpath=default.output_path):
-        """ The Environment needs an input manager instance to work, but is
-        optional at creation. Leaving the user to configure the
-        input manager first. """
+        """ The Environment needs an input manager instance to work.
+
+        This is optional at creation, leaving the user to configure the
+        input manager first.
+        """
         self.__inputmanager = inputmanager
         self.__outputpath = outputpath
 
@@ -131,15 +135,18 @@ class Environment(object):
         return chart_decision
 
     def render(self, chart):
-        """Renders the chart and creates
-        all files to display the visualization
-        under the environments output path."""
+        """Renders the chart and creates all files to display the visualization.
+
+        Files are stored under the environments output path.
+        """
         chart.create_visualization_files(self.__outputpath)
 
     def render_code(self, chart):
-        """Renders the chart and returns the javascript
-        code and its json dataset to include the
-        visualization in another document."""
+        """Renders the chart.
+
+        It returns the javascript code and its json dataset to include the
+        visualization in another document.
+        """
         js = chart.get_js_code()
         data = chart.get_json_dataset()
         return (js, data)

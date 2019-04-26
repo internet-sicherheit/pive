@@ -121,7 +121,9 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization,
     def set_icon_properties(self, iconwidth, iconheight,
                             iconcolor, iconhighlight):
         """Basic Method for viewport driven data.
-                Defines the icon properties. All arguments required."""
+
+        Defines the icon properties. All arguments required.
+        """
         self.__iconwidth = iconwidth
         self.__iconheight = iconheight
         self.__iconcolor = iconcolor

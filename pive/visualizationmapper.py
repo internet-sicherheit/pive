@@ -63,10 +63,12 @@ def has_date(viz_types):
 
 
 def get_visualization_properties(dataset, viz_types):
-    """Generates a list of the dataset properties. Returns
-    all properties in the following order: Number of Datapoints,
-    Number of Variables, Datesupport,
-    List of Visualization-Types."""
+    """Generates a list of the dataset properties.
+
+    Returns all properties in the following order:
+    Number of Datapoints, Number of Variables, Datesupport,
+    List of Visualization-Types.
+    """
     props = []
     length = len(dataset)
     props.append(length)

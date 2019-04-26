@@ -29,9 +29,11 @@ from collections import OrderedDict
 
 
 def load_input_source(input_source):
-    """Load data from an arbitrary input source. Currently supported:
-        JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
-        is available."""
+    """Load data from an arbitrary input source.
+
+    Currently supported: JSON, JSON-String, CSV, CSV-String.
+    Returns an empty list if no data is available.
+    """
     input_data = []
     try:
         input_data = load_json_from_file(input_source)
@@ -106,8 +108,10 @@ def load_csv_string(csv_input):
 
 
 def load_csv_from_file(csv_input):
-    """Loads the input from a csv file and returns
-        a list of ordered dictionaries for further processing."""
+    """Loads the input from a csv file.
+
+    Returns a list of ordered dictionaries for further processing.
+    """
     data = []
     csv_file = open(csv_input)
     csv_file.seek(0)
