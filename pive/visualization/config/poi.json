@@ -1,0 +1,19 @@
+{
+    "title": "poi",
+    "min_datapoints": 0,
+    "max_datapoints": "inf",
+    "multiple_data": true,
+    "datesupport": false,
+    "lexical_required": false,
+    "vistypes": [
+        {
+            "latitude": "coordinate"
+        },
+        {
+            "longitude": "coordinate"
+        },
+        {
+            "label": "string"
+        }
+    ]
+}

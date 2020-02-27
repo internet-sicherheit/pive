@@ -24,35 +24,38 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
+import re
+
 def get_datapoint_types(datapoint):
     """Determines the datas visualization-types of a given datapoint.
 
-    Valid visualization-types are 'number', 'string' and 'time'.
+    Valid visualization-types are 'number', 'string', 'time', 'coordinate' and 'mapshape'.
     """
     types = []
     for key in list(datapoint.keys()):
-
         item = datapoint[key]
-        if str(key).endswith('date') or str(key).endswith('time'):
-            types.append('time')
 
-        elif is_float(item) or is_int(item):
-            types.append('number')
-
-        # Python 3 string determination.
-        elif isinstance(item, (str)):
-            types.append('string')
-        # Python 2.7 workaround to determine strings.
-        # Basestring was deprecated in Python 3.
-        # else:
-        #    try:
-        #        if isinstance(item, basestring):
-        #            types.append('string')
-        #    except TypeError:
-        #        pass
+        if item == 'Polygon':
+            types.append('mapshape')
+            break
+        elif item != 'Point':
+            if is_coordinate(item):
+                types.append('coordinate')
+            elif is_float(item) or is_int(item):
+                types.append('number')
+            elif isinstance(item, (str)):
+                types.append('string')
 
     return types
 
+
+def is_coordinate(value):
+    """Checks if the passed value is a coordinate."""
+    coord = re.match(r'^-?[0-9]{1,3}(?:\.[0-9]{1,20})+$', str(value))
+    if(coord):
+        return True
+    else:
+        return False
 
 def is_float(value):
     """Checks if the passed value is a float value."""

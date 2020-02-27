@@ -25,7 +25,6 @@
 
 from collections import OrderedDict
 
-
 def count_keys_in_raw_data(raw_dataset):
     """Counts all keysets in the dataset."""
     keycount = {}

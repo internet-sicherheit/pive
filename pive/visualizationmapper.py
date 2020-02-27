@@ -28,7 +28,7 @@ import json
 from glob import glob
 from collections import OrderedDict
 
-from .visualization import defaults as default
+from pive.visualization import defaults as default
 
 CONFIG_PATH = default.config_path
 # The directory in which pive was installed.
@@ -212,8 +212,13 @@ def check_input_order(elem, item, props, supports_multi_data):
 
     each_val_count = len(req_vtypes) - 1
     data_val_count = len(props[LIST_VIZTYPES]) - 1
-    if ((data_val_count % each_val_count) != 0):
-        is_possible = False
+
+    try:
+        if ((data_val_count % each_val_count) != 0):
+            is_possible = False
+    except ZeroDivisionError:
+        if each_val_count != data_val_count and not supports_multi_data:
+            is_possible = False
 
     # Determines the given types.
     if (len(props[LIST_VIZTYPES]) >= single_data_length):

@@ -1,4 +1,4 @@
-# Copyright (c) 2014 - 2015, David Bothe
+# Copyright (c) 2019 - 2020, Tobias Stratmann
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,31 @@ import json
 
 import jinja2
 
-from . import defaults as default
-from . import basevisualization as bv
+from . import mapdefaults as default
+from . import mapvisualization as mv
 
 
-class Chart(bv.BaseVisualization):
-    """Basic chart class."""
+class Map(mv.MapVisualization):
+    """Map class for heatmap data."""
 
     def __init__(self,
                  dataset,
                  template_name,
+                 filename,
+                 shape,
+                 inner,
+                 city,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
         """Initializing the chart with default settings."""
 
-        # Initializing the inherited pseudo-interfaces.
-        bv.BaseVisualization.__init__(self)
+        # Initializing the inherited pseudo-interface.
+        mv.MapVisualization.__init__(self)
 
         # Metadata
-        self._title = 'piechart'
-        self.__template_name = 'piechart'
+        self._title = 'polygon'
+        self.__template_name = 'polygon'
         self.__dataset = dataset
         real_path = os.path.dirname(os.path.realpath(__file__))
         self.__template_url = '{}{}'.format(real_path, default.template_path)
@@ -59,8 +63,29 @@ class Chart(bv.BaseVisualization):
         self.__width = width
         self.__height = height
         self.__padding = padding
-        self.__colors = default.chartcolors
-        self.__highlightopacity = default.circleopacity
+        self.__shape = shape
+        self.__inner = inner
+        self.__city = city
+
+        # Starting, min and max values for zoom levels on the map
+        self.__scale = default.scale
+        self.__scale_extent = default.scale_extent
+
+        # Map rendering
+        self.__zoom_threshold = default.zoom_threshold
+        self.__tooltip_div_border = default.tooltip_div_border
+        self.__map_fill = default.map_fill
+        self.__map_stroke = default.map_stroke
+        self.__fill_opacity = default.fill_opacity
+        self.__stroke_opacity = default.stroke_opacity
+        self.__mouseover_opacity = default.mouseover_opacity
+        self.__mouseout_opacity = default.mouseout_opacity
+        self.__outer_map_fill = default.outer_map_fill
+
+
+        # Scale and translate values for map alignment
+        self.align_map_view(city)
+
 
     def set_title(self, title):
         """Basic Method."""
@@ -70,13 +95,43 @@ class Chart(bv.BaseVisualization):
         """Setting the data keys for the visualization."""
         self.__datakeys = datakeys
 
-    def set_highlight_opacity(self, opacity):
-        """Setting the highlighting opacity for this graph."""
-        self.__highlightopacity = opacity
+    def align_map_view(self, city):
+        """Setting scale and translate values for map alignment depending on the city."""
+        if city == "Gelsenkirchen":
+            # Scale factor for zooming
+            self.__scale_adjust = 5000
+            # Translate extent for panning borders and translate value for starting viewpoint
+            self.__trans_extent = [[602, -5280], [633, -5252]]
+            self.__x_translate = -9580
+            self.__y_translate = 84475
+        elif city == "Aachen":
+            self.__scale_adjust = 4000
+            self.__trans_extent = [[410, -4140], [443, -4112]]
+            self.__x_translate = -6524
+            self.__y_translate = 66207
+        elif city == "Wuppertal":
+            self.__scale_adjust = 5000
+            self.__trans_extent = [[608.75, -5238], [643, -5212]]
+            self.__x_translate = -9714
+            self.__y_translate = 83801
 
-    def set_chart_colors(self, colors):
-        """Basic Method."""
-        self.__colors = colors
+    def set_scales(self, scale, scale_extent):
+        """Setting scale and scale extent for the map."""
+        self.__scale = scale
+        self.__scale_extent = scale_extent
+
+    def set_inner_map_color(self, color):
+        """Setting the color for the inner map."""
+        self.__map_fill = color
+
+    def set_outer_map_color(self, color):
+        """Setting the color for the outer map."""
+        self.__outer_map_fill = color
+
+    def set_fill_opacity(self, opacity):
+        """Setting the opacity for the map."""
+        self.__fill_opacity = opacity
+        self.__mouseout_opacity = opacity
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
@@ -85,8 +140,8 @@ class Chart(bv.BaseVisualization):
         for datapoint in dataset:
             vis_datapoint = {}
             points = list(datapoint.keys())
-            vis_datapoint['value'] = datapoint[points[0]]
-            vis_datapoint['label'] = datapoint[points[1]]
+            vis_datapoint['label'] = datapoint[points[0]]
+            vis_datapoint['value'] = datapoint[points[1]]
             vis_dataset.append(vis_datapoint)
         return vis_dataset
 
@@ -96,30 +151,43 @@ class Chart(bv.BaseVisualization):
         outp = open(dest_file, 'w')
         json.dump(dataset, outp, indent=2)
         outp.close()
-        print('Writing: {}'.format(dest_file))
 
-    def set_scales(self, scales):
-        """Basic Method for data with custom scaling."""
-        self.__scales = scales
+        print('Writing: {}'.format(dest_file))
 
     def create_html(self, template):
         """Basic Method."""
         template_vars = {'t_title': self._title,
-                         't_div_hook': self._div_hook}
+                         't_div_hook_map': self._div_hook_map,
+                         't_div_hook_legend': self._div_hook_legend,
+                         't_div_hook_tooltip': self._div_hook_tooltip}
 
         output_text = template.render(template_vars)
         return output_text
 
-    def create_js(self, template, dataset_url):
+    def create_js(self, template, dataset_url, shape_file):
         """Basic Method. Creates the JavaScript code based on the template."""
         template_vars = {'t_width': self.__width,
                          't_height': self.__height,
-                         't_padding': self.__padding,
-                         't_datakeys': self.__datakeys,
-                         't_url': dataset_url,
-                         't_colors': self.__colors,
-                         't_highlightopacity': self.__highlightopacity,
-                         't_div_hook': self._div_hook,
+                         't_shape': shape_file,
+                         't_inner': self.__inner,
+                         't_city': self.__city,
+                         't_scale': self.__scale,
+                         't_scale_extent': self.__scale_extent,
+                         't_scale_adjust': self.__scale_adjust,
+                         't_trans_extent': self.__trans_extent,
+                         't_x_translate': self.__x_translate,
+                         't_y_translate': self.__y_translate,
+                         't_zoom_threshold': self.__zoom_threshold,
+                         't_div_hook_map': self._div_hook_map,
+                         't_div_hook_tooltip': self._div_hook_tooltip,
+                         't_tooltip_div_border': self.__tooltip_div_border,
+                         't_map_fill': self.__map_fill,
+                         't_map_stroke': self.__map_stroke,
+                         't_fill_opacity': self.__fill_opacity,
+                         't_stroke_opacity': self.__stroke_opacity,
+                         't_mouseover_opacity': self.__mouseover_opacity,
+                         't_mouseout_opacity': self.__mouseout_opacity,
+                         't_outer_map_fill': self.__outer_map_fill,
                          't_pive_version': self.__version}
 
         output_text = template.render(template_vars)
@@ -148,7 +216,8 @@ class Chart(bv.BaseVisualization):
         dataset_url = '{}.json'.format(self._title)
         js_template = self.load_template_file(
             '{}{}.jinja'.format(self.__template_url, self.__template_name))
-        js = self.create_js(js_template, dataset_url)
+        shape_filename = '{}_shape.json'.format(self._title)
+        js = self.create_js(js_template, dataset_url, shape_filename)
         return js
 
     def get_json_dataset(self):
@@ -158,13 +227,16 @@ class Chart(bv.BaseVisualization):
     def create_visualization_files(self, destination_url):
         """Basic Method."""
         html_template = self.load_template_file(
-            '{}html.jinja'.format(self.__template_url))
+            '{}map_html.jinja'.format(self.__template_url))
+
         js_template = self.load_template_file(
             '{}{}.jinja'.format(self.__template_url, self.__template_name))
 
-        dataset_url = '{}.json'.format(self._title)
+        shape_filename = '{}_shape.json'.format(self._title)
+        self.write_file(self.__shape, destination_url, '/' + shape_filename)
 
-        js = self.create_js(js_template, dataset_url)
+        dataset_url = '{}.json'.format(self._title)
+        js = self.create_js(js_template, dataset_url, shape_filename)
         html = self.create_html(html_template)
 
         self.write_file(html, destination_url, '/{}.html'.format(self._title))

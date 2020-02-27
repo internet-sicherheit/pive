@@ -27,14 +27,17 @@
 """ The input manager reads files and strings containing
 datasets in json and csv format. The data is automatically
 validated and corrected if necessary."""
-from . import inputreader as reader
-from . import datavalidater as validater
-from . import consistenceprofiler as profiler
-from . import visualizationmapper as vizmapper
+from collections import OrderedDict
+import pathlib
+
+import pive.inputreader as reader
+import pive.visualizationmapper as vizmapper
+import pive.consistenceprofiler as profiler
+import pive.datavalidater as validater
+import pive.shapeloader as shapeloader
 
 NOT_CONSISTENT_ERR_MSG = 'Data is not consistent.'
 NO_DATA_LOADED_ERR_MSG = 'Unexpected data source.'
-
 
 class InputManager(object):
     """Contains and manages the data."""
@@ -45,32 +48,58 @@ class InputManager(object):
         self.__mergedata = mergedata
         self.__contains_datefields = False
 
+
     def read(self, source):
         """Reads the input source."""
         input_data = reader.load_input_source(source)
 
-        # Raise an error if the data source is empty or nor readable.
+        # Raise an error if the data source is empty or not readable.
         if not input_data:
             raise ValueError(NO_DATA_LOADED_ERR_MSG)
 
-        dataset = self.__validate_input(input_data)
-        # Raise an error if the dataset is not consistent.
-        if not self.__is_dataset_consistent(dataset):
-            raise ValueError(NOT_CONSISTENT_ERR_MSG)
+        # If the input is geodata in JSON format, change its data structure. Otherwise no changes are made
+        input_data = self.__edit_json_geodata(source, input_data)
 
+        if self.__file_is_map_shape(input_data):
+            self.__shape_data = input_data
+            self.__shape_source = source
+            dataset = input_data
+        else:
+            dataset = self.__validate_input(input_data)
+            # Raise an error if the dataset is not consistent.
+            if not self.__is_dataset_consistent(dataset):
+                raise ValueError(NOT_CONSISTENT_ERR_MSG)
+        
         return dataset
 
     def map(self, dataset):
         """Maps the dataset to supported visualizations."""
         viz_types = self.__get_datapoint_types(dataset)
         properties = vizmapper.get_visualization_properties(dataset, viz_types)
-        suitables = vizmapper.check_possibilities(properties)
+        self.__suitables = vizmapper.check_possibilities(properties)
         self.__contains_datefields = vizmapper.has_date(viz_types)
-        return suitables
+        
+        return self.__suitables
 
     def has_date_points(self):
         """Returns true if the data contains dates."""
         return self.__contains_datefields
+
+    def get_map_shape(self, dataset):
+        """Returns the map shape representing the dataset."""
+        inner_shape = ''
+        # If the dataset contains coordinates
+        if 'poi' in self.__suitables or 'polygon' in self.__suitables:
+            # If the chosen dataset is the map shape
+            if 'polygon' in self.__suitables:
+                inner_shape = self.__shape_source
+            coordinates = shapeloader.get_all_coordinates(dataset)
+            (shape, city) = shapeloader.find_map_shape(coordinates)
+        # If the dataset is suitable for a heatmap
+        elif 'heatmap' in self.__suitables:
+            (shape, city) = shapeloader.build_heatmap(dataset)
+
+        return (shape, inner_shape, city)
 
     def __is_dataset_consistent(self, dataset):
         """Checks if the dataset is consistent."""
@@ -106,3 +135,71 @@ class InputManager(object):
         valid_keys = validater.validate_data_keys(keycount)
         dataset = validater.generate_valid_dataset(valid_keys, input_data)
         return dataset
+
+    def __get_json_features(self, json):
+        """Handle every single entry (feature) of the JSON dataset and get their properties."""
+        result = []
+        if isinstance(json, OrderedDict):
+            for key in json.keys():
+                if key == 'features':
+                    features = json[key]
+                    for feature in features:
+                        props = OrderedDict()
+                        props = self.__get_feature_properties(feature, props)
+                        result.append(props)
+        return result
+
+    def __get_feature_properties(self, feature, props):
+        """Returns a dict with properties and coordinates of the feature."""
+        if isinstance(feature, OrderedDict):
+            for prop in feature.keys():
+                if prop == 'properties':
+                    for elem in feature[prop].keys():
+                        props[elem] = feature[prop][elem]
+                if prop == 'geometry':
+                    next_prop = feature[prop]
+                    props = self.__get_feature_properties(next_prop, props)
+                if prop == 'type':
+                    props[prop] = feature[prop]
+                if prop == 'coordinates':
+                    if props['type'] == 'Point':
+                        lat = feature[prop][1]
+                        lon = feature[prop][0]
+                        props['Latitude'] = lat
+                        props['Longitude'] = lon
+                    elif props['type'] == 'Polygon':
+                        for polygon in feature[prop]:
+                            props['Polygon'] = polygon
+
+        return props
+
+    def __file_is_map_shape(self, dataset):
+        """Checks if the file itself represents a map shape."""
+        self.__is_shape = False
+        try:
+            if dataset[0]['type'] == 'Polygon':
+                self.__is_shape = True
+        except KeyError:
+            self.__is_shape = False
+        
+        return self.__is_shape
+
+    def dataset_is_shape(self):
+        return self.__is_shape
+
+    def __edit_json_geodata(self, source, input_data):
+        """If geodata is in JSON format, edit its data structure to match with geodata in CSV format."""
+        geodata = []
+        if self.__get_file_extension(source) == '.json':
+            # Get CSV and JSON to same data structure
+            geodata = self.__get_json_features(input_data)
+        if not geodata:
+            geodata = input_data
+
+        return geodata
+
+    def __get_file_extension(self, source):
+        """Returns the file extension of the passed source."""
+        extension = pathlib.Path(source).suffix
+
+        return extension

@@ -27,9 +27,10 @@
 """ The pive environment manages the visualizations and
  relies on a given input manager to read data before
  processing the visualizations. """
+import pathlib
 import importlib
 
-from .visualization import defaults as default
+from pive.visualization import defaults as default
 
 # Accessor to choose the charts. Corresponding with
 # the config files 'title' attribute in
@@ -40,16 +41,21 @@ CHART_BUBBLE = 'bubblechart'
 CHART_BAR = 'barchart'
 CHART_PIE = 'piechart'
 CHART_CHORD = 'chordchart'
+MAP_HEAT = 'heatmap'
+MAP_POI = 'poi'
+MAP_POLYGON = 'polygon'
 
 # Bundles all essential access methods to render visualizations.
 
+NO_SUITABLES_FOUND_ERR_MSG = 'No suitable visualization methods were found reading this file.'
 
-class Environment(object):
+class Environment_(object):
     """Contains all suitable visualizations.
 
     Only those visualizations are imported and it is not
     allowed to render unsuited visualizations.
     """
+
     __suitables = []
     __data = []
 
@@ -60,14 +66,18 @@ class Environment(object):
 
     __datakeys = []
 
-    def __init__(self, inputmanager=None, outputpath=default.output_path):
+    __map_shape = []
+
+    def __init__(self, filename, inputmanager = None, outputpath=default.output_path):
         """ The Environment needs an input manager instance to work.
 
         This is optional at creation, leaving the user to configure the
         input manager first.
         """
         self.__inputmanager = inputmanager
+        self.__filename = filename
         self.__outputpath = outputpath
+        self.__is_geodata = False
 
     def set_output_path(self, outputpath):
         """Set the output path of all visualization files."""
@@ -87,11 +97,19 @@ class Environment(object):
         except ValueError as e:
             print('Failed to load the dataset: {}'.format(e))
             raise
-
+        
         self.__modules = self.import_suitable_visualizations(self.__suitables)
         self.__has_datefields = self.__inputmanager.has_date_points()
+
         # Converting the datakeys into strings.
-        self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
+        if not self.__inputmanager.dataset_is_shape():
+            self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
+
+        # Loads the corresponding map shape if suitable for visualization
+        for x in self.__suitables:
+            if x in ['heatmap', 'poi', 'polygon']:
+                (self.__map_shape, self.__inner_shape, self.__city) = self.__inputmanager.get_map_shape(input_data)
+
         return self.__suitables
 
     @staticmethod
@@ -117,16 +135,25 @@ class Environment(object):
         if chart not in self.__suitables:
             raise ValueError('Visualization not possible.')
 
+        # Depending on the users choice mark the visualization method as geodata
+        if chart in ['heatmap', 'poi', 'polygon']:
+            self.__is_geodata = True
+
         # Automatically create the chart instance and
         # return it to the user.
         index = self.__suitables.index(chart)
         modname = self.__suitables[index]
         module = self.__modules[index]
 
-        class_ = getattr(module, 'Chart')
+        if self.__is_geodata:
+            class_ = getattr(module, 'Map')
+        else:
+            class_ = getattr(module, 'Chart')
 
         # When dates occur the constructor is called differently.
-        if self.__has_datefields:
+        if self.__is_geodata:
+            chart_decision = class_(self.__data, modname, self.__filename, self.__map_shape, self.__inner_shape, self.__city)
+        elif self.__has_datefields:
             chart_decision = class_(self.__data, modname, times=True)
         else:
             chart_decision = class_(self.__data, modname)
@@ -139,6 +166,7 @@ class Environment(object):
 
         Files are stored under the environments output path.
         """
+
         chart.create_visualization_files(self.__outputpath)
 
     def render_code(self, chart):
@@ -150,3 +178,15 @@ class Environment(object):
         js = chart.get_js_code()
         data = chart.get_json_dataset()
         return (js, data)
+
+    def __json_is_file(self, json):
+        """Returns the file extension of the passed source."""
+        try:
+            extension = pathlib.Path(json).suffix
+        except TypeError:
+            return False
+        else:
+            if extension == '.json':
+                return True
+            else:
+                return False

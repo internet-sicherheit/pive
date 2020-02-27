@@ -28,8 +28,8 @@ import json
 
 import jinja2
 
-from pive.visualization import defaults as default
-from pive.visualization import basevisualization as bv
+from . import defaults as default
+from . import basevisualization as bv
 
 
 class Chart(bv.BaseVisualization):

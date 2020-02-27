@@ -1,4 +1,4 @@
-# Copyright (c) 2014, David Bothe
+# Copyright (c) 2019 - 2020, Tobias Stratmann
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -39,62 +39,104 @@ template_path = '/templates/'
 output_path = '{}/output'.format(sys.path[0])
 # Path where pive locates the visualizations config file.
 config_path = '/visualization/config/'
-# Div container in which the visualization will be placed.
-div_hook = 'chart'
+# Div container in which the map, legend and tooltip will be placed.
+div_hook_map = 'map'
+div_hook_legend = 'legend'
+div_hook_tooltip = 'tooltip'
 # pive version
 p_version = '0.3.3'
 
 ####################
 #  Default Values ##
 ####################
-width = 900
-height = 600
+width = 600
+height = 400
 padding = 60
-viewport = 50
-jumplength = 10
-iconwidth = 20
-iconheight = 40
-circleradius = 8
-circlehighlightradius = 12
-circleopacity = 0.5
-highlightfactor = 1.1
-minradius = 1
-maxradius = 50
-barwidth = 20
-threshold = 1
+
 
 ####################
-#  Axis Rendering ##
+#  Map Rendering ##
 ####################
-shape_rendering = 'optimizeSpeed'
-line_stroke = 'black'
-font_size = 16
-label_size = 18
-
-####################
-#  Formatting ######
-####################
-timelabel = '%M %S Sek'
-isotimeformat = "%H:%M:%S"
-interpolation = 'linear'
-scales = ["linear", "linear"]
-timescales = ["date", "linear"]
-xlabel = 'X'
-ylabel = 'Y'
+zoom_threshold = 10
+fill_opacity = 0.5
+stroke_opacity = 0.6
+mouseover_opacity = 1
+mouseout_opacity = 0.5
+tooltip_div_border = '2px solid lightblue'
 
 ##########################
-#  Chord Chart specific ##
+# Scales for zoom level ##
 ##########################
-fontsize = '1.25em'
-ticksize = '.75em"'
-textpadding = 45
-# Defaults go for kilo-steps (K, 1000). Always combine them right.
-ticksteps = 1000
-prefix = 'K'
+scale = 16
+scale_extent = [9, 42]
+
+########################
+#  POI Map specific ####
+########################
+max_poi = 100
+circle_fill = '#0B6673'
+circle_stroke = 'gray'
+circle_radius = 5
+circle_stroke_width = 0.25
+
+#####################
+# Heatmap specific ##
+#####################
+legendwidth = 80
+legendheight = 200
+legendmargin = {'top': 10, 'right': 60, 'bottom': 30, 'left': 2}
+legendticksize = 6
+legendborder = '1px solid #000'
+heatmapcolors = colorthemes.heatmap
+
+#########################
+# Polygon Map specific ##
+#########################
+outer_map_fill = 'white'
+
+####################
+# Pan Buttons ######
+####################
+pan_north_rect_x = 0
+pan_north_rect_y = 0
+pan_north_rect_height = 30
+pan_north_text_y = 20
+
+pan_south_rect_x = 0
+pan_south_rect_height = 30
+
+pan_east_rect_y = 30
+pan_east_rect_width = 30
+
+pan_west_rect_x = 0
+pan_west_rect_y = 30
+pan_west_rect_width = 30
+pan_west_text_x = 15
+
+pan_moveamount = 1
+
+####################
+# Zoom Buttons #####
+####################
+zoom_rect_x = 0
+zoom_rect_y = 0
+zoom_rect_width = 30
+zoom_rect_height = 30
+zoom_rect_radius = 5
+
+zoom_text_x = 15
+zoom_text_y = 20
+
+zoom_in_width_translate = 110
+zoom_in_height_translate = 70
+zoom_out_width_translate = 70
+zoom_out_height_translate = 70
+
+scale_factor_in = 1.5
+scale_factor_out = 0.75
 
 ####################
 #  Colors ##########
 ####################
-iconcolor = '#FF2C00'
-iconhighlight = '#FF8B73'
-chartcolors = colorthemes.pive
+map_fill = 'lightblue'
+map_stroke = '#13CDE7'
