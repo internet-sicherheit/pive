@@ -25,14 +25,14 @@
 
 import sys
 
-from . import colorthemes
+from pive.visualization import colorthemes
 
 ####################
 #  Meta Data #######
 ####################
 title = 'pivechart'
 # Used to locate the modules with dotted namespace.
-module_path = 'geoviz.visualization'
+module_path = 'pive.visualization'
 # Filepath to the template folder.
 template_path = '/templates/'
 # Path where pive will create the standard output.

@@ -29,8 +29,8 @@ import pathlib
 
 import jinja2
 
-from . import mapdefaults as default
-from . import mapvisualization as mv
+from pive.visualization import mapdefaults as default
+from pive.visualization import mapvisualization as mv
 
 
 class Map(mv.MapVisualization):

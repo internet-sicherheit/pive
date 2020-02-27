@@ -6,7 +6,7 @@ import pive.inputmanager as inputmanager
 # in the same directory. Try to create JSON-Objekts as Key/Value
 # pairs or use a JSON formatted String Object. CSV is also
 # supported.
-input_path = 'samples/data/numerical.json'
+input_path = 'samples/data/geodata/ge_arbeitsmarkt.csv'
 
 ###########################
 ### Basic usage of pive ###
@@ -26,8 +26,8 @@ supported = env.load(input_path)
 # print out the list of the supported charts and choose directly
 # from it. The accessors, e.g. CHART_LINE, are environment
 # constants and represent the charts included in pive.
-if environment.CHART_BUBBLE in supported:
-    chart = env.choose(environment.CHART_BUBBLE)
+if environment.MAP_HEAT in supported:
+    chart = env.choose(environment.MAP_HEAT)
 
     #You can now edit the charts properties.
     chart.set_width(600)
