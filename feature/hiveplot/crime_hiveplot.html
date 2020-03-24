@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+  .axis {
+    stroke: #000;
+    stroke-width:1.5px;
+  }
+
+  .node {
+    stroke:#000;
+  }
+
+  .link {
+    fill: none;
+    stroke-width: 1.5px;
+    stroke-opacity: 0.8;
+  }
+
+  .link.turnedOn {
+    stroke-width: 3px;
+  }
+
+  .link.turnedOff {
+    stroke-opacity: 0.3;
+    stroke-width: 1px;
+  }
+
+  .node.turnedOn {
+    stroke: red;
+    stroke-width: 3px;
+  }
+
+  div.tooltip { 
+    position: absolute;     
+    text-align: center;     
+    width: 60px;          
+    height: 28px;         
+    padding: 2px;       
+    font: 12px sans-serif;    
+    background: lightsteelblue; 
+    border: 0px;    
+    border-radius: 8px;     
+    pointer-events: none;     
+}
+
+</style>
+
+<body>
+
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3.hive.v0.min.js"></script>
+
+<script>
+/**
+  This script is focused on JSON, other Types like CSV will not targeted in this script. Maybe this will be fixed later.
+*/
+d3.json("hiveplot_random.json", function(data){
+  var defaultinfo = "Hiveplot",
+      width = 960,
+      height = 500,
+      innerRadius = 40,
+      outerRadius = 240,
+      nodes = data,
+      links = createLinks(data),
+      types = getTypes(data), // TYPE of data for axis.
+      range = types.length; // count of TYPE for count of axis.
+
+  var angle = d3.scale.ordinal()
+              .domain(d3.range(range + 1))
+              .rangePoints([0, 2 * Math.PI]), // angle from axis to axis
+    radius = d3.scale.linear()
+              .range([innerRadius, outerRadius]), // scale of lines
+    color = d3.scale.category10()
+              .domain(d3.range(20));
+
+  /* tooltip for nodes ands links, info: general diagramm info. */
+  var tooltip = d3.select("body").append("div") 
+              .attr("class", "tooltip")       
+              .style("opacity", 0),
+    info = d3.select("body").append("p")
+              .attr("class", "info")
+              .attr("height", 30)
+              .attr("width", 150);
+
+  /* SVG - Body  */
+  var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width/2 + "," + height/2 + ")");
+
+  /* SVG - all axis, draws in right position */
+  svg.selectAll(".axis")
+      .data(d3.range(range))
+    .enter().append("line")
+      .attr("class", "axis")
+      .attr("transform", function(d) { return "rotate(" + degrees(angle(d)) + ")" })
+      .attr("x1", radius.range()[0])
+      .attr("x2", radius.range()[1]);
+
+  /* Draws all links, with their curves, styles and hovers. */
+  svg.selectAll(".link")
+      .data(links)
+    .enter().append("path")
+      .attr("class", "link")
+      .attr("d", d3.hive.link()
+        .angle(function(d) { return angle(d.TYPE); })
+        .radius(function(d) { return radius(d.WEIGHT); }))
+      .style("stroke", function(d) { return color(d.source.TYPE); })
+      .on("mouseover", linkMouseover)
+      .on("mouseout", mouseout);
+
+  /* Draws nodes wit their right position, styles and hovers. */
+  svg.selectAll(".node")
+      .data(nodes)
+    .enter().append("circle")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "rotate(" + degrees(angle(getNumberForType(d.TYPE))) + ")"; })
+      .attr("cx", function(d) { return radius(d.WEIGHT); })
+      .attr("r", 5)
+      .style("fill", function(d) { return color(d.TYPE); })
+      .on("mouseover", nodeMouseover)
+      .on("mouseout", mouseout);
+
+  /* link-hover-stati and changes from on and off. */
+  function linkMouseover(d) {
+    svg.selectAll(".link")
+      .classed("turnedOn", function(dl) {
+        return dl === d;
+      })
+      .classed("turnedOff", function(dl) {
+        return !(dl === d);
+      })
+    svg.selectAll(".node")
+      .classed("turnedOn", function(dl) {
+        return dl === d.source || dl === d.target;
+      })
+
+    /* Infotext of links when links is hovered */
+    info.text("LINK | x: " + Object.values(d.source) + ", y: " + Object.values(d.target));
+  }
+
+  /* node-hover stati and changes from on and off. */
+  function nodeMouseover(d) {
+    svg.selectAll(".link")
+      .classed("turnedOn", function(dl) {
+        return dl.source === d || dl.target === d;
+      })
+      .classed("turnedOff", function(dl) {
+        return !(dl.source === d || dl.target === d)
+      });
+
+    /* div for the tooltip, when node is hovered. */
+    tooltip.transition()    
+      .duration(200)    
+      .style("opacity", .9);    
+    tooltip.html("ID: " + d.ID + ", " + d.TYPE +  "<br/>" + getNumberForType(d.TYPE) + ", " + d.WEIGHT)  
+      .style("left", (d3.event.pageX) + "px")   
+      .style("top", (d3.event.pageY - 28) + "px");          
+
+    /* Infotext on the top of the page, when node is hvoered.  */
+    info.text("NODE | x: " + getNumberForType(d.TYPE) +  ", y: " + d.WEIGHT);
+
+    d3.select(this)
+      .classed("turnedOn", true);
+  }
+
+  /* Clears highlighted nodes or links and sets info and tooltip to default.  */
+  function mouseout() {
+    svg.selectAll(".turnedOn").classed("turnedOn", false);
+    svg.selectAll(".turnedOff").classed("turnedOff", false);
+
+    info.text(defaultinfo);
+  
+    tooltip.transition()
+      .duration(500)
+      .style("opacity", .0);
+  }
+
+  /* Calculates degrees of radians for drawing axes with appropriate distances. */
+  function degrees(radians) {
+    return radians / Math.PI * 180 - 90;
+  }
+  
+  /* Searches the original node per ID and prepares a hive-conform node and target in a link object. Returns the filled link object. */ 
+  function findNode(linkID) {
+    var n = {};
+    for(var i = 0; i < data.length; i++) {
+      if(data[i].ID == linkID) {
+        /* change id to type, because we have current 3 types for 3 axes. */
+        n = {TYPE:getNumberForType(data[i].TYPE), WEIGHT:data[i].WEIGHT};
+      }
+    }
+    return n;
+  }
+
+  /* Creates links in a hive-conform way. link = {source[type, weight], target[type, weight]}, returns all possible links in an array. */
+  function createLinks() {
+    var l = [];
+    for(var i = 0; i < data.length; i++)  {
+      var lA = data[i].LINKS; // linkarray, nodes can have more than 1 links
+      for(var j = 0; j < lA.length; j++) {
+        var lID = lA[j],
+            trg = findNode(lID),
+            src = findNode(data[i].ID);
+        l.push({source:src, target:trg});
+      }
+    }
+    return l;
+  }
+
+   /* Checks in JSON-data how many types are defined for creating the count of axes and returns array with the types. */
+  function getTypes() {
+    const s = new Set();
+    for(var i = 0; i < data.length; i++) {
+      s.add(data[i].TYPE);
+    }
+    var a = Array.from(s);
+    return a;
+  }
+});
+
+  /* Converts the types to numbers to achieve the hive-confimity.
+  Currently are 5 axes the maximum for all datasets we get. Returns the number according to the type.  */
+  function getNumberForType(type) { 
+    var t = ['A', 'B', 'C', 'D', 'E'],
+        n = t.find(elem => elem == type);
+    n = t.indexOf(n) + 1;
+    return n
+  }
+
+</script>
