@@ -62,7 +62,7 @@ class Piechart {
 
             _this.svg = d3.select(_this.hashtag.concat(_this.div_hook)).append("svg")
                         .datum(dataset)
-                        .attr("width", _this.width)                           
+                        .attr("width", _this.width)
                         .attr("height", _this.height);
 
             const arc = d3.svg.arc().outerRadius(radius);
@@ -105,7 +105,7 @@ class Piechart {
                 return _this.colors[colorindex];
             }
 
-           
+
            function hideTooltip(){
                 _this.tooltip.transition()
                 .duration(200)
@@ -114,14 +114,13 @@ class Piechart {
             }
 
             function showTooltip(values, position, accessor){
-                    
                     _this.tooltip.html((values[1] + ": " + values[0] + "<br><br><center>" + percentformat(values[0] / total)))
                            .style("left", ((position[0] + radius) +  "px"))
                            .transition()
                            .delay(600)
                            .duration(400)
                            .style("opacity", 1.0)
-                           .style("position", "absolute")                  
+                           .style("position", "absolute")
                            .style("background-color", getColorIndex(accessor))
                            .style("top", ((position[1] + radius) + "px"));
 

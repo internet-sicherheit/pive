@@ -18,7 +18,7 @@ class Chordchart {
 
         this.hashtag = '#';
         this.hash_div_hook = this.hashtag.concat(div_hook);
-        this.innerRadius = Math.min(width, height) * .34;
+        this.innerRadius = Math.min(width, height) * .32;
         this.outerRadius = this.innerRadius * 1.2;
         this.labelFont = "Helvetica";
         this.transistionSpeed = 500;
@@ -50,7 +50,6 @@ class Chordchart {
 
 
         d3.json(url, function(data){
-
             const chordElements = data.elements;
             const matrix = data.matrix;
 
@@ -61,7 +60,7 @@ class Chordchart {
                     colorindex = colorindex - _this.colors.length;
 
                 }
-                
+
                 return _this.colors[colorindex];
             }
 
@@ -70,10 +69,8 @@ class Chordchart {
               .attr("height", _this.height)
             let g = _this.svg.append("g")
               .attr("transform", "translate(" + _this.width/2 + "," + _this.height/2 + ")");
-            console.log(_this.svg);
 
             function generateChord() {
-
                 g.selectAll("rect").remove();
                 g.selectAll("g").remove();
 
@@ -83,7 +80,7 @@ class Chordchart {
                 const chord = d3.layout.chord()
                         .matrix(matrix)
                         .padding(0.05)
-                        .sortSubgroups(d3.descending);        
+                        .sortSubgroups(d3.descending);
 
                 //Select all groups from class "chordGroup"
                 const chordGroup = g.selectAll("g.chordGroup")
@@ -97,7 +94,7 @@ class Chordchart {
 
                 chordGroup.append("path")
                     .attr("d", arc)
-                    .style("fill", function(d) {                        
+                    .style("fill", function(d) {
                         return getColorIndex(d.index);
                     })
                     .style("stroke", function(d) {
@@ -138,11 +135,11 @@ class Chordchart {
                     .attr("d", d3.svg.chord().radius(_this.innerRadius))
                     .style("fill", function(d) {
                         return chordColor(d);
-                    })    
+                    })
                     .style("stroke", function(d) {
                         return chordColor(d);
-                    })                    
-                    .style("opacity", 0.75); 
+                    })
+                    .style("opacity", 0.75);
 
                 const ticks = g.append("g").selectAll("g")
                            .data(chord.groups)
@@ -154,7 +151,7 @@ class Chordchart {
                               return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
                                   + "translate(" + _this.outerRadius + ",0)";
                             });
-                           
+
 
                 ticks.append("line")
                     .attr("x1", 1)
@@ -175,17 +172,16 @@ class Chordchart {
             }
 
             function chordColor(d) {
-
-                        var colorindex = (d.source.value > d.target.value ?
+                        let colorindex = (d.source.value > d.target.value ?
                         d.source.index : d.target.index);
                     return getColorIndex(colorindex);
                 }
-                 
+
 
             function fade(opacity) {
                 return function(d, i) {
                     g.selectAll(".chord path")
-                        .filter(function(d) {                            
+                        .filter(function(d) {
                             return d.source.index != i &&
                                    d.target.index != i;
                         })
@@ -197,7 +193,6 @@ class Chordchart {
 
             //Draws a detailed BarChart containing the absolute weight of the graphnode.
             function showDetail(index) {
-
                 g.attr("transform", "translate(0,0)");
 
                 g.selectAll("g").remove()
@@ -206,7 +201,7 @@ class Chordchart {
                 const detailheight = _this.height / 2;
 
                 const color = getColorIndex(index);
-            
+
                 const dataset = matrix[index];
 
                 const xScale = d3.scale.ordinal()
@@ -250,7 +245,7 @@ class Chordchart {
                     .attr("opacity", 1.0);
 
                 //Create Y axis
-                g.append("g")                    
+                g.append("g")
                     .attr("opacity", 0.0)
                     .attr("class", "y axis")
                     .attr("transform", "translate(" + _this.padding + ",0)")
@@ -265,7 +260,7 @@ class Chordchart {
                    .enter()
                    .append("rect")
                    .attr("opacity", 0.0)
-                   .attr("fill", color)                  
+                   .attr("fill", color)
                    .on("click", generateChord)
                    .transition()
                    .duration(_this.transistionSpeed)
@@ -275,18 +270,18 @@ class Chordchart {
                            return xScale(i) + _this.padding;
                    })
                    .attr("y", function (d) {
-                           return detailheight - yScale(d) - _this.padding; 
+                           return detailheight - yScale(d) - _this.padding;
                    })
                    .attr("width", xScale.rangeBand())
                    .attr("height", function (d){
                            return yScale(d);
-                   });                
+                   });
             };
-             
-             
+
+
             // Returns tick angles.
             function chordTicks(d) {
-              var k = (d.endAngle - d.startAngle) / d.value;
+              let k = (d.endAngle - d.startAngle) / d.value;
 
               return d3.range(0, d.value, _this.tickSteps).map(function(v, i) {
                 return {
@@ -296,7 +291,7 @@ class Chordchart {
               });
             };
             generateChord();
-        });    
+        });
 
 
     }

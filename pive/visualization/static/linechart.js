@@ -55,11 +55,10 @@ class Linechart {
         const _this = this;
 
         d3.json(_this.url, function(data){
-
             const dataset = data;
             let current_offset = 0;
             let viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
-            
+
             const max_y = d3.max(data, function(d){
                 return d3.max(d.y, function(d1) {
                     return d1;
@@ -79,18 +78,18 @@ class Linechart {
             let yAxisScale;
             scaleXAxis();
             scaleYAxis();
-           
+
             function getDateFromTime(time){
                 try {
-                    return new Date(time);  
+                    return new Date(time);
                 } catch (err) {
-                    console.log("An Error occured while parsing the date object.");
-                    console.log(err.message);
+                    console.err("An Error occured while parsing the date object.");
+                    console.err(err.message);
                     return null;
                 };
             };
 
-            function scaleXAxis(){                  
+            function scaleXAxis(){
                 //###################################
                 //######## scale the x-axis. ########
                 //###################################
@@ -99,31 +98,30 @@ class Linechart {
                 if (_this.scales[0] == 'linear') {
                     //Provide a linear scaling.
                     xScale = d3.scale.linear()
-                               .range(xrange)                      
+                               .range(xrange)
                                .domain(x_extent);
 
                 } else if (_this.scales[0] == 'log') {
                     if (x_extent[0] <= 0){
                         xScale = d3.scale.linear()
-                               .range(xrange)                      
-                               .domain(x_extent);               
+                               .range(xrange)
+                               .domain(x_extent);
                     } else {
                         xScale = d3.scale.log()
-                               .range(xrange)                      
+                               .range(xrange)
                                .domain(x_extent);
                     }
 
-                    
-                } else if (_this.scales[0].substring(0,3) == 'pow') { 
-                    
+
+                } else if (_this.scales[0].substring(0,3) == 'pow') {
                     //The exponent of the power scale is indicated by a number
                     //following the 'pow', e.g. 'pow2'.
                     exp = parseInt(_this.scales[0].substring(3, _this.scales[0].length));
-                    
+
                     //Provide a power scaling.
                     xScale = d3.scale.pow()
                                .exponent(exp)
-                               .range(xrange)          
+                               .range(xrange)
                                .domain(x_extent);
 
                 } else if (_this.scales[0] == 'date') {
@@ -132,14 +130,14 @@ class Linechart {
                     const maxDate = getDateFromTime(x_extent[1]);
                     console.log(minDate.toString());
                     console.log(maxDate.toString());
-                    
+
                     xScale = d3.time.scale()
                                .range(xrange)
-                               .domain([minDate, maxDate]);                     
+                               .domain([minDate, maxDate]);
                 };
             };
 
-            function scaleYAxis(){                  
+            function scaleYAxis(){
                 //###################################
                 //######## scale the x-axis. ########
                 //###################################
@@ -162,28 +160,27 @@ class Linechart {
                            .domain(y_extent);
                     } else {
                         yScale = d3.scale.log()
-                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])                     
+                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                                .domain(y_extent);
                         yAxisScale = d3.scale.log()
-                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])                     
+                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                                .domain(y_extent);
                     }
 
-                    
-                } else if (_this.scales[1].substring(0,3) == 'pow') { 
-                    
+
+                } else if (_this.scales[1].substring(0,3) == 'pow') {
                     //The exponent of the power scale is indicated by a number
                     //following the 'pow', e.g. 'pow2'.
                     exp = parseInt(_this.scales[1].substring(3, _this.scales[1].length));
-                    
+
                     //Provide a power scaling.
                     yScale = d3.scale.pow()
                                .exponent(exp)
-                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])         
+                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                                .domain(y_extent);
                     yAxisScale = d3.scale.pow()
                                .exponent(exp)
-                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])         
+                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                                .domain(y_extent);
 
                 } else if (_this.scales[1] == 'date') {
@@ -194,15 +191,15 @@ class Linechart {
                     console.log(maxDate.toString());
                     yScale = d3.time.scale()
                                .range([_this.padding + _this.labelsize, _this.height - _this.padding])
-                               .domain([minDate, maxDate]);     
+                               .domain([minDate, maxDate]);
                     yAxisScale = d3.time.scale()
                                .range([_this.height - _this.padding, _this.padding + _this.labelsize])
-                               .domain([minDate, maxDate]);                 
+                               .domain([minDate, maxDate]);
                 };
             };
 
             _this.svg = d3.select(_this.hashtag.concat(_this.div_hook)).append("svg")
-                        .attr("width", _this.width)                           
+                        .attr("width", _this.width)
                         .attr("height", _this.height);
 
             _this.tooltip = d3.select(_this.hashtag.concat(_this.div_hook)).append("div")
@@ -214,38 +211,36 @@ class Linechart {
             const yaxis = d3.svg.axis();
 
             function initializeXAxis() {
-
                 if (_this.scales[0] == 'date') {
                     xaxis.ticks(d3.time.milliseconds, 10)
-                         .tickFormat(d3.time.format(_this.timeformat))                            
+                         .tickFormat(d3.time.format(_this.timeformat))
                          .tickSize(-(_this.height - _this.padding * 2 - _this.labelsize), 0, 0)
                          .scale(xScale);
                 } else {
-
-                    xaxis.tickSize(-(_this.height - _this.padding * 2 - _this.labelsize), 0, 0)                           
+                    xaxis.tickSize(-(_this.height - _this.padding * 2 - _this.labelsize), 0, 0)
                          .scale(xScale);
-                };                  
+                };
             };
 
             function initializeYAxis() {
-                yaxis.orient('left')                    
-                     .scale(yAxisScale); 
+                yaxis.orient('left')
+                     .scale(yAxisScale);
             };
 
-            initializeXAxis();      
-            initializeYAxis();                      
+            initializeXAxis();
+            initializeYAxis();
 
             const xa = _this.svg.append('g')
                        .attr('class', 'x axis')
                        .attr('transform', 'translate(0, ' + (_this.height - _this.padding - _this.labelsize) + ')')
                        .data(viewdata)
                        .call(xaxis)
-                       .selectAll("text")  
+                       .selectAll("text")
                         .style("text-anchor", "end")
                         .attr("dx", "-.8em")
                         .attr("dy", ".15em")
                         .attr("transform", function(d) {
-                            return "rotate(" + _this.tickrotation + ")" 
+                            return "rotate(" + _this.tickrotation + ")"
                             });
 
             const ya = _this.svg.append('g')
@@ -272,7 +267,7 @@ class Linechart {
 
             function drawButtons(){
                 //Append the buttons.
-                const buttons = _this.svg.append("g")                   
+                const buttons = _this.svg.append("g")
                                  .attr("class", "button")
 
                 const vertical_center = (_this.height / 2) - (_this.padding / 2) - (_this.iconheight / 2);
@@ -282,11 +277,11 @@ class Linechart {
                 const left_translation = 'translate(' + (_this.iconwidth + 10 + _this.labelsize) + ',' + (vertical_center) + ')';
 
                 //Append the right arrow button and apply its transformation.
-                buttons.append("path")                  
-                    .attr('d', 'm 0 0 0 ' + _this.iconheight + ' ' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')                
-                    .attr('transform', right_translation)                   
+                buttons.append("path")
+                    .attr('d', 'm 0 0 0 ' + _this.iconheight + ' ' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')
+                    .attr('transform', right_translation)
                     .attr('fill', _this.iconcolor)
-                    .on("click", function() {                           
+                    .on("click", function() {
                             forwardData();
                     })
                     .on('mouseover', function() {
@@ -295,13 +290,13 @@ class Linechart {
                     .on('mouseout', function() {
                         d3.select(this).attr('fill', _this.iconcolor);
                     });
-                
+
                 //Append the left arrow button and apply its transformation.
-                buttons.append("path")                  
+                buttons.append("path")
                     .attr('d', 'm 0 0 0 ' + _this.iconheight + ' -' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')
                     .attr('transform',  left_translation)
                     .attr('fill', _this.iconcolor)
-                    .on("click", function() {                           
+                    .on("click", function() {
                             backwardData();
                     })
                     .on('mouseover', function() {
@@ -309,7 +304,7 @@ class Linechart {
                     })
                     .on('mouseout', function() {
                         d3.select(this).attr('fill', _this.iconcolor);
-                    }); 
+                    });
 
             }
 
@@ -318,10 +313,9 @@ class Linechart {
             } else {
                 drawButtons();
             }
-            
-            
-            function updateXAxis(new_extent) {
 
+
+            function updateXAxis(new_extent) {
                 if (_this.scales[0] == 'date') {
                     const minDate = _this.iso(getDateFromTime(new_extent[0]));
                     const maxDate = _this.iso(getDateFromTime(new_extent[1]));
@@ -329,81 +323,80 @@ class Linechart {
                 } else {
                     xScale.domain(new_extent);
                 }
-                
+
             }
 
             function forwardData() {
                 current_offset += _this.jumplength;
-                
+
                 if ((current_offset + _this.viewport) > dataset.length) {
                     viewdata = dataset.slice(current_offset, dataset.length);
                     current_offset -= _this.jumplength;
                 } else {
                     viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
                 };
-                
+
                 //Binds the new viedata to the line generation.
                 lines.datum(viewdata);
 
                 x_extent = d3.extent(viewdata, function(d){ return d.x});
 
-                
+
                 if (_this.scales[0] == 'date') {
                     const minDate = getDateFromTime(x_extent[0]);
                     const maxDate = getDateFromTime(x_extent[1]);
-                    xScale.domain([minDate, maxDate]);  
+                    xScale.domain([minDate, maxDate]);
                 } else {
                     xScale.domain(x_extent);
                 };
-                
+
                 updateView();
-                            
+
             };
 
-            
+
             function backwardData() {
                 current_offset -= _this.jumplength;
-                
+
                 if (current_offset < 0) {
                     viewdata = dataset.slice(0, 0 + _this.viewport);
                     current_offset = 0;
                 } else {
                     viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
                 };
-                
+
                 //Binds the new viedata to the line generation.
                 lines.datum(viewdata);
 
                 x_extent = d3.extent(viewdata, function(d){ return d.x});
 
-                
+
                 if (_this.scales[0] == 'date') {
                     const minDate = getDateFromTime(x_extent[0]);
                     const maxDate = getDateFromTime(x_extent[1]);
-                    xScale.domain([minDate, maxDate]);  
+                    xScale.domain([minDate, maxDate]);
                 } else {
                     xScale.domain(x_extent);
                 };
-                
-                updateView();
-                            
-            };
-            
-            
-            function updateView(){
 
+                updateView();
+
+            };
+
+
+            function updateView(){
                 _this.svg.select(".x.axis")
                     .transition()
                     .duration(250)
                     .call(xaxis)
-                    
+
                 _this.svg.select(".x.axis")
-                    .selectAll("text")  
+                    .selectAll("text")
                     .style("text-anchor", "end")
                     .attr("dx", "-.8em")
                     .attr("dy", ".15em")
                     .attr("transform", function(d) {
-                        return "rotate(" + _this.tickrotation + ")" 
+                        return "rotate(" + _this.tickrotation + ")"
                     });
 
                 _this.svg.selectAll(".line").remove();
@@ -431,7 +424,7 @@ class Linechart {
 
                 }
                 return _this.colors[colorindex];
-            }           
+            }
 
             function drawData(y_accessor){
                 //If no y_accessor was defined, the data is assumed to contain only one dataset.
@@ -441,14 +434,12 @@ class Linechart {
                 valueline = d3.svg.line()
                               .interpolate(_this.interpolation)
                               .x(function (d) {
-                                    
                                     if (_this.scales[0] == 'date') {
                                         d.x = getDateFromTime(d.x);
                                     };
                                     return xScale(d.x);
                               })
                               .y(function (d) {
-
                                     let y_value;
 
                                     if (d.y instanceof Array){
@@ -456,13 +447,13 @@ class Linechart {
                                     } else {
                                         y_value = d.y;
                                     };
-                                    
+
                                     return _this.height - yScale(y_value);
                               });
 
-                
-                
-                
+
+
+
                 //sellectAll("path") causes a path element to be added for each data array
                 //member. So call the line method on each data entry in the data for this
                 //one "path"-element. The d-attribute of SVG usualy contains a string with a series of path
@@ -474,7 +465,6 @@ class Linechart {
                            .attr("d", valueline);
 
                 function drawCircleHighlights(index){
-
                     circles = _this.svg.append("circle")
                              .datum(viewdata)
                              .attr("class", "circle")
@@ -496,15 +486,15 @@ class Linechart {
                              })
                              .attr("y_accessor", y_accessor)
                              .attr("opacity", 0)
-                             .attr("fill", getColorIndex(y_accessor));              
+                             .attr("fill", getColorIndex(y_accessor));
                 }
-                
+
                 for (let i = 0; i < viewdata.length; i++)
                     drawCircleHighlights(i);
-                
-                
 
-             
+
+
+
 
                 _this.svg.selectAll("circle")
                     .on("mouseover", function(){
@@ -540,14 +530,14 @@ class Linechart {
 
             function showTooltip(coords, values, position, accessor){
                     const keyindex = parseInt(accessor) + 1;
-                    
+
                     _this.tooltip.text(_this.datakeys[0] + ": " + values[0] + " " + _this.datakeys[keyindex] + ": " + values[1])
                            .style("left", (position[0] + "px"))
                            .transition()
                            .delay(600)
                            .duration(400)
                            .style("opacity", 1.0)
-                           .style("position", "absolute")                  
+                           .style("position", "absolute")
                            .style("background-color", getColorIndex(accessor))
                            .style("top", ((position[1] - (2 * _this.highlightradius)) + "px"));
 

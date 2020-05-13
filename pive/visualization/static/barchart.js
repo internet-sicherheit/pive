@@ -31,8 +31,6 @@ class Barchart {
         if ((width / viewport) < threshold){
             this.filter = parseInt(threshold * (viewport / width));
         };
-
-        
     }
 
     create() {
@@ -65,9 +63,9 @@ class Barchart {
             let current_offset = 0;
             //Define the viewport of the data. Only a slice of the full dataset is currently shown.
             let viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
-          
+
             const vertical_extent = d3.extent(dataset, function(d){ return d.value});
-            
+
             let yScale;
             let yAxisScale;
 
@@ -81,7 +79,7 @@ class Barchart {
 
             scaleYAxis();
 
-            function scaleYAxis(){                  
+            function scaleYAxis(){
                 //###################################
                 //######## scale the x-axis. ########
                 //###################################
@@ -102,40 +100,37 @@ class Barchart {
                         yAxisScale = d3.scale.linear()
                            .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                            .domain(vertical_extent);
-                    
+
                     } else {
                         yScale = d3.scale.log()
-                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])                     
+                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                                .domain(vertical_extent);
                         yAxisScale = d3.scale.log()
-                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])                     
+                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                                .domain(vertical_extent);
                     }
 
-                    
-                } else if (_this.verticalscale.substring(0,3) == 'pow') { 
-                    
+                } else if (_this.verticalscale.substring(0,3) == 'pow') {
                     //The exponent of the power scale is indicated by a number
                     //following the 'pow', e.g. 'pow2'.
 
-                    //FIXME: scales is undefined
-                    console.log(scales)
+                    //FIXME: scales is undefined in barchart
                     exp = parseInt(scales[1].substring(3, scales[1].length));
-                    
+
                     //Provide a power scaling.
                     yScale = d3.scale.pow()
                                .exponent(exp)
-                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])         
+                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                                .domain(vertical_extent);
                     yAxisScale = d3.scale.pow()
                                .exponent(exp)
-                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])         
+                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                                .domain(vertical_extent);
                 };
             };
 
             _this.svg = d3.select(_this.hashtag.concat(_this.div_hook)).append("svg")
-                        .attr("width", _this.width)                           
+                        .attr("width", _this.width)
                         .attr("height", _this.height);
 
             _this.tooltip = d3.select(_this.hashtag.concat(_this.div_hook)).append("div")
@@ -154,7 +149,7 @@ class Barchart {
             };
 
             function initializeYAxis() {
-                yaxis.scale(yAxisScale); 
+                yaxis.scale(yAxisScale);
             };
 
             initializeXAxis();
@@ -190,20 +185,17 @@ class Barchart {
                     });
 
                 bars.on("mouseover", function(d, i){
-                        var tx = d3.mouse(this)[0];
-                        var ty = d3.mouse(this)[1];
+                        let tx = d3.mouse(this)[0];
+                        let ty = d3.mouse(this)[1];
                         d3.select(this).transition()
                                        .attr("opacity", 0.5);
-                        console.log(viewdata[i].label);
                         showTooltip([d.value, viewdata[i].label], [tx, ty], i);
                     })
                     .on("mouseout", function(){
                         hideTooltip();
                         d3.select(this).transition()
                                    .attr("opacity", 1.0);
-                    });  
-
-                
+                    });
             }
 
             barUpdate();
@@ -213,12 +205,12 @@ class Barchart {
                        .attr('transform', 'translate(0, ' + (_this.height - _this.padding - _this.labelsize) + ')')
                        .data(viewdata)
                        .call(xaxis)
-                       .selectAll("text")  
+                       .selectAll("text")
                         .style("text-anchor", "end")
                         .attr("dx", "-.8em")
                         .attr("dy", ".15em")
                         .attr("transform", function(d) {
-                            return "rotate(" + _this.tickrotation + ")" 
+                            return "rotate(" + _this.tickrotation + ")"
                             });
 
             const ya = _this.svg.append('g')
@@ -245,12 +237,9 @@ class Barchart {
                                   .style("font-size", _this.labelsize)
                                   .text(_this.ylabel);
 
-
-
-
             function drawButtons(){
                 //Append the buttons.
-                const buttons = _this.svg.append("g")                   
+                const buttons = _this.svg.append("g")
                                  .attr("class", "button")
 
                 const vertical_center = (_this.height / 2) - (_this.padding / 2) - (_this.iconheight / 2);
@@ -260,11 +249,11 @@ class Barchart {
                 const left_translation = 'translate(' + (_this.iconwidth + 10 + _this.labelsize) + ',' + (vertical_center) + ')';
 
                 //Append the right arrow button and apply its transformation.
-                buttons.append("path")                  
-                    .attr('d', 'm 0 0 0 ' + _this.iconheight + ' ' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')                
-                    .attr('transform', right_translation)                   
+                buttons.append("path")
+                    .attr('d', 'm 0 0 0 ' + _this.iconheight + ' ' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')
+                    .attr('transform', right_translation)
                     .attr('fill', _this.iconcolor)
-                    .on("click", function() {                           
+                    .on("click", function() {
                             forwardData();
                     })
                     .on('mouseover', function() {
@@ -273,13 +262,13 @@ class Barchart {
                     .on('mouseout', function() {
                         d3.select(this).attr('fill', _this.iconcolor);
                     });
-                
+
                 //Append the left arrow button and apply its transformation.
-                buttons.append("path")                  
+                buttons.append("path")
                     .attr('d', 'm 0 0 0 ' + _this.iconheight + ' -' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')
                     .attr('transform',  left_translation)
                     .attr('fill', _this.iconcolor)
-                    .on("click", function() {                           
+                    .on("click", function() {
                             backwardData();
                     })
                     .on('mouseover', function() {
@@ -287,7 +276,7 @@ class Barchart {
                     })
                     .on('mouseout', function() {
                         d3.select(this).attr('fill', _this.iconcolor);
-                    }); 
+                    });
 
             }
 
@@ -296,85 +285,82 @@ class Barchart {
             } else {
                 drawButtons();
             }
-            
+
             function forwardData() {
                 current_offset += _this.jumplength;
-                
+
                 if ((current_offset + _this.viewport) > dataset.length) {
                     viewdata = dataset.slice(current_offset, dataset.length);
                     current_offset -= _this.jumplength;
                 } else {
                     viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
                 };
-                
+
                 barScale.domain(viewdata.map(function(d){
                     return d.label;
-                }));      
+                }));
 
-                updateAxes();   
+                updateAxes();
                 barUpdate();
 
             };
 
-            
+
             function backwardData() {
                 current_offset -= _this.jumplength;
-                
+
                 if (current_offset < 0) {
                     viewdata = dataset.slice(0, 0 + _this.viewport);
                     current_offset = 0;
                 } else {
                     viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
                 };
-                
+
                 barScale.domain(viewdata.map(function(d){
                     return d.label;
-                }));      
+                }));
 
                 updateAxes();
-                barUpdate();        
+                barUpdate();
             };
-            
-            
-            function updateAxes(){
 
+            function updateAxes(){
                 xaxis.tickValues(barScale.domain().filter(function(d, i) { return !(i % _this.filter); }));
 
                 _this.svg.select(".x.axis")
-                    .transition()           
+                    .transition()
                     .duration(250)
                     .call(xaxis)
 
                 _this.svg.select(".y.axis")
-                    .transition()           
+                    .transition()
                     .duration(250)
                     .call(yaxis)
-                    
+
                 _this.svg.select(".x.axis")
-                    .selectAll("text")  
+                    .selectAll("text")
                     .style("text-anchor", "end")
                     .attr("dx", "-.8em")
                     .attr("dy", ".15em")
                     .attr("transform", function(d) {
-                        return "rotate(" + _this.tickrotation + ")" 
+                        return "rotate(" + _this.tickrotation + ")"
                     });
 
             };
 
 
             function getColorIndex(y_accessor){
-                    var colorindex = y_accessor;
-                    var color;
+                    let colorindex = y_accessor;
+                    let color;
 
                     while (colorindex > _this.colors.length - 1) {
                         colorindex = colorindex - _this.colors.length;
-
                     }
-                    
+
                     color = _this.colors[colorindex];
                     return color;
-                }   
-            
+                }
+
 
            function hideTooltip(){
                 _this.tooltip.transition()
@@ -384,18 +370,17 @@ class Barchart {
             }
 
             function showTooltip(values, position, accessor){
-                    //console.log("tooltip")
-                    var keyindex = parseInt(accessor) + 1;
-                    
-                    _this.tooltip.text(values[1] + ": " + values[0])
-                           .style("left", (position[0] + "px"))
-                           .transition()
-                           .delay(600)
-                           .duration(400)
-                           .style("opacity", 1.0)
-                           .style("position", "absolute")                  
-                           .style("background-color", getColorIndex(accessor))
-                           .style("top", (position[1] + "px"));
+                let keyindex = parseInt(accessor) + 1;
+
+                _this.tooltip.text(values[1] + ": " + values[0])
+                       .style("left", (position[0] + "px"))
+                       .transition()
+                       .delay(600)
+                       .duration(400)
+                       .style("opacity", 1.0)
+                       .style("position", "absolute")
+                       .style("background-color", getColorIndex(accessor))
+                       .style("top", (position[1] + "px"));
 
                 }
 

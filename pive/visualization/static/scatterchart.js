@@ -31,7 +31,6 @@ class Scatterchart {
         this.highlightradius = 8;
         this.hashtag = '#';
         this.hash_div_hook = this.hashtag.concat(div_hook);
-
     }
 
     create() {
@@ -64,7 +63,7 @@ class Scatterchart {
             let current_offset = 0;
             //Define the viewport of the data. Only a slice of the full dataset is currently shown.
             let viewdata = dataset.slice(current_offset, current_offset + _this.viewport);
-            
+
             //Determines the maximum y-value considering each datapoints maximum.
             const max_y = d3.max(data, function(d){
                 return d3.max(d.y, function(d1) {
@@ -87,20 +86,20 @@ class Scatterchart {
 
             scaleXAxis();
             scaleYAxis();
-           
+
             //Creates a new date object of a given timestamp.
             function getDateFromTime(time){
                 try {
-                    return new Date(time);  
+                    return new Date(time);
                 } catch (err) {
-                    console.log("An Error occured while parsing the date object.");
-                    console.log(err.message);
+                    console.err("An Error occured while parsing the date object.");
+                    console.err(err.message);
                     return null;
                 };
-                
+
             };
 
-            function scaleXAxis(){                  
+            function scaleXAxis(){
                 //###################################
                 //######## scale the x-axis. ########
                 //###################################
@@ -109,49 +108,46 @@ class Scatterchart {
                 if (_this.scales[0] == 'linear') {
                     //Provide a linear scaling.
                     xScale = d3.scale.linear()
-                               .range(xrange)                      
+                               .range(xrange)
                                .domain(x_extent);
 
                 } else if (_this.scales[0] == 'log') {
                     if (x_extent[0] <= 0){
                         xScale = d3.scale.linear()
-                               .range(xrange)                      
+                               .range(xrange)
                                .domain(x_extent);
-                        
+
                     } else {
                         xScale = d3.scale.log()
-                               .range(xrange)                      
+                               .range(xrange)
                                .domain(x_extent);
                             }
 
-                    
-                } else if (_this.scales[0].substring(0,3) == 'pow') { 
-                    
+
+                } else if (_this.scales[0].substring(0,3) == 'pow') {
                     //The exponent of the power scale is indicated by a number
                     //following the 'pow', e.g. 'pow2'.
                     //console.log(_this.scales[0].length)
                     exp = parseInt(_this.scales[0].substring(3, _this.scales[0].length));
-                    
+
                     //Provide a power scaling.
                     xScale = d3.scale.pow()
                                .exponent(exp)
-                               .range(xrange)          
+                               .range(xrange)
                                .domain(x_extent);
 
                 } else if (_this.scales[0] == 'date') {
                     //Date-code to be implemented.
                     const minDate = getDateFromTime(x_extent[0]);
                     const maxDate = getDateFromTime(x_extent[1]);
-                    console.log(minDate.toString());
-                    console.log(maxDate.toString());
-                    
+
                     xScale = d3.time.scale()
                                .range(xrange)
-                               .domain([minDate, maxDate]);                     
+                               .domain([minDate, maxDate]);
                 };
             };
 
-            function scaleYAxis(){                  
+            function scaleYAxis(){
                 //###################################
                 //######## scale the x-axis. ########
                 //###################################
@@ -165,7 +161,7 @@ class Scatterchart {
                            .domain(y_extent);
 
                 } else if (_this.scales[1] == 'log') {
-                    if (y_extent[0] <= 0){              
+                    if (y_extent[0] <= 0){
                         yScale = d3.scale.linear()
                            .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                            .domain(y_extent);
@@ -174,46 +170,43 @@ class Scatterchart {
                            .domain(y_extent);
                     } else {
                         yScale = d3.scale.log()
-                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])                     
+                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                                .domain(y_extent);
                         yAxisScale = d3.scale.log()
-                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])                     
+                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                                .domain(y_extent);
                     }
-                    
-                } else if (_this.scales[1].substring(0,3) == 'pow') { 
-                    
+
+                } else if (_this.scales[1].substring(0,3) == 'pow') {
                     //The exponent of the power scale is indicated by a number
                     //following the 'pow', e.g. 'pow2'.
                     exp = parseInt(_this.scales[1].substring(3, _this.scales[1].length));
-                    
+
                     //Provide a power scaling.
                     yScale = d3.scale.pow()
                                .exponent(exp)
-                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])         
+                               .range([_this.padding + _this.labelsize, _this.height - _this.padding])
                                .domain(y_extent);
                     yAxisScale = d3.scale.pow()
                                .exponent(exp)
-                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])         
+                               .range([_this.height - _this.padding, _this.padding + _this.labelsize])
                                .domain(y_extent);
 
                 } else if (_this.scales[1] == 'date') {
                     //Date-code to be implemented.
                     const minDate = getDateFromTime(y_extent[0]);
                     const maxDate = getDateFromTime(y_extent[1]);
-                    console.log(minDate.toString());
-                    console.log(maxDate.toString());
                     yScale = d3.time.scale()
                                .range([_this.padding + _this.labelsize, _this.height - _this.padding])
-                               .domain([minDate, maxDate]);     
+                               .domain([minDate, maxDate]);
                     yAxisScale = d3.time.scale()
                                .range([_this.height - _this.padding, _this.padding + _this.labelsize])
-                               .domain([minDate, maxDate]);                 
+                               .domain([minDate, maxDate]);
                 };
             };
 
             _this.svg = d3.select(_this.hashtag.concat(_this.div_hook)).append("svg")
-                        .attr("width", _this.width)                           
+                        .attr("width", _this.width)
                         .attr("height", _this.height);
 
             _this.tooltip = d3.select(_this.hashtag.concat(_this.div_hook)).append("div")
@@ -226,39 +219,37 @@ class Scatterchart {
 
             //X Axis initialization.
             function initializeXAxis() {
-
                 if (_this.scales[0] == 'date') {
                     xaxis.ticks(d3.time.milliseconds, 10)
-                         .tickFormat(d3.time.format(_this.timeformat))                            
+                         .tickFormat(d3.time.format(_this.timeformat))
                          .tickSize(-(_this.height - _this.padding * 2 - _this.labelsize), 0, 0)
                          .scale(xScale);
                 } else {
-
-                    xaxis.tickSize(-(_this.height - _this.padding * 2 - _this.labelsize), 0, 0)                           
+                    xaxis.tickSize(-(_this.height - _this.padding * 2 - _this.labelsize), 0, 0)
                          .scale(xScale);
-                };                  
+                };
             };
 
             function initializeYAxis() {
-                yaxis.orient('left')                    
+                yaxis.orient('left')
                      .scale(yAxisScale);
 
             };
 
-            initializeXAxis();      
-            initializeYAxis();                      
+            initializeXAxis();
+            initializeYAxis();
 
             const xa = _this.svg.append('g')
                        .attr('class', 'x axis')
                        .attr('transform', 'translate(0, ' + (_this.height - _this.padding - _this.labelsize) + ')')
                        .data(viewdata)
                        .call(xaxis)
-                       .selectAll("text")  
+                       .selectAll("text")
                         .style("text-anchor", "end")
                         .attr("dx", "-.8em")
                         .attr("dy", ".15em")
                         .attr("transform", function(d) {
-                            return "rotate(" + tickrotation + ")" 
+                            return "rotate(" + tickrotation + ")"
                             });
 
             const ya = _this.svg.append('g')
@@ -287,7 +278,7 @@ class Scatterchart {
 
             function drawButtons(){
                 //Append the buttons.
-                const buttons = _this.svg.append("g")                   
+                const buttons = _this.svg.append("g")
                                  .attr("class", "button")
 
                 const vertical_center = (_this.height / 2) - (_this.padding / 2) - (_this.iconheight / 2);
@@ -297,11 +288,11 @@ class Scatterchart {
                 const left_translation = 'translate(' + (_this.iconwidth + 10 + _this.labelsize) + ',' + (vertical_center) + ')';
 
                 //Append the right arrow button and apply its transformation.
-                buttons.append("path")                  
-                    .attr('d', 'm 0 0 0 ' + _this.iconheight + ' ' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')                
-                    .attr('transform', right_translation)                   
+                buttons.append("path")
+                    .attr('d', 'm 0 0 0 ' + _this.iconheight + ' ' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')
+                    .attr('transform', right_translation)
                     .attr('fill', _this.iconcolor)
-                    .on("click", function() {                           
+                    .on("click", function() {
                             forwardData();
                     })
                     .on('mouseover', function() {
@@ -310,13 +301,13 @@ class Scatterchart {
                     .on('mouseout', function() {
                         d3.select(this).attr('fill', _this.iconcolor);
                     });
-                
+
                 //Append the left arrow button and apply its transformation.
-                buttons.append("path")                  
+                buttons.append("path")
                     .attr('d', 'm 0 0 0 ' + _this.iconheight + ' -' + _this.iconwidth + ' -' + _this.iconheight / 2 + 'z')
                     .attr('transform',  left_translation)
                     .attr('fill', _this.iconcolor)
-                    .on("click", function() {                           
+                    .on("click", function() {
                             backwardData();
                     })
                     .on('mouseover', function() {
@@ -324,7 +315,7 @@ class Scatterchart {
                     })
                     .on('mouseout', function() {
                         d3.select(this).attr('fill', _this.iconcolor);
-                    }); 
+                    });
 
             }
 
@@ -333,10 +324,9 @@ class Scatterchart {
             } else {
                 drawButtons();
             }
-            
-            
-            function updateXAxis(new_extent) {
 
+
+            function updateXAxis(new_extent) {
                 if (_this.scales[0] == 'date') {
                     const minDate = _this.iso(getDateFromTime(new_extent[0]));
                     const maxDate = _this.iso(getDateFromTime(new_extent[1]));
@@ -344,12 +334,12 @@ class Scatterchart {
                 } else {
                     xScale.domain(new_extent);
                 }
-                
+
             }
 
             function forwardData() {
                 current_offset += _this.jumplength;
-                
+
                 if ((current_offset + _this.viewport) > dataset.length) {
                     viewdata = dataset.slice(current_offset, dataset.length);
                     current_offset -= _this.jumplength;
@@ -359,23 +349,23 @@ class Scatterchart {
 
                 x_extent = d3.extent(viewdata, function(d){ return d.x});
 
-                
+
                 if (_this.scales[0] == 'date') {
                     const minDate = getDateFromTime(x_extent[0]);
                     const maxDate = getDateFromTime(x_extent[1]);
-                    xScale.domain([minDate, maxDate]);  
+                    xScale.domain([minDate, maxDate]);
                 } else {
                     xScale.domain(x_extent);
                 };
-                
+
                 updateView();
-                            
+
             };
 
-            
+
             function backwardData() {
                 current_offset -= _this.jumplength;
-                
+
                 if (current_offset < 0) {
                     viewdata = dataset.slice(0, 0 + _this.viewport);
                     current_offset = 0;
@@ -385,34 +375,33 @@ class Scatterchart {
 
                 x_extent = d3.extent(viewdata, function(d){ return d.x});
 
-                
+
                 if (_this.scales[0] == 'date') {
                     const minDate = getDateFromTime(x_extent[0]);
                     const maxDate = getDateFromTime(x_extent[1]);
-                    xScale.domain([minDate, maxDate]);  
+                    xScale.domain([minDate, maxDate]);
                 } else {
                     xScale.domain(x_extent);
                 };
-                
-                updateView();
-                            
-            };
-            
-            
-            function updateView(){
 
+                updateView();
+
+            };
+
+
+            function updateView(){
                 _this.svg.select(".x.axis")
                     .transition()
                     .duration(250)
                     .call(xaxis)
-                    
+
                 _this.svg.select(".x.axis")
-                    .selectAll("text")  
+                    .selectAll("text")
                     .style("text-anchor", "end")
                     .attr("dx", "-.8em")
                     .attr("dy", ".15em")
                     .attr("transform", function(d) {
-                        return "rotate(" + tickrotation + ")" 
+                        return "rotate(" + tickrotation + ")"
                     });
 
                 _this.svg.selectAll(".circle").remove();
@@ -435,7 +424,7 @@ class Scatterchart {
                     colorindex = colorindex - _this.colors.length;
 
                 }
-                
+
                 return _this.colors[colorindex];
             }
 
@@ -443,9 +432,8 @@ class Scatterchart {
                 //If no y_accessor was defined, the data is assumed to contain only one dataset.
                 //the y_accessor then becomes obsolete.
                 y_accessor = (typeof y_accessor == "undefined") ? "singleData" : y_accessor;
-                
-                function drawCircles(index){
 
+                function drawCircles(index){
                     circles = _this.svg.append("circle")
                              .datum(viewdata)
                              .attr("class", "circle")
@@ -467,15 +455,15 @@ class Scatterchart {
                              })
                              .attr("y_accessor", y_accessor)
                              .attr("opacity", _this.circleopacity)
-                             .attr("fill", getColorIndex(y_accessor));              
+                             .attr("fill", getColorIndex(y_accessor));
                 }
-                
+
                 for (let i = 0; i < viewdata.length; i++)
                     drawCircles(i);
-                
-                
 
-             
+
+
+
 
                 _this.svg.selectAll("circle")
                     .on("mouseover", function(){
@@ -519,7 +507,7 @@ class Scatterchart {
                            .delay(600)
                            .duration(400)
                            .style("opacity", 1.0)
-                           .style("position", "absolute")                  
+                           .style("position", "absolute")
                            .style("background-color", getColorIndex(accessor))
                            .style("top", ((position[1] - (2 * _this.highlightfactor)) + "px"));
 
