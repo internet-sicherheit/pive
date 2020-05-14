@@ -249,7 +249,7 @@ class Scatterchart {
                         .attr("dx", "-.8em")
                         .attr("dy", ".15em")
                         .attr("transform", function(d) {
-                            return "rotate(" + tickrotation + ")"
+                            return "rotate(" + _this.tickrotation + ")"
                             });
 
             const ya = _this.svg.append('g')
@@ -401,7 +401,7 @@ class Scatterchart {
                     .attr("dx", "-.8em")
                     .attr("dy", ".15em")
                     .attr("transform", function(d) {
-                        return "rotate(" + tickrotation + ")"
+                        return "rotate(" + _this.tickrotation + ")"
                     });
 
                 _this.svg.selectAll(".circle").remove();

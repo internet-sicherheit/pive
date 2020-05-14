@@ -49,7 +49,7 @@ class Chordchart {
         const _this = this;
 
 
-        d3.json(url, function(data){
+        d3.json(_this.url, function(data){
             const chordElements = data.elements;
             const matrix = data.matrix;
 
