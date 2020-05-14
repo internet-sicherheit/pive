@@ -34,8 +34,10 @@ class BaseVisualization:
 
     def __init__(self):
         self._div_hook = default.div_hook
-        self._template_url = ''
         self._template_name = ''
+        realpath = os.path.dirname(os.path.realpath(__file__))
+        self._template_url = '%s%s' % (realpath, default.template_path)
+        self._static_code_url = '%s%s' % (realpath, default.static_code_path)
         self._dataset_url = ''
         self.dataset = []
         self._title = ''
@@ -111,10 +113,8 @@ class BaseVisualization:
         f.close()
 
     def create_visualization_files(self, destination_url):
-
-        html_template = self.load_template_file('%shtml.jinja' % (self._template_url))
+        html_template = self.load_template_file('%shtml-base.jinja' % (self._template_url))
         js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
-        print "What"
 
         # Default dataset url is used when nothing was explicitly passed.
         if not self._dataset_url:
@@ -131,7 +131,9 @@ class BaseVisualization:
         html = self.create_html(html_template)
 
         self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
-        self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
+        #self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
+        with open(os.path.join(self._static_code_url,"{}.js".format(self._template_name)),"r") as js_static:
+            self.write_file(js_static.read(), destination_url, '%s%s.js' % (os.sep, self._title))
 
         visdata = self.generate_visualization_dataset(self._dataset)
         self.write_dataset_file(visdata, self._dataset_url)

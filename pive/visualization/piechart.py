@@ -43,35 +43,40 @@ class Chart(bv.BaseVisualization):
 
         # Metadata
         self._title = 'piechart'
-        self.__template_name = 'piechart'
-        self.__dataset = dataset
+        self._template_name = 'piechart'
+        self._dataset = dataset
         self._dataset_url = ''
 
         realpath = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '%s%s' % (realpath, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._template_url = '%s%s' % (realpath, default.template_path)
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__colors = default.chartcolors
-        self.__highlightopacity = default.circleopacity
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._colors = default.chartcolors
+        self._highlightopacity = default.circleopacity
+
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
+        self._label_size = default.label_size
 
 
     def set_title(self, title):
         self._title = title
 
     def setDataKeys(self, datakeys):
-        self.__datakeys = datakeys
+        self._datakeys = datakeys
 
     def sethighlightOpacity(self, opacity):
-        self.__highlightopacity = opacity
+        self._highlightopacity = opacity
 
     def set_chart_colors(self, colors):
         """Basic Method."""
-        self.__colors = colors
+        self._colors = colors
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
@@ -92,26 +97,40 @@ class Chart(bv.BaseVisualization):
         print ('Writing: %s' % (dataset_url))
 
     def setScales(self, scales):
-        self.__scales = scales
+        self._scales = scales
 
 
     def create_html(self, template):
         templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
+                        't_chart_type': self._template_name,
+                        't_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
+                        't_datakeys': self._datakeys,
+                        't_url': self._dataset_url,
+                        't_colors': self._colors,
+                        't_highlightopacity': self._highlightopacity,
+                        't_div_hook': self._div_hook,
+                        't_pive_version' : self._version,
+                        't_font_size': self._font_size,
+                        't_shape_rendering': self._shape_rendering,
+                        't_line_stroke': self._line_stroke,
+                        't_pive_version' : self._version,
+                        't_axis_label_size' : self._label_size}
 
         outputText = template.render(templateVars)
         return outputText
 
     def create_js(self, template, dataset_url):
-        templateVars = {'t_width': self.__width,
-                        't_height': self.__height,
-                        't_padding': self.__padding,
-                        't_datakeys': self.__datakeys,
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
+                        't_datakeys': self._datakeys,
                         't_url': dataset_url,
-                        't_colors': self.__colors,
-                        't_highlightopacity': self.__highlightopacity,
+                        't_colors': self._colors,
+                        't_highlightopacity': self._highlightopacity,
                         't_div_hook': self._div_hook,
-                        't_pive_version' : self.__version}
+                        't_pive_version' : self._version}
 
         outputText = template.render(templateVars)
         return outputText
@@ -135,33 +154,33 @@ class Chart(bv.BaseVisualization):
 
 
     def get_js_code(self):
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
+        js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
         js = self.create_js(js_template, self._dataset_url)
         return js
 
 
     def get_json_dataset(self):
-        return self.generate_visualization_dataset(self.__dataset)
+        return self.generate_visualization_dataset(self._dataset)
 
 
-    def create_visualization_files(self, destination_url):
+    # def create_visualization_files(self, destination_url):
 
-        html_template = self.load_template_file('%shtml.jinja' % (self.__template_url))
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
+    #     html_template = self.load_template_file('%shtml.jinja' % (self._template_url))
+    #     js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
 
-        # Default dataset url is used when nothing was explicitly passed.
-        if not self._dataset_url:
-            dataset_url = destination_url + '%s%s.json' % (os.sep, self._title)
-            self.set_dataset_url(dataset_url)
+    #     # Default dataset url is used when nothing was explicitly passed.
+    #     if not self._dataset_url:
+    #         dataset_url = destination_url + '%s%s.json' % (os.sep, self._title)
+    #         self.set_dataset_url(dataset_url)
 
-        js = self.create_js(js_template, self._dataset_url)
-        html = self.create_html(html_template)
+    #     js = self.create_js(js_template, self._dataset_url)
+    #     html = self.create_html(html_template)
 
-        self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
-        self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
+    #     self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
+    #     self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
 
-        visdata = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(visdata, self._dataset_url)
+    #     visdata = self.generate_visualization_dataset(self._dataset)
+    #     self.write_dataset_file(visdata, self._dataset_url)
 
 
     def set_height(self, height):
@@ -171,7 +190,7 @@ class Chart(bv.BaseVisualization):
         if (height <= 0):
             print ("Warning: Negative or zero height parameter. Using default settings instead.")
             height = default.height
-        self.__height = height
+        self._height = height
 
     def set_width(self, width):
         """Basic method for width driven data."""
@@ -180,7 +199,7 @@ class Chart(bv.BaseVisualization):
         if (width <= 0):
             print ("Warning: Negative or zero width parameter. Using default settings instead.")
             width = default.width
-        self.__width = width
+        self._width = width
 
     def set_dimension(self, width, height):
         self.set_width(width)
