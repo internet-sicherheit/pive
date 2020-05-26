@@ -78,7 +78,7 @@ class InputManager(object):
 
     def __get_datapoint_types(self, dataset):
         """Returns all containing visualization types."""
-        viztypes = profiler.get_datapoint_types(dataset[0])
+        viztypes = profiler.get_consistent_types(dataset)
         return viztypes
 
     def __validate_input(self, inputdata):

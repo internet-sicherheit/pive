@@ -50,10 +50,10 @@ def get_datapoint_types(datapoint):
         # If the item is a string, it may also be formatted as
         # a datetime item.
         if is_string(item):
+            types.append("string")
+            #Strings might also be dates
             if is_date(item):
                 types.append("time")
-            else:
-                types.append("string")
 
     return types
 
@@ -85,7 +85,7 @@ def is_date(item):
     try:
         parse(item)
         return True
-    except ValueError:
+    except (ValueError,TypeError):
         return False
 
 
@@ -107,15 +107,26 @@ def is_int(value):
     else:
         return num_a == num_b
 
+def get_consistent_types(dataset):
+    # List of possible viztype candidates
+    current_types = get_datapoint_types(dataset[0])
+    for data_point in dataset[1:]:
+        checked_datapoint_types = get_datapoint_types(data_point)
+        new_viztypes = []
+        for viztype in current_types:
+            if viztype in checked_datapoint_types:
+                new_viztypes.append(viztype)
+        if new_viztypes == []:
+            # All possible viztypes have been eliminated, dataset is inconsistent
+            return []
+        current_types = new_viztypes
+    return current_types
+
 
 def is_dataset_consistent(input_data):
-    """Checks the consistency of the dataset. Each item
-	must contain the exact datapoint-type as the other."""
+    """Checks the consistency of the dataset.
+    All data points must have at least one type in common.
+    As everything can be at least a string, this most likely will return true."""
     if input_data:
-        current = get_datapoint_types(input_data[0])
-        for item in input_data[1:]:
-            previous = current
-            current = get_datapoint_types(item)
-            if previous != current:
-                return False
+        return get_consistent_types(input_data) != []
     return True
