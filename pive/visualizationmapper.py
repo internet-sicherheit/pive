@@ -227,7 +227,6 @@ def checkInputOrder(elem, config, props, supportsMultiData):
 
     if not data_matches:
         isPossible = False
-    else:
 
     if (datalength > requiredlength):
         if supportsMultiData:
