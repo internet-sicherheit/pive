@@ -128,7 +128,7 @@ def is_dataset_consistent(input_data):
     As everything can be at least a string, this most likely will return true."""
     if input_data:
         types = get_consistent_types(input_data)
-        consistency = reduce(lambda x, y: x & (y != {}), types, True)
+        consistency = reduce(lambda x, y: x and (y != set()), types, True)
         return consistency
     #TODO: is the absence of input data consistent?
     return True
