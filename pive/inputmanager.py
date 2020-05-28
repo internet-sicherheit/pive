@@ -100,7 +100,8 @@ class InputManager(object):
         return dataset
 
     def __dataset_validation(self, inputdata):
-        """Validate the unmerged data by counting the keys."""
+        """Validate the unmerged data by counting the keys and
+        filtering out data points with minority keysets"""
         keycount = validater.count_keys_in_raw_data(inputdata)
         validkeys = validater.validate_data_keys(keycount)
         dataset = validater.generate_valid_dataset(validkeys, inputdata)

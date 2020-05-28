@@ -27,6 +27,7 @@
 # the given dataset.
 
 from dateutil.parser import parse
+from functools import reduce
 import sys
 
 VISTYPE_STRING = 0;
@@ -39,22 +40,26 @@ def get_datapoint_types(datapoint):
     Valid visualization-types are 'number', 'string' and 'time'"""
     types = []
     for key in list(datapoint.keys()):
+        typeset = set()
 
         item = datapoint[key]
 
         # If the datapoint contains a float or int it will
         # be considered as a numerical datapoint.
         if is_float(item) or is_int(item):
-            types.append("number")
+            #types.append("number")
+            typeset.add("number")
 
         # If the item is a string, it may also be formatted as
         # a datetime item.
         if is_string(item):
-            types.append("string")
+            #types.append("string")
+            typeset.add("string")
             #Strings might also be dates
             if is_date(item):
-                types.append("time")
-
+                #types.append("time")
+                typeset.add("time")
+        types.append(typeset)
     return types
 
 
@@ -92,7 +97,7 @@ def is_date(item):
 def is_float(value):
     try:
         number = float(value)
-    except ValueError:
+    except (ValueError,TypeError):
         return False
     else:
         return True
@@ -102,24 +107,18 @@ def is_int(value):
     try:
         num_a = float(value)
         num_b = int(num_a)
-    except ValueError:
+    except (ValueError,TypeError):
         return False
     else:
         return num_a == num_b
 
 def get_consistent_types(dataset):
     # List of possible viztype candidates
+    #FIXME: Datapoints with multiple types can shift order around.
     current_types = get_datapoint_types(dataset[0])
     for data_point in dataset[1:]:
-        checked_datapoint_types = get_datapoint_types(data_point)
-        new_viztypes = []
-        for viztype in current_types:
-            if viztype in checked_datapoint_types:
-                new_viztypes.append(viztype)
-        if new_viztypes == []:
-            # All possible viztypes have been eliminated, dataset is inconsistent
-            return []
-        current_types = new_viztypes
+        test_types = get_datapoint_types(data_point)
+        current_types = [ x & y for (x,y) in zip(current_types,test_types) ]
     return current_types
 
 
@@ -128,5 +127,8 @@ def is_dataset_consistent(input_data):
     All data points must have at least one type in common.
     As everything can be at least a string, this most likely will return true."""
     if input_data:
-        return get_consistent_types(input_data) != []
+        types = get_consistent_types(input_data)
+        consistency = reduce(lambda x, y: x & (y != {}), types, True)
+        return consistency
+    #TODO: is the absence of input data consistent?
     return True

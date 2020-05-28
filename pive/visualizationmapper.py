@@ -26,6 +26,7 @@
 import json
 from glob import glob
 from collections import OrderedDict
+from functools import reduce
 from .visualization import defaults as default
 import os
 
@@ -50,7 +51,7 @@ def has_date(viz_types):
     """Checks if the datapoint has dates."""
     times = False
     for item in viz_types:
-        if item == 'time':
+        if "time" in item:
             times = True
     return times
 
@@ -60,37 +61,33 @@ def get_visualization_properties(dataset, viz_types):
     all properties in the following order: Number of Datapoints,
     Number of Variables, Datesupport,
     List of Visualization-Types."""
-    props = []
+    props = {}
     length = len(dataset)
-    props.append(length)
-    props.append(len(viz_types))
+    #props.append(length)
+    props["dataset_length"] = length
+    #rops.append(len(viz_types))
+    props["viz_types_length"] = len(viz_types)
     times = has_date(viz_types)
-    props.append(times)
-    props.append(viz_types)
+    #props.append(times)
+    props["has_date"] = times
+    #props.append(viz_types)
+    props["viz_types"] = viz_types
+    props["lexicographic"] = (viz_types[0] & {'number', 'time'}) and length > 1 and is_data_in_lexicographic_order(dataset)
 
     # Indicates, if the abcissa of the dataset is in lexicographic order.
-    if (viz_types[0] in ('number', 'time')) and length > 1:
-        lexicographic = is_data_in_lexicographic_order(dataset)
-    else:
-        lexicographic = False
+    # if (viz_types[0] in ('number', 'time')) and length > 1:
+    #     lexicographic = is_data_in_lexicographic_order(dataset)
+    # else:
+    #     lexicographic = False
 
-    props.append(lexicographic)
+    # props.append(lexicographic)
     return props
 
 
 def types_matching_data_requirements(given_types, required_types):
     """Verifies if all given types match the requirements.
     Requirements may vary and support multiple options."""
-    matches = True
-    i = 0
-
-    for item in given_types:
-        #print ("item: %r     req: %r" % (item, required_types[i]))
-
-        if item not in required_types[i]:
-            matches = False
-        i += 1
-    return matches
+    return reduce(lambda x, zipped: x and (set(zipped[1]) & set(zipped[0])), list(zip(given_types,required_types)), True)
 
 
 def is_multiple_data_consistent(given_types, singleDataLength):
@@ -146,73 +143,82 @@ def check_possibilities(property_list):
     with the supported charts."""
     result = []
     props = property_list
-    conf = open_config_files(config_path)
+    configurations = open_config_files(config_path)
 
-    for item in conf:
-        item_type = item['title']
+    for config in configurations:
+        item_type = config['title']
         is_possible = True
         supports_multi_data = False
 
-        for elem in item.keys():
+        for elem in config.keys():
             # The dataset should contain at
             # least the minimum required datapoints.
             if elem == 'min_datapoints':
-                if props[0] < item[elem]:
+                if props["dataset_length"] < config[elem]:
                     is_possible = False
             #The dataset should not contain more
             #than the maximum number off supported
             #datapoints.
             if elem == 'max_datapoints':
-                if item[elem] != 'inf':
-                    if (props[0] > item[elem]):
+                if config[elem] != 'inf':
+                    if (props["dataset_length"] > config[elem]):
                         is_possible = False
 
             #If the data contains a date, the visualization
             #has to support date-types.
             if elem == 'datesupport':
-                if props[2]:
-                    if item[elem] != props[2]:
+                if props["has_date"]:
+                    if config[elem] != props["has_date"]:
                         is_possible = False
             if elem == 'multiple_data':
-                supports_multi_data = item[elem]
+                supports_multi_data = config[elem]
 
             if elem == 'lexical_required':
-                if item[elem] == True:
-                    if not props[4]:
+                if config[elem] == True:
+                    if not props["lexicographic"]:
                         is_possible = False
 
             #Checks if the input order of the desired viz-types matches
             #the requirements.
             if ((elem == 'vistypes') and is_possible):
-                is_possible = checkInputOrder(elem, item, props, supports_multi_data)
+                is_possible = checkInputOrder(elem, config, props, supports_multi_data)
         if is_possible:
             result.append(item_type)
     return result
 
 
-def checkInputOrder(elem, item, props, supportsMultiData):
+def checkInputOrder(elem, config, props, supportsMultiData):
     """Checks if the input vistypes match the requirements."""
     isPossible = True
     req_vtypes = []
-    for i in item[elem]:
+    for i in config[elem]:
         for j in i:
-            req_vtypes.append(i[j])
+            if type(i[j]) == str:
+                req_vtypes.append(set([i[j]]))
+            else:
+                req_vtypes.append(set(i[j]))
 
     # Length required to render a single dataset.
     singleDataLength = len(req_vtypes)
 
+    #TODO: Check if the following formula fits all possible chart types
+    #       Might not work for multidimensional graphs or network graphs
+
+    # Subract 1 for X-value from both sets
+    # Number of required datapoint-values per element must fit N times
+    #       into the available data without rest
     eachValCount = len(req_vtypes) - 1
-    dataValCount = len(props[3]) - 1
+    dataValCount = len(props["viz_types"]) - 1
     if ((dataValCount % eachValCount) != 0):
         isPossible = False
 
     # Determines the given types.
-    if (len(props[3]) >= singleDataLength):
-        given_types = props[3][:singleDataLength]
+    if (len(props["viz_types"]) >= singleDataLength):
+        given_types = props["viz_types"][:singleDataLength]
     else:
-        given_types = props[3]
+        given_types = props["viz_types"]
 
-    datalength = len(props[3])
+    datalength = len(props["viz_types"])
     requiredlength = len(req_vtypes)
 
     # If the data is larger than the single length it must match the
@@ -221,6 +227,7 @@ def checkInputOrder(elem, item, props, supportsMultiData):
 
     if not data_matches:
         isPossible = False
+    else:
 
     if (datalength > requiredlength):
         if supportsMultiData:

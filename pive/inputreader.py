@@ -32,7 +32,7 @@ def load_input_source(input_source):
     """Load data from an arbitrary input source. Currently supported:
 	JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
 	is available."""
-    input_data = []
+    input_data = None
     try:
         input_data = load_json_from_file(input_source)
     except ValueError as e:
@@ -43,7 +43,6 @@ def load_input_source(input_source):
         pass
     else:
         return input_data
-
     if not input_data:
         try:
             input_data = load_json_string(input_source)
@@ -53,7 +52,6 @@ def load_input_source(input_source):
             pass
         except Exception as e:
             pass
-
     if not input_data:
         try:
             input_data = load_csv_from_file(input_source)
@@ -63,7 +61,6 @@ def load_input_source(input_source):
             pass
         except Exception as e:
             pass
-
     if not input_data:
         try:
             input_data = load_csv_string(input_source)
@@ -71,12 +68,11 @@ def load_input_source(input_source):
             pass
     return input_data
 
-
 def load_json_from_file(json_input):
     """Load a JSON File."""
-    fp = open(json_input, 'r')
-    inpt = json.load(fp, object_pairs_hook=OrderedDict)
-    return inpt
+    with open(json_input, 'r') as fp:
+        inpt = json.load(fp, object_pairs_hook=OrderedDict)
+        return inpt
 
 
 def load_json_string(json_input):
@@ -109,30 +105,30 @@ def load_csv_from_file(csv_input):
     """Loads the input from a csv file and returns
 	a list of ordered dictionaries for further processing."""
     data = []
-    csvfile = open(csv_input)
-    csvfile.seek(0)
-    dialect = csv.Sniffer().sniff(csvfile.read())
-    csvfile.seek(0)
-    isHeader = csv.Sniffer().has_header(csvfile.read())
-    csvfile.seek(0)
-    # The delimiter used in the dialect.
-    delimiterchar = dialect.delimiter
-    # Opens the input file with the determined delimiter.
-    dictreader = csv.DictReader(csvfile, dialect=dialect)
+    with open(csv_input) as csvfile:
+        csvfile.seek(0)
+        dialect = csv.Sniffer().sniff(csvfile.read())
+        csvfile.seek(0)
+        isHeader = csv.Sniffer().has_header(csvfile.read())
+        csvfile.seek(0)
+        # The delimiter used in the dialect.
+        delimiterchar = dialect.delimiter
+        # Opens the input file with the determined delimiter.
+        dictreader = csv.DictReader(csvfile, dialect=dialect)
 
-    header = dictreader.fieldnames
+        header = dictreader.fieldnames
 
-    #Translate the data into a list of dictionaries.
-    for row in dictreader:
+        #Translate the data into a list of dictionaries.
+        for row in dictreader:
 
-        ordered_data = OrderedDict()
-        for item in header:
-            value = parse_value_type(row[item])
+            ordered_data = OrderedDict()
+            for item in header:
+                value = parse_value_type(row[item])
 
-            ordered_data[item] = value
+                ordered_data[item] = value
 
-        data.append(ordered_data)
-    return data
+            data.append(ordered_data)
+        return data
 
 
 def parse_value_type(value):

@@ -114,7 +114,6 @@ class BaseVisualization:
 
         html_template = self.load_template_file('%shtml.jinja' % (self._template_url))
         js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
-        print "What"
 
         # Default dataset url is used when nothing was explicitly passed.
         if not self._dataset_url:
