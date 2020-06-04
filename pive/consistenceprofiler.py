@@ -46,6 +46,7 @@ def get_datapoint_types(datapoint):
 
         # If the datapoint contains a float or int it will
         # be considered as a numerical datapoint.
+        #TODO: Is is_float necessery, because if it is not a sensible floar value it wont be a sensible int value either
         if is_float(item) or is_int(item):
             #types.append("number")
             typeset.add("number")
@@ -87,6 +88,8 @@ def is_string(item):
 
 def is_date(item):
     """Checks if the item is a date."""
+    #TODO: Should this be limited to RFC3339 and ISO8601 formatted datestrings to circumvent strange dateutil behaviour?
+    #   If yes, check datestring with regex
     try:
         parse(item)
         return True
@@ -114,7 +117,6 @@ def is_int(value):
 
 def get_consistent_types(dataset):
     # List of possible viztype candidates
-    #FIXME: Datapoints with multiple types can shift order around.
     current_types = get_datapoint_types(dataset[0])
     for data_point in dataset[1:]:
         test_types = get_datapoint_types(data_point)

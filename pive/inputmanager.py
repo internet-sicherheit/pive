@@ -42,6 +42,8 @@ class InputManager(object):
     # Input Managers can try to merge false datapoints or not.
     def __init__(self, mergedata=False):
         self.__mergedata = mergedata
+        #TODO: Should __contains_datefields be a property of InputManager
+        #   and if yes, should it be set the way it is
         self.__contains_datefields = False
 
     def read(self, source):
@@ -69,6 +71,7 @@ class InputManager(object):
 
     def has_date_points(self):
         """Returns true if the data contains dates."""
+        #FIXME: Value only set after call to map(self, dataset)
         return self.__contains_datefields
 
     def __is_dataset_consistent(self, dataset):
