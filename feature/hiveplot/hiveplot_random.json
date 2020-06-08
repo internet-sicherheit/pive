@@ -1,0 +1,881 @@
+[
+  {
+    "ID": 0,
+    "TYPE": "A",
+    "WEIGHT": 0.76,
+    "LINKS": [
+      97,
+      95,
+      85
+    ]
+  },
+  {
+    "ID": 1,
+    "TYPE": "B",
+    "WEIGHT": 0.7,
+    "LINKS": [
+      93,
+      75,
+      74,
+      40
+    ]
+  },
+  {
+    "ID": 2,
+    "TYPE": "B",
+    "WEIGHT": 0.69,
+    "LINKS": [
+      89,
+      93
+    ]
+  },
+  {
+    "ID": 3,
+    "TYPE": "A",
+    "WEIGHT": 0.84,
+    "LINKS": [
+      26,
+      40
+    ]
+  },
+  {
+    "ID": 4,
+    "TYPE": "B",
+    "WEIGHT": 0.67,
+    "LINKS": [
+      59
+    ]
+  },
+  {
+    "ID": 5,
+    "TYPE": "C",
+    "WEIGHT": 0.08,
+    "LINKS": [
+      7,
+      10
+    ]
+  },
+  {
+    "ID": 6,
+    "TYPE": "B",
+    "WEIGHT": 0.25,
+    "LINKS": [
+      24,
+      44
+    ]
+  },
+  {
+    "ID": 7,
+    "TYPE": "B",
+    "WEIGHT": 0.44,
+    "LINKS": []
+  },
+  {
+    "ID": 8,
+    "TYPE": "B",
+    "WEIGHT": 0.65,
+    "LINKS": [
+      13,
+      77,
+      96
+    ]
+  },
+  {
+    "ID": 9,
+    "TYPE": "B",
+    "WEIGHT": 0.04,
+    "LINKS": []
+  },
+  {
+    "ID": 10,
+    "TYPE": "A",
+    "WEIGHT": 0.82,
+    "LINKS": [
+      62
+    ]
+  },
+  {
+    "ID": 11,
+    "TYPE": "B",
+    "WEIGHT": 0.43,
+    "LINKS": [
+      6,
+      67,
+      99
+    ]
+  },
+  {
+    "ID": 12,
+    "TYPE": "B",
+    "WEIGHT": 0.53,
+    "LINKS": []
+  },
+  {
+    "ID": 13,
+    "TYPE": "B",
+    "WEIGHT": 0.88,
+    "LINKS": []
+  },
+  {
+    "ID": 14,
+    "TYPE": "B",
+    "WEIGHT": 0.39,
+    "LINKS": [
+      61,
+      24
+    ]
+  },
+  {
+    "ID": 15,
+    "TYPE": "B",
+    "WEIGHT": 0.5,
+    "LINKS": [
+      18,
+      3
+    ]
+  },
+  {
+    "ID": 16,
+    "TYPE": "C",
+    "WEIGHT": 0.66,
+    "LINKS": []
+  },
+  {
+    "ID": 17,
+    "TYPE": "C",
+    "WEIGHT": 0.78,
+    "LINKS": [
+      27,
+      98,
+      90,
+      43
+    ]
+  },
+  {
+    "ID": 18,
+    "TYPE": "B",
+    "WEIGHT": 0.81,
+    "LINKS": [
+      62
+    ]
+  },
+  {
+    "ID": 19,
+    "TYPE": "B",
+    "WEIGHT": 0.02,
+    "LINKS": [
+      37
+    ]
+  },
+  {
+    "ID": 20,
+    "TYPE": "C",
+    "WEIGHT": 0.7,
+    "LINKS": [
+      93,
+      4,
+      13,
+      34
+    ]
+  },
+  {
+    "ID": 21,
+    "TYPE": "A",
+    "WEIGHT": 0.99,
+    "LINKS": []
+  },
+  {
+    "ID": 22,
+    "TYPE": "C",
+    "WEIGHT": 0.32,
+    "LINKS": [
+      42
+    ]
+  },
+  {
+    "ID": 23,
+    "TYPE": "C",
+    "WEIGHT": 0.6,
+    "LINKS": [
+      81,
+      22
+    ]
+  },
+  {
+    "ID": 24,
+    "TYPE": "C",
+    "WEIGHT": 0.68,
+    "LINKS": []
+  },
+  {
+    "ID": 25,
+    "TYPE": "B",
+    "WEIGHT": 0.88,
+    "LINKS": []
+  },
+  {
+    "ID": 26,
+    "TYPE": "A",
+    "WEIGHT": 0.1,
+    "LINKS": [
+      25,
+      56,
+      86
+    ]
+  },
+  {
+    "ID": 27,
+    "TYPE": "C",
+    "WEIGHT": 0.9,
+    "LINKS": [
+      24
+    ]
+  },
+  {
+    "ID": 28,
+    "TYPE": "A",
+    "WEIGHT": 0.96,
+    "LINKS": [
+      6,
+      17,
+      60
+    ]
+  },
+  {
+    "ID": 29,
+    "TYPE": "C",
+    "WEIGHT": 0.2,
+    "LINKS": [
+      50,
+      76,
+      30,
+      23
+    ]
+  },
+  {
+    "ID": 30,
+    "TYPE": "A",
+    "WEIGHT": 0.1,
+    "LINKS": []
+  },
+  {
+    "ID": 31,
+    "TYPE": "C",
+    "WEIGHT": 0.53,
+    "LINKS": [
+      25
+    ]
+  },
+  {
+    "ID": 32,
+    "TYPE": "A",
+    "WEIGHT": 0.16,
+    "LINKS": [
+      68,
+      92,
+      28,
+      80
+    ]
+  },
+  {
+    "ID": 33,
+    "TYPE": "B",
+    "WEIGHT": 0.53,
+    "LINKS": [
+      66,
+      40,
+      58,
+      43
+    ]
+  },
+  {
+    "ID": 34,
+    "TYPE": "B",
+    "WEIGHT": 0.82,
+    "LINKS": [
+      99,
+      76,
+      23
+    ]
+  },
+  {
+    "ID": 35,
+    "TYPE": "A",
+    "WEIGHT": 0.11,
+    "LINKS": [
+      38,
+      81
+    ]
+  },
+  {
+    "ID": 36,
+    "TYPE": "A",
+    "WEIGHT": 0.59,
+    "LINKS": []
+  },
+  {
+    "ID": 37,
+    "TYPE": "C",
+    "WEIGHT": 0.71,
+    "LINKS": []
+  },
+  {
+    "ID": 38,
+    "TYPE": "B",
+    "WEIGHT": 0.15,
+    "LINKS": [
+      95
+    ]
+  },
+  {
+    "ID": 39,
+    "TYPE": "C",
+    "WEIGHT": 0.77,
+    "LINKS": []
+  },
+  {
+    "ID": 40,
+    "TYPE": "A",
+    "WEIGHT": 0.06,
+    "LINKS": []
+  },
+  {
+    "ID": 41,
+    "TYPE": "A",
+    "WEIGHT": 0.71,
+    "LINKS": [
+      52,
+      78
+    ]
+  },
+  {
+    "ID": 42,
+    "TYPE": "C",
+    "WEIGHT": 0.05,
+    "LINKS": [
+      97,
+      28,
+      93
+    ]
+  },
+  {
+    "ID": 43,
+    "TYPE": "C",
+    "WEIGHT": 0.14,
+    "LINKS": [
+      49,
+      72,
+      29,
+      30
+    ]
+  },
+  {
+    "ID": 44,
+    "TYPE": "B",
+    "WEIGHT": 0.8,
+    "LINKS": [
+      44,
+      75
+    ]
+  },
+  {
+    "ID": 45,
+    "TYPE": "C",
+    "WEIGHT": 0.74,
+    "LINKS": [
+      44
+    ]
+  },
+  {
+    "ID": 46,
+    "TYPE": "B",
+    "WEIGHT": 0.77,
+    "LINKS": [
+      9,
+      17
+    ]
+  },
+  {
+    "ID": 47,
+    "TYPE": "B",
+    "WEIGHT": 0.89,
+    "LINKS": [
+      87,
+      78,
+      82
+    ]
+  },
+  {
+    "ID": 48,
+    "TYPE": "C",
+    "WEIGHT": 0.88,
+    "LINKS": [
+      49,
+      34
+    ]
+  },
+  {
+    "ID": 49,
+    "TYPE": "C",
+    "WEIGHT": 0.98,
+    "LINKS": [
+      78,
+      76,
+      22
+    ]
+  },
+  {
+    "ID": 50,
+    "TYPE": "B",
+    "WEIGHT": 0.13,
+    "LINKS": [
+      84,
+      19,
+      10,
+      59
+    ]
+  },
+  {
+    "ID": 51,
+    "TYPE": "A",
+    "WEIGHT": 0.76,
+    "LINKS": [
+      94
+    ]
+  },
+  {
+    "ID": 52,
+    "TYPE": "A",
+    "WEIGHT": 0.57,
+    "LINKS": [
+      42,
+      2
+    ]
+  },
+  {
+    "ID": 53,
+    "TYPE": "B",
+    "WEIGHT": 0.29,
+    "LINKS": [
+      4,
+      61
+    ]
+  },
+  {
+    "ID": 54,
+    "TYPE": "A",
+    "WEIGHT": 0.94,
+    "LINKS": []
+  },
+  {
+    "ID": 55,
+    "TYPE": "C",
+    "WEIGHT": 0.25,
+    "LINKS": [
+      12
+    ]
+  },
+  {
+    "ID": 56,
+    "TYPE": "A",
+    "WEIGHT": 0.77,
+    "LINKS": [
+      35,
+      37,
+      99
+    ]
+  },
+  {
+    "ID": 57,
+    "TYPE": "A",
+    "WEIGHT": 0.22,
+    "LINKS": [
+      87,
+      3,
+      33,
+      74
+    ]
+  },
+  {
+    "ID": 58,
+    "TYPE": "B",
+    "WEIGHT": 0.62,
+    "LINKS": [
+      34,
+      57,
+      47
+    ]
+  },
+  {
+    "ID": 59,
+    "TYPE": "A",
+    "WEIGHT": 0.48,
+    "LINKS": [
+      63,
+      53,
+      78
+    ]
+  },
+  {
+    "ID": 60,
+    "TYPE": "A",
+    "WEIGHT": 0.2,
+    "LINKS": [
+      78
+    ]
+  },
+  {
+    "ID": 61,
+    "TYPE": "A",
+    "WEIGHT": 0.03,
+    "LINKS": [
+      12
+    ]
+  },
+  {
+    "ID": 62,
+    "TYPE": "B",
+    "WEIGHT": 0.93,
+    "LINKS": [
+      56,
+      59,
+      16,
+      67
+    ]
+  },
+  {
+    "ID": 63,
+    "TYPE": "B",
+    "WEIGHT": 0.63,
+    "LINKS": [
+      0
+    ]
+  },
+  {
+    "ID": 64,
+    "TYPE": "C",
+    "WEIGHT": 0.66,
+    "LINKS": [
+      65,
+      12
+    ]
+  },
+  {
+    "ID": 65,
+    "TYPE": "A",
+    "WEIGHT": 0.23,
+    "LINKS": [
+      47,
+      91
+    ]
+  },
+  {
+    "ID": 66,
+    "TYPE": "A",
+    "WEIGHT": 0.48,
+    "LINKS": [
+      31,
+      74,
+      10
+    ]
+  },
+  {
+    "ID": 67,
+    "TYPE": "A",
+    "WEIGHT": 0.88,
+    "LINKS": [
+      54,
+      55,
+      25
+    ]
+  },
+  {
+    "ID": 68,
+    "TYPE": "C",
+    "WEIGHT": 0.15,
+    "LINKS": [
+      28
+    ]
+  },
+  {
+    "ID": 69,
+    "TYPE": "C",
+    "WEIGHT": 0.89,
+    "LINKS": [
+      84,
+      81,
+      70
+    ]
+  },
+  {
+    "ID": 70,
+    "TYPE": "C",
+    "WEIGHT": 0.05,
+    "LINKS": [
+      91,
+      25
+    ]
+  },
+  {
+    "ID": 71,
+    "TYPE": "C",
+    "WEIGHT": 0.09,
+    "LINKS": [
+      20
+    ]
+  },
+  {
+    "ID": 72,
+    "TYPE": "C",
+    "WEIGHT": 0.35,
+    "LINKS": [
+      19,
+      32,
+      63,
+      83
+    ]
+  },
+  {
+    "ID": 73,
+    "TYPE": "A",
+    "WEIGHT": 0.72,
+    "LINKS": [
+      53,
+      72,
+      22
+    ]
+  },
+  {
+    "ID": 74,
+    "TYPE": "A",
+    "WEIGHT": 0.32,
+    "LINKS": [
+      18,
+      70,
+      27,
+      75
+    ]
+  },
+  {
+    "ID": 75,
+    "TYPE": "A",
+    "WEIGHT": 0.8,
+    "LINKS": [
+      4,
+      20
+    ]
+  },
+  {
+    "ID": 76,
+    "TYPE": "B",
+    "WEIGHT": 0.51,
+    "LINKS": [
+      49
+    ]
+  },
+  {
+    "ID": 77,
+    "TYPE": "A",
+    "WEIGHT": 0.27,
+    "LINKS": [
+      74,
+      53,
+      0
+    ]
+  },
+  {
+    "ID": 78,
+    "TYPE": "A",
+    "WEIGHT": 0.62,
+    "LINKS": [
+      46,
+      42
+    ]
+  },
+  {
+    "ID": 79,
+    "TYPE": "A",
+    "WEIGHT": 0.77,
+    "LINKS": [
+      31,
+      37
+    ]
+  },
+  {
+    "ID": 80,
+    "TYPE": "C",
+    "WEIGHT": 0.49,
+    "LINKS": [
+      35,
+      85,
+      91,
+      96
+    ]
+  },
+  {
+    "ID": 81,
+    "TYPE": "A",
+    "WEIGHT": 0.55,
+    "LINKS": [
+      94,
+      8
+    ]
+  },
+  {
+    "ID": 82,
+    "TYPE": "C",
+    "WEIGHT": 0.98,
+    "LINKS": [
+      77
+    ]
+  },
+  {
+    "ID": 83,
+    "TYPE": "B",
+    "WEIGHT": 0.28,
+    "LINKS": [
+      77,
+      48
+    ]
+  },
+  {
+    "ID": 84,
+    "TYPE": "B",
+    "WEIGHT": 0.5,
+    "LINKS": [
+      30,
+      41
+    ]
+  },
+  {
+    "ID": 85,
+    "TYPE": "A",
+    "WEIGHT": 0.33,
+    "LINKS": [
+      30
+    ]
+  },
+  {
+    "ID": 86,
+    "TYPE": "B",
+    "WEIGHT": 0.36,
+    "LINKS": [
+      33,
+      55,
+      98,
+      81
+    ]
+  },
+  {
+    "ID": 87,
+    "TYPE": "B",
+    "WEIGHT": 0.36,
+    "LINKS": []
+  },
+  {
+    "ID": 88,
+    "TYPE": "B",
+    "WEIGHT": 0.12,
+    "LINKS": [
+      46,
+      78
+    ]
+  },
+  {
+    "ID": 89,
+    "TYPE": "B",
+    "WEIGHT": 0.32,
+    "LINKS": [
+      19,
+      86,
+      0
+    ]
+  },
+  {
+    "ID": 90,
+    "TYPE": "C",
+    "WEIGHT": 0.67,
+    "LINKS": [
+      15,
+      64,
+      89
+    ]
+  },
+  {
+    "ID": 91,
+    "TYPE": "C",
+    "WEIGHT": 0.21,
+    "LINKS": []
+  },
+  {
+    "ID": 92,
+    "TYPE": "C",
+    "WEIGHT": 0.45,
+    "LINKS": [
+      95,
+      27,
+      68
+    ]
+  },
+  {
+    "ID": 93,
+    "TYPE": "A",
+    "WEIGHT": 0.57,
+    "LINKS": [
+      24
+    ]
+  },
+  {
+    "ID": 94,
+    "TYPE": "B",
+    "WEIGHT": 0.74,
+    "LINKS": [
+      79,
+      8,
+      14
+    ]
+  },
+  {
+    "ID": 95,
+    "TYPE": "C",
+    "WEIGHT": 0.79,
+    "LINKS": [
+      10
+    ]
+  },
+  {
+    "ID": 96,
+    "TYPE": "B",
+    "WEIGHT": 0.35,
+    "LINKS": [
+      90
+    ]
+  },
+  {
+    "ID": 97,
+    "TYPE": "B",
+    "WEIGHT": 0.87,
+    "LINKS": [
+      34,
+      85,
+      8,
+      99
+    ]
+  },
+  {
+    "ID": 98,
+    "TYPE": "A",
+    "WEIGHT": 0.17,
+    "LINKS": [
+      98,
+      13,
+      17
+    ]
+  },
+  {
+    "ID": 99,
+    "TYPE": "C",
+    "WEIGHT": 0.12,
+    "LINKS": []
+  }
+]
