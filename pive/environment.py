@@ -39,6 +39,7 @@ CHART_BUBBLE = 'bubblechart'
 CHART_BAR = 'barchart'
 CHART_PIE = 'piechart'
 CHART_CHORD = 'chordchart'
+CHART_HIVE = 'hiveplot'
 
 # Bundles all essential access methods to render visualizations.
 class Environment(object):
@@ -86,6 +87,8 @@ class Environment(object):
         self.__has_datefields = self.__inputmanager.has_date_points()
         # Converting the datakeys into strings.
         self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
+        print("ENVIRONMENT.PY: load()")
+        print("ENVIRONMENT.PY: self.__data: ", self.__data)
         return self.__suitables
 
     @staticmethod
@@ -141,4 +144,5 @@ class Environment(object):
         visualization in another document."""
         js = chart.get_js_code()
         data = chart.get_json_dataset()
+        print("ENVIRONMENT.PY: render_code data: ", data)
         return (js, data)

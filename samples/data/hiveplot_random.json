@@ -1,0 +1,96 @@
+[
+  {
+    "ID": 0,
+    "TYPE": "C",
+    "WEIGHT": 0.54,
+    "LINKS": [
+      3,
+      0
+    ]
+  },
+  {
+    "ID": 1,
+    "TYPE": "C",
+    "WEIGHT": 0.75,
+    "LINKS": [
+      8,
+      6,
+      0
+    ]
+  },
+  {
+    "ID": 2,
+    "TYPE": "C",
+    "WEIGHT": 0.42,
+    "LINKS": [
+      7,
+      8
+    ]
+  },
+  {
+    "ID": 3,
+    "TYPE": "C",
+    "WEIGHT": 0.64,
+    "LINKS": [
+      8
+    ]
+  },
+  {
+    "ID": 4,
+    "TYPE": "B",
+    "WEIGHT": 0.55,
+    "LINKS": [
+      8
+    ]
+  },
+  {
+    "ID": 5,
+    "TYPE": "A",
+    "WEIGHT": 0.8,
+    "LINKS": [
+      4,
+      2,
+      0
+    ]
+  },
+  {
+    "ID": 6,
+    "TYPE": "B",
+    "WEIGHT": 0.02,
+    "LINKS": [
+      3,
+      1,
+      5,
+      4
+    ]
+  },
+  {
+    "ID": 7,
+    "TYPE": "C",
+    "WEIGHT": 0.25,
+    "LINKS": [
+      8
+    ]
+  },
+  {
+    "ID": 8,
+    "TYPE": "A",
+    "WEIGHT": 0.48,
+    "LINKS": [
+      1,
+      8,
+      7
+    ]
+  },
+  {
+    "ID": 9,
+    "TYPE": "B",
+    "WEIGHT": 0.65,
+    "LINKS": [
+      1,
+      0,
+      9,
+      7
+    ]
+  }
+]

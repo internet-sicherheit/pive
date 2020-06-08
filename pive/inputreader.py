@@ -33,6 +33,7 @@ def load_input_source(input_source):
 	JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
 	is available."""
     input_data = []
+    print("INPUTREADER.PY: load_input_source() begin")
     try:
         input_data = load_json_from_file(input_source)
     except ValueError as e:
@@ -69,6 +70,7 @@ def load_input_source(input_source):
             input_data = load_csv_string(input_source)
         except Exception as e:
             pass
+    print("INPUTREADER.PY: load_input_source() end")
     return input_data
 
 

@@ -27,26 +27,55 @@ def get_datapoint_types(datapoint):
     """Determines the datas visualization-types of a given datapoint.
 	Valid visualization-types are 'number', 'string' and 'time'"""
     types = []
+    isSource = False
+
+    # for checking hive initials
+    for key in datapoint:
+        if key == 'source' or key == 'target':
+            isSource = True
+
     for key in list(datapoint.keys()):
-
         item = datapoint[key]
-        if str(key).endswith("date") or str(key).endswith("time"):
-            types.append("time")
 
-        elif is_float(item) or is_int(item):
-            types.append("number")
+        if isinstance(item, dict) == True and isSource == True:
+            for key, value in item.items():
+                #print('key, value: ' , key, '->', value)
+                if str(key).endswith("date") or str(key).endswith("time"):
+                    types.append("time")
 
-        # Python 3 string determination.
-        elif isinstance(item, (str)):
-            types.append("string")
-        # Python 2.7 workaround to determine strings.
-        # Basestring was deprecated in Python 3.
-        else:
-            try:
-                if isinstance(item, basestring):
+                elif is_float(value) or is_int(value):
+                    types.append("number")
+
+                # Python 3 string determination.
+                elif isinstance(value, (str)):
                     types.append("string")
-            except TypeError:
-                pass
+                # Python 2.7 workaround to determine strings.
+                # Basestring was deprecated in Python 3.
+                else:
+                    try:
+                        if isinstance(value, basestring):
+                            types.append("string")
+                    except TypeError:
+                                pass
+        else:
+            item = datapoint[key]
+            if str(key).endswith("date") or str(key).endswith("time"):
+                types.append("time")
+
+            elif is_float(item) or is_int(item):
+                types.append("number")
+
+            # Python 3 string determination.
+            elif isinstance(item, (str)):
+                types.append("string")
+            # Python 2.7 workaround to determine strings.
+            # Basestring was deprecated in Python 3.
+            else:
+                try:
+                    if isinstance(item, basestring):
+                        types.append("string")
+                except TypeError:
+                    pass
 
     return types
 

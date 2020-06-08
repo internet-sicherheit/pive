@@ -1,0 +1,32 @@
+{
+    "title": "hiveplot",
+    "min_datapoints": 0,
+    "max_datapoints": "inf",
+    "multiple_data": false,  
+    "datesupport": false,    
+    "lexical_required": false,  
+    "vistypes": {
+        "source":[
+            {
+                "ID": "number"
+            },
+            {
+                "TYPE": "string"
+            },
+            {
+                "WEIGHT": "number"
+            }
+        ],
+        "target":[
+            {
+                "ID": "number"
+            },
+            {
+                "TYPE": "string"
+            },
+            {
+                "WEIGHT": "number"
+            }
+        ]
+    }
+}
