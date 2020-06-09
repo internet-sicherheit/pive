@@ -68,10 +68,11 @@ class BaseVisualization:
 
     def set_chart_colors(self, colors):
         """Basic Method."""
-        self.__colors = colors
+        self._colors = colors
 
     @abstractmethod
     def generate_visualization_dataset(self, dataset):
+        #TODO: Should this raise NotImpmenetedError?
         return
 
 
@@ -116,24 +117,17 @@ class BaseVisualization:
         js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
 
         # Default dataset url is used when nothing was explicitly passed.
-        if not self._dataset_url:
-            dataset_url = destination_url + '%s%s.json' % (os.sep, self._title)
-            self.set_dataset_url(dataset_url)
-            # By default, the dataset is stored directly in the visualizations javascript path,
-            # the templating engine then only references the relative path.
-            js = self.create_js(js_template, '%s.json' % (self._title))
-        else:
-            # When a dataset url was passed, the visualization references
-            # this as the absolute path to the dataset.
-            js = self.create_js(js_template, self._dataset_url)
+        data_output_path = destination_url + '%s%s.json' % (os.sep, self._title)
 
+
+        js = self.create_js(js_template, data_output_path)
         html = self.create_html(html_template)
 
         self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
         self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
 
         visdata = self.generate_visualization_dataset(self._dataset)
-        self.write_dataset_file(visdata, self._dataset_url)
+        self.write_dataset_file(visdata, data_output_path)
 
     def set_height(self, height):
         """Basic method for height driven data."""
@@ -142,7 +136,7 @@ class BaseVisualization:
         if (height <= 0):
             print ("Warning: Negative or zero height parameter. Using default settings instead.")
             height = default.height
-        self.__height = height
+        self._height = height
 
     def set_width(self, width):
         """Basic method for width driven data."""
@@ -151,7 +145,7 @@ class BaseVisualization:
         if (width <= 0):
             print ("Warning: Negative or zero width parameter. Using default settings instead.")
             width = default.width
-        self.__width = width
+        self._width = width
 
     def set_dimension(self, width, height):
         self.set_width(width)

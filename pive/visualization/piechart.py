@@ -13,6 +13,7 @@
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
 # LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
@@ -43,35 +44,31 @@ class Chart(bv.BaseVisualization):
 
         # Metadata
         self._title = 'piechart'
-        self.__template_name = 'piechart'
-        self.__dataset = dataset
+        self._template_name = 'piechart'
+        self._dataset = dataset
         self._dataset_url = ''
 
         realpath = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '%s%s' % (realpath, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._template_url = '%s%s' % (realpath, default.template_path)
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__colors = default.chartcolors
-        self.__highlightopacity = default.circleopacity
-
-
-    def set_title(self, title):
-        self._title = title
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._colors = default.chartcolors
+        self._highlightopacity = default.circleopacity
 
     def setDataKeys(self, datakeys):
-        self.__datakeys = datakeys
+        self._datakeys = datakeys
 
     def sethighlightOpacity(self, opacity):
-        self.__highlightopacity = opacity
+        self._highlightopacity = opacity
 
     def set_chart_colors(self, colors):
         """Basic Method."""
-        self.__colors = colors
+        self._colors = colors
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
@@ -85,103 +82,20 @@ class Chart(bv.BaseVisualization):
             visdataset.append(visdatapoint)
         return visdataset
 
-    def write_dataset_file(self, dataset, dataset_url):
-        outp = open(dataset_url, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-        print ('Writing: %s' % (dataset_url))
-
     def setScales(self, scales):
-        self.__scales = scales
-
-
-    def create_html(self, template):
-        templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
-
-        outputText = template.render(templateVars)
-        return outputText
+        self._scales = scales
 
     def create_js(self, template, dataset_url):
-        templateVars = {'t_width': self.__width,
-                        't_height': self.__height,
-                        't_padding': self.__padding,
-                        't_datakeys': self.__datakeys,
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
+                        't_datakeys': self._datakeys,
                         't_url': dataset_url,
-                        't_colors': self.__colors,
-                        't_highlightopacity': self.__highlightopacity,
+                        't_colors': self._colors,
+                        't_highlightopacity': self._highlightopacity,
                         't_div_hook': self._div_hook,
-                        't_pive_version' : self.__version}
+                        't_pive_version' : self._version}
 
         outputText = template.render(templateVars)
         return outputText
 
-    def write_file(self, output, destination_url, filename):
-
-        dest_file = '%s%s' % (destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print ("Folder does not exist. Creating folder '%s'. " % (destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print ('Writing: %s' % (dest_file))
-
-        for line in output:
-            f.write(line)
-
-        f.close()
-
-
-    def get_js_code(self):
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-        js = self.create_js(js_template, self._dataset_url)
-        return js
-
-
-    def get_json_dataset(self):
-        return self.generate_visualization_dataset(self.__dataset)
-
-
-    def create_visualization_files(self, destination_url):
-
-        html_template = self.load_template_file('%shtml.jinja' % (self.__template_url))
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-
-        # Default dataset url is used when nothing was explicitly passed.
-        if not self._dataset_url:
-            dataset_url = destination_url + '%s%s.json' % (os.sep, self._title)
-            self.set_dataset_url(dataset_url)
-
-        js = self.create_js(js_template, self._dataset_url)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
-        self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
-
-        visdata = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(visdata, self._dataset_url)
-
-
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError("Integer expected, got %s instead." % (type(height)))
-        if (height <= 0):
-            print ("Warning: Negative or zero height parameter. Using default settings instead.")
-            height = default.height
-        self.__height = height
-
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError("Integer expected, got %s instead." % (type(width)))
-        if (width <= 0):
-            print ("Warning: Negative or zero width parameter. Using default settings instead.")
-            width = default.width
-        self.__width = width
-
-    def set_dimension(self, width, height):
-        self.set_width(width)
-        self.set_height(height)

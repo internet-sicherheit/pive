@@ -56,83 +56,76 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
 
         realpath = os.path.dirname(os.path.realpath(__file__))
         self._template_url = '%s%s' % (realpath, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__viewport = viewport
-        self.__jumplength = jumplength
-        self.__xlabel = default.xlabel
-        self.__ylabel = default.ylabel
-        self.__label_size = default.label_size
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._viewport = viewport
+        self._jumplength = jumplength
+        self._xlabel = default.xlabel
+        self._ylabel = default.ylabel
+        self._label_size = default.label_size
 
         if times:
-            self.__scales = default.timescales
+            self._scales = default.timescales
         else:
-            self.__scales = default.scales
+            self._scales = default.scales
 
-        self.__timelabel = default.timelabel
-        self.__timeformat = default.isotimeformat
-        self.__iconwidth = default.iconwidth
-        self.__iconheight = default.iconheight
-        self.__iconcolor = default.iconcolor
-        self.__iconhighlight = default.iconhighlight
-        self.__colors = default.chartcolors
+        self._timelabel = default.timelabel
+        self._timeformat = default.isotimeformat
+        self._iconwidth = default.iconwidth
+        self._iconheight = default.iconheight
+        self._iconcolor = default.iconcolor
+        self._iconhighlight = default.iconhighlight
+        self._colors = default.chartcolors
 
-        self.__circleopacity = default.circleopacity
-        self.__highlightfactor = default.highlightfactor
-        self.__minradius = default.minradius
-        self.__maxradius = default.maxradius
+        self._circleopacity = default.circleopacity
+        self._highlightfactor = default.highlightfactor
+        self._minradius = default.minradius
+        self._maxradius = default.maxradius
 
         #Axis properties.
-        self.__shape_rendering = default.shape_rendering
-        self.__line_stroke = default.line_stroke
-        self.__font_size = default.font_size
-
-    # def set_title(self, title):
-    #     self._title = title
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
 
     def getViewport(self):
-        return self.__viewport
+        return self._viewport
 
     def set_labels(self, labels):
-        self.__xlabel = labels[0]
-        self.__ylabel = labels[1]
+        self._xlabel = labels[0]
+        self._ylabel = labels[1]
 
     def setDataKeys(self, datakeys):
-        self.__datakeys = datakeys
+        self._datakeys = datakeys
 
     def setCircleOpacity(self, opacity):
-        self.__circleopacity = opacity
+        self._circleopacity = opacity
 
     def setHighlightFactor(self, factor):
-        self.__highlightfactor = factor
+        self._highlightfactor = factor
 
     def setMinRadius(self, radius):
-        self.__minradius = radius
+        self._minradius = radius
 
     def setMaxRadius(self, radius):
-        self.__maxradius = radius
+        self._maxradius = radius
 
     def setTimeProperties(self, timelabel, timeformat):
         """Basic Method for time supporting visualizations."""
-        self.__timeformat = timeformat
-        self.__timelabel = timelabel
+        self._timeformat = timeformat
+        self._timelabel = timelabel
 
     def setIconProperties(self, iconwidth, iconheight, iconcolor, iconhighlight):
         """Basic Method for viewport driven data.
 		Defines the icon properties. All arguments required."""
-        self.__iconwidth = iconwidth
-        self.__iconheight = iconheight
-        self.__iconcolor = iconcolor
-        self.__iconhighlight = iconhighlight
-
-    def set_chart_colors(self, colors):
-        """Basic Method."""
-        self.__colors = colors
+        self._iconwidth = iconwidth
+        self._iconheight = iconheight
+        self._iconcolor = iconcolor
+        self._iconhighlight = iconhighlight
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
@@ -159,108 +152,41 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
             visdataset.append(visdatapoint)
         return visdataset
 
-    def write_dataset_file(self, dataset, dataset_url):
-        outp = open(dataset_url, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-        print ('Writing: %s' % (dataset_url))
-
     def setScales(self, scales):
-        self.__scales = scales
-
-
-    def create_html(self, template):
-        templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
-
-        outputText = template.render(templateVars)
-        return outputText
+        self._scales = scales
 
     def create_js(self, template, dataset_url):
-        templateVars = {'t_width': self.__width,
-                        't_height': self.__height,
-                        't_padding': self.__padding,
-                        't_viewport': self.__viewport,
-                        't_jumplength': self.__jumplength,
-                        't_xlabel': self.__xlabel,
-                        't_ylabel': self.__ylabel,
-                        't_timeformat': self.__timeformat,
-                        't_iconwidth': self.__iconwidth,
-                        't_iconheight': self.__iconheight,
-                        't_iconcolor': self.__iconcolor,
-                        't_iconhighlight': self.__iconhighlight,
-                        't_datakeys': self.__datakeys,
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
+                        't_viewport': self._viewport,
+                        't_jumplength': self._jumplength,
+                        't_xlabel': self._xlabel,
+                        't_ylabel': self._ylabel,
+                        't_timeformat': self._timeformat,
+                        't_iconwidth': self._iconwidth,
+                        't_iconheight': self._iconheight,
+                        't_iconcolor': self._iconcolor,
+                        't_iconhighlight': self._iconhighlight,
+                        't_datakeys': self._datakeys,
                         't_url': dataset_url,
-                        't_format': self.__timeformat,
-                        't_iso': self.__timeformat,
-                        't_scales': self.__scales,
-                        't_colors': self.__colors,
-                        't_highlightfactor': self.__highlightfactor,
-                        't_minradius': self.__minradius,
-                        't_maxradius': self.__maxradius,
-                        't_circleopacity': self.__circleopacity,
+                        't_format': self._timeformat,
+                        't_iso': self._timeformat,
+                        't_scales': self._scales,
+                        't_colors': self._colors,
+                        't_highlightfactor': self._highlightfactor,
+                        't_minradius': self._minradius,
+                        't_maxradius': self._maxradius,
+                        't_circleopacity': self._circleopacity,
                         't_div_hook': self._div_hook,
-                        't_font_size': self.__font_size,
-                        't_shape_rendering': self.__shape_rendering,
-                        't_line_stroke': self.__line_stroke,
-                        't_pive_version' : self.__version,
-                        't_axis_label_size' : self.__label_size}
+                        't_font_size': self._font_size,
+                        't_shape_rendering': self._shape_rendering,
+                        't_line_stroke': self._line_stroke,
+                        't_pive_version' : self._version,
+                        't_axis_label_size' : self._label_size}
 
         outputText = template.render(templateVars)
         return outputText
-
-    def write_file(self, output, destination_url, filename):
-
-        dest_file = '%s%s' % (destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print ("Folder does not exist. Creating folder '%s'. " % (destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print ('Writing: %s' % (dest_file))
-
-        for line in output:
-            f.write(line)
-
-        f.close()
-
-
-    def get_js_code(self):
-        js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
-        js = self.create_js(js_template, self._dataset_url)
-        return js
-
-
-    def get_json_dataset(self):
-        return self.generate_visualization_dataset(self._dataset)
-
-
-    # def create_visualization_files(self, destination_url):
-    #
-    #     html_template = self.load_template_file('%shtml.jinja' % (self.__template_url))
-    #     js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-    #
-    #     # Default dataset url is used when nothing was explicitly passed.
-    #     if not self._dataset_url:
-    #         dataset_url = destination_url + '%s%s.json' % (os.sep, self._title)
-    #         self.set_dataset_url(dataset_url)
-    #         # By default, the dataset is stored directly in the visualizations javascript path,
-    #         # the templating engine then only references the relative path.
-    #         js = self.create_js(js_template, '%s.json' % (self._title))
-    #     else:
-    #         # When a dataset url was passed, the visualization references
-    #         # this as the absolute path to the dataset.
-    #         js = self.create_js(js_template, self._dataset_url)
-    #
-    #     html = self.create_html(html_template)
-    #
-    #     self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
-    #     self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
-    #
-    #     visdata = self.generate_visualization_dataset(self.__dataset)
-    #     self.write_dataset_file(visdata, self._dataset_url)
 
     def setJumplength(self, jumplength):
         """Basic Method for viewport driven data."""
@@ -270,7 +196,7 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
             print ("Warning: Negative or zero jumplength parameter. Using default settings instead.")
             jumplength = default.jumplength
 
-        self.__jumplength = jumplength
+        self._jumplength = jumplength
 
     def setViewport(self, viewport):
         """Basic method for viewport driven data."""
@@ -279,27 +205,4 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
         if (viewport <= 0):
             print ("Warning: Negative or zero viewport parameter. Using default settings instead.")
             viewport = default.viewport
-        self.__viewport = viewport
-
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError("Integer expected, got %s instead." % (type(height)))
-        if (height <= 0):
-            print ("Warning: Negative or zero height parameter. Using default settings instead.")
-            height = default.height
-        self.__height = height
-
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError("Integer expected, got %s instead." % (type(width)))
-        if (width <= 0):
-            print ("Warning: Negative or zero width parameter. Using default settings instead.")
-            width = default.width
-        self.__width = width
-
-    def set_dimension(self, width, height):
-        self.set_width(width)
-        self.set_height(height)
-
+        self._viewport = viewport
