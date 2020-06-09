@@ -43,49 +43,49 @@ class Chart(bv.BaseVisualization):
 
         # Metadata
         self._title = 'chordchart'
-        self.__template_name = 'chordchart'
-        self.__dataset = dataset
+        self._template_name = 'chordchart'
+        self._dataset = dataset
         self._dataset_url = ''
 
         realpath = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '%s%s' % (realpath, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._template_url = '%s%s' % (realpath, default.template_path)
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__colors = default.chartcolors
-        self.__label_size = default.label_size
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._colors = default.chartcolors
+        self._label_size = default.label_size
 
         #Axis properties.
-        self.__shape_rendering = default.shape_rendering
-        self.__line_stroke = default.line_stroke
-        self.__font_size = default.font_size
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
 
         #Chord specific.
-        self.__textpadding = default.textpadding
-        self.__elementfontsizse = default.fontsize
-        self.__tickfontsize = default.ticksize
-        self.__ticksteps = default.ticksteps
-        self.__tickprefix = default.prefix
+        self._textpadding = default.textpadding
+        self._elementfontsizse = default.fontsize
+        self._tickfontsize = default.ticksize
+        self._ticksteps = default.ticksteps
+        self._tickprefix = default.prefix
 
     def set_title(self, title):
         self._title = title
 
     def setDataKeys(self, datakeys):
-        self.__datakeys = datakeys;
+        self._datakeys = datakeys;
 
     def setTicksteps(self, ticksteps):
-        self.__ticksteps = ticksteps;
+        self._ticksteps = ticksteps;
 
     def setTickprefix(self, tickprefix):
-        self.__tickprefix = tickprefix;
+        self._tickprefix = tickprefix;
 
     def set_chart_colors(self, colors):
         """Basic Method."""
-        self.__colors = colors
+        self._colors = colors
 
     def initMatrixRow(self, elements):
         """Initializes a matrix row with zero values."""
@@ -141,109 +141,24 @@ class Chart(bv.BaseVisualization):
 
         return visdataset
 
-    def write_dataset_file(self, dataset, dataset_url):
-        outp = open(dataset_url, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-        print ('Writing: %s' % (dataset_url))
-
-
-    def create_html(self, template):
-        templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
-
-        outputText = template.render(templateVars)
-        return outputText
-
 
     def create_js(self, template, dataset_url):
-        templateVars = {'t_width': self.__width,
-                        't_height': self.__height,
-                        't_padding': self.__padding,
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
                         't_url': dataset_url,
-                        't_colors': self.__colors,
-                        't_textpadding': self.__textpadding,
-                        't_elementFontSize': self.__elementfontsizse,
-                        't_tickFontSize': self.__tickfontsize,
-                        't_ticksteps': self.__ticksteps,
-                        't_tickprefix': self.__tickprefix,
+                        't_colors': self._colors,
+                        't_textpadding': self._textpadding,
+                        't_elementFontSize': self._elementfontsizse,
+                        't_tickFontSize': self._tickfontsize,
+                        't_ticksteps': self._ticksteps,
+                        't_tickprefix': self._tickprefix,
                         't_div_hook': self._div_hook,
-                        't_font_size': self.__font_size,
-                        't_shape_rendering': self.__shape_rendering,
-                        't_line_stroke': self.__line_stroke,
-                        't_pive_version' : self.__version,
-                        't_axis_label_size' : self.__label_size}
+                        't_font_size': self._font_size,
+                        't_shape_rendering': self._shape_rendering,
+                        't_line_stroke': self._line_stroke,
+                        't_pive_version' : self._version,
+                        't_axis_label_size' : self._label_size}
 
         outputText = template.render(templateVars)
         return outputText
-
-    def write_file(self, output, destination_url, filename):
-
-        dest_file = '%s%s' % (destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print ("Folder does not exist. Creating folder '%s'. " % (destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print ('Writing: %s' % (dest_file))
-
-        for line in output:
-            #f.write(line.encode('utf-8'))
-            f.write(line)
-
-        f.close()
-
-
-    def get_js_code(self):
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-        js = self.create_js(js_template, self._dataset_url)
-        return js
-
-
-    def get_json_dataset(self):
-        return self.generate_visualization_dataset(self.__dataset)
-
-
-    def create_visualization_files(self, destination_url):
-
-        html_template = self.load_template_file('%shtml.jinja' % (self.__template_url))
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-
-        # Default dataset url is used when nothing was explicitly passed.
-        if not self._dataset_url:
-            dataset_url = destination_url + '%s%s.json' % (os.sep, self._title)
-            self.set_dataset_url(dataset_url)
-
-        js = self.create_js(js_template, self._dataset_url)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
-        self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
-
-        visdata = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(visdata, self._dataset_url)
-
-
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError("Integer expected, got %s instead." % (type(height)))
-        if (height <= 0):
-            print ("Warning: Negative or zero height parameter. Using default settings instead.")
-            height = default.height
-        self.__height = height
-
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError("Integer expected, got %s instead." % (type(width)))
-        if (width <= 0):
-            print ("Warning: Negative or zero width parameter. Using default settings instead.")
-            width = default.width
-        self.__width = width
-
-    def set_dimension(self, width, height):
-        self.set_width(width)
-        self.set_height(height)
