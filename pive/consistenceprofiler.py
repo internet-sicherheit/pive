@@ -46,8 +46,7 @@ def get_datapoint_types(datapoint):
 
         # If the datapoint contains a float or int it will
         # be considered as a numerical datapoint.
-        #TODO: Is is_float necessery, because if it is not a sensible floar value it wont be a sensible int value either
-        if is_float(item) or is_int(item):
+        if is_int(item) or is_float(item):
             #types.append("number")
             typeset.add("number")
 
@@ -93,7 +92,7 @@ def is_date(item):
     try:
         parse(item)
         return True
-    except (ValueError,TypeError):
+    except (ValueError, TypeError, AttributeError):
         return False
 
 
@@ -110,7 +109,7 @@ def is_int(value):
     try:
         num_a = float(value)
         num_b = int(num_a)
-    except (ValueError,TypeError):
+    except (ValueError, TypeError, OverflowError):
         return False
     else:
         return num_a == num_b

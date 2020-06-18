@@ -31,6 +31,9 @@ def count_keys_in_raw_data(raw_dataset):
     keycount = {}
     for item in raw_dataset:
         try:
+            if item == {}:
+                raise AttributeError("Encountered mpty keyset")
+            #FIXME: Assumes order of item. Must either check for OrderedDict, unordered structure, or sort keys
             keyset = tuple(item.keys())
         except AttributeError as e:
             print ('Key counting failed. "%s" is not a key/value pair. Error: %s' % (item, e.args[0]))
