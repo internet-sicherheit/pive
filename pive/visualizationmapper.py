@@ -77,7 +77,8 @@ def get_visualization_properties(dataset, viz_types):
 def types_matching_data_requirements(given_types, required_types):
     """Verifies if all given types match the requirements.
     Requirements may vary and support multiple options."""
-    # TODO: Check for correct length of inputs
+    if len(given_types) != len(required_types):
+        return False
     return reduce(lambda x, zipped: x and (set(zipped[1]) & set(zipped[0])), list(zip(given_types, required_types)),
                   True)
 

@@ -32,7 +32,7 @@ def count_keys_in_raw_data(raw_dataset):
     for item in raw_dataset:
         try:
             if item == {}:
-                raise AttributeError("Encountered mpty keyset")
+                raise AttributeError("Encountered empty keyset")
             #FIXME: Assumes order of item. Must either check for OrderedDict, unordered structure, or sort keys
             keyset = tuple(item.keys())
         except AttributeError as e:
