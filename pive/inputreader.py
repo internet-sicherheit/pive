@@ -71,14 +71,14 @@ def load_input_source(input_source):
 def load_json_from_file(json_input):
     """Load a JSON File."""
     with open(json_input, 'r') as fp:
-        inpt = json.load(fp, object_pairs_hook=OrderedDict)
-        return inpt
+        inpt = json.load(fp)
+        return parse_json_to_internal(inpt)
 
 
 def load_json_string(json_input):
     """Load a JSON-String."""
-    inpt = json.loads(json_input, object_pairs_hook=OrderedDict)
-    return inpt
+    inpt = json.loads(json_input)
+    return parse_json_to_internal(inpt)
 
 
 def load_csv_string(csv_input):
@@ -156,3 +156,63 @@ def is_int(value):
         return False
     else:
         return num_a == num_b
+
+def parse_json_to_internal(json_element):
+
+    def name_gen(length):
+        index = 0
+        while index < length:
+            if index == 0:
+                yield 'x'
+            elif index == 1:
+                yield 'y'
+            elif index == 2:
+                yield 'z'
+            else:
+                yield 'a' + str(index-3)
+            index += 1
+
+
+    data = []
+
+    #check if there is an order tag
+    if type(json_element) == dict:
+        if json_element.get("order"):
+            for datapoint in json_element["data"]:
+                if len(datapoint) != len(json_element["order"]):
+                    raise ValueError("Length mismatch between datapoint and order")
+                internal_datapoint = OrderedDict()
+                for k,v in zip(json_element["order"],datapoint):
+                    internal_datapoint[k] = v
+                data.append(internal_datapoint)
+        else:
+            raise ValueError("Root JSON Element is an object, but has no order metadata")
+    #Otherwise the element should be a list
+    elif type(json_element) == list:
+        #If no input data exists we dont need to do anything further
+        if len(json_element) != 0:
+            first = json_element[0]
+            if type(first) == list:
+                if len(first) != 0:
+                    if type(first[0]) == dict and len(first[0].keys()) == 1:
+                        #if length other than 1 assume complex object
+                        #KV-Pairs available
+                        for datapoint in json_element:
+                            internal_datapoint = OrderedDict()
+                            for datum in datapoint:
+                                internal_datapoint[list(datum.keys())[0]] = list(datum.values())[0]
+                            data.append(internal_datapoint)
+                    else:
+                        for datapoint in json_element:
+                            internal_datapoint = OrderedDict()
+                            for k,v in zip(name_gen(len(datapoint)),datapoint):
+                                internal_datapoint[k] = v
+                            data.append(internal_datapoint)
+
+            else:
+                raise ValueError("Expected a list of coordinates")
+
+    else:
+        raise ValueError("Unsupported format")
+    return data
+

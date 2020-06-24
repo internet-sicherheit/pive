@@ -25,19 +25,21 @@
 
 from collections import OrderedDict
 
+from typing import Tuple, List, Any
+from typing import OrderedDict as OrderedDictionary
 
-def count_keys_in_raw_data(raw_dataset):
+
+def count_keys_in_raw_data(raw_dataset: List[OrderedDictionary[str, Any]]) -> OrderedDictionary[Tuple[str, ...], int]:
     """Counts all keysets in the dataset."""
-    keycount = {}
+    keycount = OrderedDict()
     for item in raw_dataset:
         try:
             if item == {}:
                 raise AttributeError("Encountered empty keyset")
-            #FIXME: Assumes order of item. Must either check for OrderedDict, unordered structure, or sort keys
             keyset = tuple(item.keys())
         except AttributeError as e:
-            print ('Key counting failed. "%s" is not a key/value pair. Error: %s' % (item, e.args[0]))
-            return {}
+            print('Key counting failed. "%s" is not a key/value pair. Error: %s' % (item, e.args[0]))
+            return OrderedDict()
         else:
             # For each new keyset occurence,
             # generate the intial entry.
@@ -49,7 +51,7 @@ def count_keys_in_raw_data(raw_dataset):
     return keycount
 
 
-def validate_data_keys(keyset_occurences):
+def validate_data_keys(keyset_occurences: OrderedDictionary[Tuple[str, ...], int]) -> List[str]:
     """Checks the dataset for valid keysets. The last contained keyset
 	with the most occurences will be assumed to be valid."""
     valid_tuple = ()
@@ -67,7 +69,7 @@ def validate_data_keys(keyset_occurences):
     return validkeys
 
 
-def generate_valid_dataset(valid_keyset, raw_dataset):
+def generate_valid_dataset(valid_keyset: List[str], raw_dataset: List[OrderedDictionary[str, Any]]) -> List[OrderedDictionary[str, Any]]:
     """Generates a valid dataset based on the highest count."""
     valid_data = []
     for item in raw_dataset:
@@ -76,7 +78,7 @@ def generate_valid_dataset(valid_keyset, raw_dataset):
     return valid_data
 
 
-def get_all_keys_in_dataset(raw_dataset):
+def get_all_keys_in_dataset(raw_dataset: List[OrderedDictionary[str, Any]]) -> List[str]:
     """Determines if there are keys shared by
 	the whole dataset"""
     allKeys = []
@@ -87,22 +89,21 @@ def get_all_keys_in_dataset(raw_dataset):
     return allKeys
 
 
-def determine_shared_keys_in_dataset(all_keys, raw_dataset):
+def determine_shared_keys_in_dataset(all_keys: List[str], raw_dataset: List[OrderedDictionary[str, Any]]) -> List[str]:
     """Determines if there are keys shared by
 	the whole dataset."""
-    evenKeys = all_keys
+    shared_keys = all_keys
     for item in raw_dataset:
-        # Intersection of two lists.
-        evenKeys = list(set(evenKeys) & set(list(item.keys())))
-    return evenKeys
+        shared_keys = [key for key in shared_keys if key in item.keys()]
+    return shared_keys
 
 
-def generate_valid_dataset_from_shared_keys(even_keyset, raw_dataset):
+def generate_valid_dataset_from_shared_keys(even_keyset: List[str], raw_dataset: List[OrderedDictionary[str, Any]]) -> List[OrderedDictionary[str, Any]]:
     """Generates a valid dataset based on the keys shared by
 	the whole dataset."""
     valid_data = []
     for item in raw_dataset:
-        datapoint = OrderedDict({})
+        datapoint = OrderedDict()
         for key in list(item.keys()):
             if key in even_keyset:
                 datapoint[key] = item[key]
