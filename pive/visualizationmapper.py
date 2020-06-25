@@ -87,18 +87,12 @@ def is_multiple_data_consistent(given_types, singleDataLength):
     """Verifies if the multiple data elements following
     the last single data element are consistent."""
 
-    # FIXME: This will most likely fail for set of data types
-    # FIXME: Tuples of data-elements arent supported with just a look on the last element instead of n elements
-    consistent = True
     last_index = singleDataLength - 1
-    last_element = given_types[last_index]
+    consistent_types = given_types[last_index]
 
     for item in given_types[last_index:]:
-        # Possible fix, but a better solution would merge all an check for an empty set to identify failure
-        # if not (item & last_element):
-        if item != last_element:
-            consistent = False
-    return consistent
+        consistent_types = consistent_types & item
+    return (consistent_types != set())
 
 
 def is_data_value_ascending(dataset):
