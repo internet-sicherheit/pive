@@ -85,7 +85,7 @@ def load_csv_string(csv_input):
     """Load a CSV-String."""
     inputstring = csv_input.split('\n')
     data = []
-    dialect = csv.Sniffer().sniff(csv_input)
+    dialect = csv.Sniffer().sniff(csv_input[:4096])
     delimiterchar = dialect.delimiter
     inputdata = csv.DictReader(inputstring)
     header = inputdata.fieldnames
@@ -107,9 +107,9 @@ def load_csv_from_file(csv_input):
     data = []
     with open(csv_input) as csvfile:
         csvfile.seek(0)
-        dialect = csv.Sniffer().sniff(csvfile.read())
+        dialect = csv.Sniffer().sniff(csvfile.read(4096))
         csvfile.seek(0)
-        isHeader = csv.Sniffer().has_header(csvfile.read())
+        isHeader = csv.Sniffer().has_header(csvfile.read(4096))
         csvfile.seek(0)
         # The delimiter used in the dialect.
         delimiterchar = dialect.delimiter
