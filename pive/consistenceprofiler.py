@@ -31,29 +31,27 @@ def get_datapoint_types(datapoint):
 
     # for checking hive initials
     for key in datapoint:
-        if key == 'source' or key == 'target':
+        if key == 'LINKS':
             isSource = True
+            break
 
     for key in list(datapoint.keys()):
         item = datapoint[key]
+        if isinstance(item, list) == True and isSource == True:
+            for i in item:
 
-        if isinstance(item, dict) == True and isSource == True:
-            for key, value in item.items():
-                #print('key, value: ' , key, '->', value)
-                if str(key).endswith("date") or str(key).endswith("time"):
+                if str(i).endswith("date") or str(i).endswith("time"):
                     types.append("time")
-
-                elif is_float(value) or is_int(value):
+                elif is_float(i) or is_int(i):
                     types.append("number")
-
                 # Python 3 string determination.
-                elif isinstance(value, (str)):
+                elif isinstance(i, (str)):
                     types.append("string")
                 # Python 2.7 workaround to determine strings.
                 # Basestring was deprecated in Python 3.
                 else:
                     try:
-                        if isinstance(value, basestring):
+                        if isinstance(i, basestring):
                             types.append("string")
                     except TypeError:
                                 pass
@@ -76,7 +74,6 @@ def get_datapoint_types(datapoint):
                         types.append("string")
                 except TypeError:
                     pass
-
     return types
 
 

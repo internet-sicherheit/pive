@@ -6,7 +6,7 @@ import pive.inputmanager as inputmanager
 # in the same directory. Try to create JSON-Objekts as Key/Value
 # pairs or use a JSON formatted String Object. CSV is also
 # supported.
-input_path = 'samples/data/hiveplot_random_format.json'
+input_path = 'samples/data/hiveplot_random.json'
 
 ###########################
 ### Basic usage of pive ###
@@ -20,7 +20,6 @@ env = environment.Environment(inputmanager=manager)
 # 2) Load your dataset into the environment to get a
 # list of supported visualizations.
 supported = env.load(input_path)
-
 # 3) Check if your desired chart is in the list and choose
 # it as your visualization object. Alternatively you can
 # print out the list of the supported charts and choose directly

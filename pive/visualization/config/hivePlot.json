@@ -5,8 +5,7 @@
     "multiple_data": false,  
     "datesupport": false,    
     "lexical_required": false,  
-    "vistypes": {
-        "source":[
+    "vistypes": [
             {
                 "ID": "number"
             },
@@ -15,18 +14,9 @@
             },
             {
                 "WEIGHT": "number"
-            }
-        ],
-        "target":[
-            {
-                "ID": "number"
             },
             {
-                "TYPE": "string"
-            },
-            {
-                "WEIGHT": "number"
+                "LINKS": "number"
             }
-        ]
-    }
+    ]
 }

@@ -84,13 +84,18 @@ class Chart(bv.BaseVisualization):
     def getTypes(self, data):
         """ checks how many different types in the dataset are available.
         Returns a list with unique types (no duplicates). """ 
-        #s = {}
-        l = []
+        s = set()
         for i in data:
-            src = i["source"]
-            trg = i["target"]
-            l.append(src["TYPE"]) # set or dict for unique counts of types.
-            l.append(trg["TYPE"])
+          s.add(i['TYPE'])
+
+        l = list(s)
+
+        #l = []
+        #for i in data:
+        #    src = i["source"]
+        #    trg = i["target"]
+        #    l.append(src["TYPE"]) # set or dict for unique counts of types.
+        #    l.append(trg["TYPE"])
         return l
 
 
@@ -122,7 +127,6 @@ class Chart(bv.BaseVisualization):
          could be a problem at reading json.  """
         #nodes = data
         #links = self.createLinks(dataset)
-        print("HIVEPLOT.PY: generate_visualization_dataset() dataset: ", dataset)
         types = self.getTypes(dataset)
         typeRange = len(types)
 
@@ -198,7 +202,6 @@ class Chart(bv.BaseVisualization):
 
 
     def get_json_dataset(self):
-        print("HIVEPLOT.PY:_get json_dataset() __dataset: ", self.__dataset)
         return self.generate_visualization_dataset(self.__dataset)
 
 

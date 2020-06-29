@@ -70,11 +70,19 @@ var css_line = '#{{ t_div_hook }} .line { stroke: {{ t_line_stroke }}; fill: non
     css_xlabel_text = '#{{ t_div_hook }} .xlabel {font-family: helvetica; font-size: {{ t_axis_label_size }}px }\n',
     css_ylabel_text = '#{{ t_div_hook }} .ylabel {font-family: helvetica; font-size: {{ t_axis_label_size }}px }\n',
     css_x_axis_line = '#{{ t_div_hook }} .x.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n',
-    css_y_axis_line = '#{{ t_div_hook }} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}';
+    css_y_axis_line = '#{{ t_div_hook }} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}',
+    css_axis = '.axis { stroke: #000; stroke-width:1.5px; }',
+    css_node = '.node { stroke:#000; }',
+    css_link = '.link { fill: none; stroke-width: 1.5px; , stroke-opacity: 0.8; }',
+    css_link_turnedOn = '.link .turnedOn { stroke-width: 3px; }',
+    css_link_turnedOff = '.link .turnedOff { stroke-opacity: 0.3, stroke-width: 1px; }',
+    css_node_turnedOn = '.node .turnedON { stroke: red; stroke-width: 3px; }';
 
 {# The style definitions are concatinated into a single string. #}
 var css = css_line.concat(css_tooltip).concat(css_axis_path).concat(css_axis_line).concat(css_path_area).concat(css_axis_text)
-          .concat(css_xlabel_text).concat(css_ylabel_text).concat(css_x_axis_line).concat(css_y_axis_line);
+          .concat(css_xlabel_text).concat(css_ylabel_text).concat(css_x_axis_line).concat(css_y_axis_line).concat(css_axis)
+          .concat(css_node).concat(css_link).concat(css_link_turnedOn)
+          .concat(css_link_turnedOff).concat(css_node_turnedOn);
 
 {# The style element in the dom is created and included into the root div. #}
 var style = document.createElement('style');
@@ -86,7 +94,11 @@ root_div.appendChild(style);
 {# Begin of D3.js Visualization. #}
 {# ############################# #}
 
-d3.json(url, function(data, types, typeRange){
+d3.json(url, function(error, data){
+
+  if (error) throw error;   // Exceptions handling
+    console.log("Data has ended: " + error);
+
 	var innerRadius = 40,
       outerRadius = 240,
       nodes = data,
@@ -95,7 +107,7 @@ d3.json(url, function(data, types, typeRange){
       range = types.length; // count of TYPE for count of axis.
 
 	var angle = d3.scale.ordinal()
-              .domain(d3.range(typeRange + 1))
+              .domain(d3.range(range + 1))
               .rangePoints([0, 2 * Math.PI]), // angle from axis to axis
     radius = d3.scale.linear()
               .range([innerRadius, outerRadius]), // scale of lines
@@ -117,7 +129,7 @@ d3.json(url, function(data, types, typeRange){
 
 	/* SVG - all axis, draws in right position */
 	svg.selectAll(".axis")
-	    .data(d3.range(typeRange))
+	    .data(d3.range(range))
 	  .enter().append("line")
 	    .attr("class", "axis")
 	    .attr("transform", function(d) { return "rotate(" + degrees(angle(d)) + ")" })
@@ -182,7 +194,7 @@ d3.json(url, function(data, types, typeRange){
         }
     }
 
-	  showTooltip([d.ID, d.WEIGHT], [tx, ty], ind);
+	  showTooltip(["ID: " + d.ID, "WEIGHT: " + d.WEIGHT], [tx, ty], ind);
 
 	  d3.select(this)
 	    .classed("turnedOn", true);
@@ -236,7 +248,6 @@ d3.json(url, function(data, types, typeRange){
     var a = Array.from(s);
     return a;
   }
-});
 
   /* Converts the types to numbers to achieve the hive-confimity.
   Currently are 5 axes the maximum for all datasets we get. Returns the number according to the type.  */
@@ -246,7 +257,6 @@ d3.json(url, function(data, types, typeRange){
     n = t.indexOf(n) + 1;
     return n
   }
-//});
 
 
 function getColorIndex(y_accessor){
@@ -286,4 +296,4 @@ function getColorIndex(y_accessor){
 
     }
 
-//});
+});

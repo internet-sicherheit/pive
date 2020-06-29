@@ -71,10 +71,10 @@ def get_visualization_properties(dataset, viz_types):
     isHive = False
 
     # for checking hive initials
-    for key in dataset:
+    for i in dataset:
         try:
-            for i in key: 
-                if i == 'source':
+            for key,value in i.items():
+                if key == 'LINKS':
                     isHive = True
                     break
         except KeyError:
@@ -161,7 +161,6 @@ def check_possibilities(property_list):
     props = property_list
     conf = open_config_files(config_path)
     #conf besitzt alle configs zu den viztypen
-    print("isHive: ", props[-1])
     if not props[-1]:
         del conf[1]
 
@@ -200,10 +199,9 @@ def check_possibilities(property_list):
                 if item[elem] == True:
                     if not props[4]:
                         is_possible = False
-            #print("kind of vizualization: ", item_type)
             if ((elem == 'vistypes') and is_possible and props[-1] == True):
                 for key in item[elem]: 
-                    if key == 'source' and item_type == 'hiveplot':
+                    if key == 'LINKS' and item_type == 'hiveplot':
                         is_possible =checkInputOrder(elem, item, props, supports_multi_data, props[-1])
                         break
             elif ((elem == 'vistypes') and is_possible  and props[-1] == False):
@@ -212,7 +210,6 @@ def check_possibilities(property_list):
                 is_possible = checkInputOrder(elem, item, props, supports_multi_data, props[-1])
         if is_possible:
             result.append(item_type)
-    print("before return of check_possibilities!!")
     return result
 
 
@@ -220,7 +217,6 @@ def checkInputOrder(elem, item, props, supportsMultiData, isHive):
     """Checks if the input vistypes match the requirements."""
     isPossible = True
     req_vtypes = []
-    print("item: ", item)
 
     # item[elem] is ordered dict
     # i is source or target, as a string
@@ -240,7 +236,6 @@ def checkInputOrder(elem, item, props, supportsMultiData, isHive):
 
     # Length required to render a single dataset.
     singleDataLength = len(req_vtypes)
-    print("singleDataLength: ", singleDataLength)
 
     eachValCount = len(req_vtypes) - 1
     dataValCount = len(props[3]) - 1
@@ -259,7 +254,6 @@ def checkInputOrder(elem, item, props, supportsMultiData, isHive):
     # If the data is larger than the single length it must match the
     # requirements for multiple datasets.
     data_matches = types_matching_data_requirements(given_types, req_vtypes)
-    print("after data_matches: ", data_matches)
     if not data_matches:
         isPossible = False
 
@@ -273,5 +267,4 @@ def checkInputOrder(elem, item, props, supportsMultiData, isHive):
             isPossible = False
     elif (datalength < requiredlength):
         isPossible = False
-    print("before return checkInputOrder!")
     return isPossible
