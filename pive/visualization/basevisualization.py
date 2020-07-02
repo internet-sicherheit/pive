@@ -181,7 +181,7 @@ class BaseVisualization:
             if type(value) == str:
                 retval = []
                 for letter in value:
-                    if _js_escapes.has_key(letter):
+                    if letter in _js_escapes:
                         retval.append(_js_escapes[letter])
                     else:
                         retval.append(letter)
