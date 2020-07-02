@@ -24,9 +24,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from . import defaults as default
 from abc import ABCMeta, abstractmethod
-import jinja2
 import os
 import json
+import jinja2
+import jinja2.ext
+from jinja2.lexer import Token, TOKEN_VARIABLE_END, TOKEN_VARIABLE_BEGIN, TOKEN_PIPE, TOKEN_NAME, TOKEN_LBRACKET, TOKEN_RBRACKET
+from functools import reduce
 
 class BaseVisualization:
     __metaclass__ = ABCMeta
@@ -45,7 +48,7 @@ class BaseVisualization:
         self._div_hook = div_hook
 
     def get_js_code(self):
-        js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
+        js_template = self.load_js_template('%s%s.jinja' % (self._template_url, self._template_name))
         js = self.create_js(js_template, self._dataset_url)
         return js
 
@@ -113,8 +116,8 @@ class BaseVisualization:
 
     def create_visualization_files(self, destination_url):
 
-        html_template = self.load_template_file('%shtml.jinja' % (self._template_url))
-        js_template = self.load_template_file('%s%s.jinja' % (self._template_url, self._template_name))
+        html_template = self.load_html_template('%shtml.jinja' % (self._template_url))
+        js_template = self.load_js_template('%s%s.jinja' % (self._template_url, self._template_name))
 
         # Default dataset url is used when nothing was explicitly passed.
         data_output_path = destination_url + '%s%s.json' % (os.sep, self._title)
@@ -151,9 +154,93 @@ class BaseVisualization:
         self.set_width(width)
         self.set_height(height)
 
-    def load_template_file(self, template_url):
+    def load_html_template(self, template_url):
         path, filename = os.path.split(template_url)
         template_loader = jinja2.FileSystemLoader(searchpath=[path, './'])
-        template_env = jinja2.Environment(loader=template_loader)
-        template = template_env.get_template(filename)
-        return template
+        template_env = jinja2.Environment(loader=template_loader, autoescape=True)
+        return self.load_template(template_env, template_url)
+
+    def load_js_template(self, template_url):
+        _js_escapes = {
+            '\\': '\\u005C',
+            '\'': '\\u0027',
+            '"': '\\u0022',
+            '>': '\\u003E',
+            '<': '\\u003C',
+            '&': '\\u0026',
+            '=': '\\u003D',
+            '-': '\\u002D',
+            ';': '\\u003B',
+            u'\u2028': '\\u2028',
+            u'\u2029': '\\u2029'
+        }
+        # Escape every ASCII character with a value less than 32.
+        _js_escapes.update(('%c' % z, '\\u%04X' % z) for z in range(32))
+
+        def jinja2_escapejs_filter(value):
+            if type(value) == str:
+                retval = []
+                for letter in value:
+                    if _js_escapes.has_key(letter):
+                        retval.append(_js_escapes[letter])
+                    else:
+                        retval.append(letter)
+            else:
+                return jinja2.Markup(value)
+
+            return jinja2.Markup("".join(retval))
+
+        def jinja2_stringify_filter(value):
+            if type(value) != str:
+                value = str(value)
+            if len(value) < 2 or not (value[0] == '\'' and value[-1] == '\'' or value[0] == '\"' and value[-1] == '\"'):
+                value = "'{}'".format(value)
+            return jinja2.Markup(value)
+
+        path, filename = os.path.split(template_url)
+        template_loader = jinja2.FileSystemLoader(searchpath=[path, './'])
+        template_env = jinja2.Environment(loader=template_loader, extensions=(JSAutoescape,), autoescape=True)
+        template_env.filters['escapejs'] = jinja2_escapejs_filter
+        template_env.filters['stringify'] = jinja2_stringify_filter
+        return self.load_template(template_env, template_url)
+
+    def load_template(self, environment, template_url):
+        path, filename = os.path.split(template_url)
+        return environment.get_template(filename)
+
+
+class JSAutoescape(jinja2.ext.Extension):
+    def filter_stream(self, stream):
+        tokens = []
+        autoescape = self.environment.autoescape
+        for token in stream:
+            if len(tokens) != 0 or token.type == TOKEN_VARIABLE_BEGIN:
+                tokens.append(token)
+                if token.type == TOKEN_VARIABLE_END:
+                    block_is_safe = reduce(
+                        lambda reduced, element: reduced or element.type == TOKEN_NAME and element.value == 'safe',
+                        tokens, False)
+                    encountered_named = False
+                    for t, index in zip(tokens, range(len(tokens))):
+                        if t.type == TOKEN_NAME and t.value == 'e':
+                            # Yield escape code
+                            # TODO: Parametrize, maybe with decorator?
+                            yield Token(token.lineno, TOKEN_NAME, 'escapejs')
+                        elif autoescape and not block_is_safe and not encountered_named and (t.type == TOKEN_NAME or t.type == TOKEN_RBRACKET) and (tokens[index+1].type != TOKEN_LBRACKET):
+                            encountered_named = True
+                            # Yield original token
+                            yield t
+                            # Yield escape code
+                            # TODO: Parametrize, maybe with decorator?
+                            yield Token(token.lineno, TOKEN_PIPE, '|')
+                            yield Token(token.lineno, TOKEN_NAME, 'escapejs')
+                            # Mark as safe to avoid double escaping
+                            yield Token(token.lineno, TOKEN_PIPE, '|')
+                            yield Token(token.lineno, TOKEN_NAME, 'safe')
+                        else:
+                            yield t
+                    # clear tokens at the end of variable
+                    tokens = []
+            else:
+                # Directly yield all tokens outside of a variable
+                yield token
