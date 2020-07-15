@@ -32,6 +32,7 @@ from pyveplot import Hiveplot, Axis, Node
 import networkx as nx
 import random
 import json
+import math
 
 class Chart(bv.BaseVisualization):
     def __init__(self,
@@ -105,7 +106,7 @@ class Chart(bv.BaseVisualization):
         n = {}
         for i in data:
             if i['ID'] == linkID:
-                n = {'TYPE':getNumberForType(i['TYPE']), 'WEIGHT':i['WEIGHT']}
+                n = {'TYPE':self.getNumberForType(i['TYPE']), 'WEIGHT':i['WEIGHT']}
         return n
 
 
@@ -132,11 +133,12 @@ class Chart(bv.BaseVisualization):
 
         return dataset#, types, typeRange # look at that
 
+    @staticmethod
     def degrees(radians):
         """ Returns degrees of radians. """
         return radians / math.PI * 180 - 90
 
-
+    @staticmethod
     def getNumberForType(type):
         """ Return the index of the type because hive can only handle numbers as type. """
         t = ['A', 'B', 'C', 'D', 'E']
