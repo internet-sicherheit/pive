@@ -39,6 +39,7 @@ CHART_BUBBLE = 'bubblechart'
 CHART_BAR = 'barchart'
 CHART_PIE = 'piechart'
 CHART_CHORD = 'chordchart'
+CHART_HIVE = 'hiveplot'
 
 # Bundles all essential access methods to render visualizations.
 class Environment(object):
@@ -78,20 +79,25 @@ class Environment(object):
             inputdata = self.__inputmanager.read(source)
             self.__suitables = self.__inputmanager.map(inputdata)
             self.__data = inputdata
+            #print("after try (inpurtdata): ", inputdata)
         except ValueError as e:
             print ("Failed to load the dataset: %s" % e)
             raise
 
         self.__modules = self.import_suitable_visualizations(self.__suitables)
+
+
         self.__has_datefields = self.__inputmanager.has_date_points()
+
+
         # Converting the datakeys into strings.
         self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
+        #print("ENVIRONMENT.PY: self.__data: ", self.__data)
         return self.__suitables
 
     @staticmethod
     def import_suitable_visualizations(suitable_visualization_list):
         """Dynamically import all suited visualization modules."""
-
         mods = []
         for item in suitable_visualization_list:
             mod = '.%s' % item
@@ -102,7 +108,6 @@ class Environment(object):
         for item in mods:
             modules.append(importlib.import_module(item,
                                                    package=default.module_path))
-
         return modules
 
     # Choose a chart to start modifying or render it.

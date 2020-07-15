@@ -38,6 +38,7 @@ NO_DATA_LOADED_ERR_MSG = "Unexpected data source."
 
 class InputManager(object):
     """Contains and manages the data."""
+    isHive = False
 
     # Input Managers can try to merge false datapoints or not.
     def __init__(self, mergedata=False):
@@ -56,6 +57,12 @@ class InputManager(object):
 
         dataset = self.__validate_input(inputdata)
         # Raise an error if the dataset is not consistent.
+        for i in dataset:
+            for key,value in i.items():
+                if key == 'LINKS':
+                    isHive = True
+                    break
+
         if not self.__is_dataset_consistent(dataset):
             raise ValueError(NOT_CONSISTENT_ERR_MSG)
 

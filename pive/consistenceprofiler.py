@@ -44,6 +44,9 @@ def get_datapoint_types(datapoint):
 
         item = datapoint[key]
 
+        if isinstance(item, list):
+            typeset.add("list")
+
         # If the datapoint contains a float or int it will
         # be considered as a numerical datapoint.
         if is_int(item) or is_float(item):

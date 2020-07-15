@@ -208,7 +208,15 @@ def parse_json_to_internal(json_element):
                             for k,v in zip(name_gen(len(datapoint)),datapoint):
                                 internal_datapoint[k] = v
                             data.append(internal_datapoint)
-
+            elif "LINKS" in first:
+                #FIXME: Workaround for Hiveplot
+                for datapoint in json_element:
+                    internal_datapoint = OrderedDict()
+                    internal_datapoint["ID"] = datapoint["ID"]
+                    internal_datapoint["TYPE"] = datapoint["TYPE"]
+                    internal_datapoint["WEIGHT"] = datapoint["WEIGHT"]
+                    internal_datapoint["LINKS"] = datapoint["LINKS"]
+                    data.append(internal_datapoint)
             else:
                 raise ValueError("Expected a list of coordinates")
 

@@ -44,6 +44,7 @@ def open_config_files(default_config_path):
         with open(filename, 'r') as fp:
             conf = json.load(fp, object_pairs_hook=OrderedDict)
         configs.append(conf)
+        # configs is type of list
     return configs
 
 
@@ -70,6 +71,17 @@ def get_visualization_properties(dataset, viz_types):
     props["viz_types"] = viz_types
     props["lexicographic"] = (viz_types[0] & {'number', 'time'}) and length > 1 and is_data_in_lexicographic_order(
         dataset)
+    isHive = False
+    # for checking hive initials
+    for i in dataset:
+        try:
+            for key,value in i.items():
+                if key == 'LINKS':
+                    isHive = True
+                    break
+        except KeyError:
+            pass
+    props["hive"] = isHive
 
     return props
 
@@ -136,15 +148,16 @@ def check_possibilities(property_list):
     result = []
     props = property_list
     configurations = open_config_files(config_path)
-
     for config in configurations:
         item_type = config['title']
         is_possible = True
         supports_multi_data = False
+        # item is ordereddict
 
         for elem in config.keys():
             # The dataset should contain at
             # least the minimum required datapoints.
+            # elem is a string
             if elem == 'min_datapoints':
                 if props["dataset_length"] < config[elem]:
                     is_possible = False
@@ -183,6 +196,12 @@ def checkInputOrder(elem, config, props, supportsMultiData):
     """Checks if the input vistypes match the requirements."""
     isPossible = True
     req_vtypes = []
+    # if props["hive"]:
+    #     for k in config[elem]:
+    #         source_list = v
+    #         for i in source_list:
+    #             for j in i:
+    #                 req_vtypes.append(i[j])
     for i in config[elem]:
         for j in i:
             if type(i[j]) == str:
@@ -216,7 +235,6 @@ def checkInputOrder(elem, config, props, supportsMultiData):
     # If the data is larger than the single length it must match the
     # requirements for multiple datasets.
     data_matches = types_matching_data_requirements(given_types, req_vtypes)
-
     if not data_matches:
         isPossible = False
 
