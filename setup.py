@@ -24,6 +24,7 @@ setup(
         'Topic :: Scientific/Engineering :: Visualization',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    install_requires=['jinja2','py-dateutil', 'pyveplot',  'networkx']
+    install_requires=['jinja2','py-dateutil', 'pyveplot',  'networkx'],
+    test_suite = 'testcases'
 
 )
