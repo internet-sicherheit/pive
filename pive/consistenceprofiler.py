@@ -29,11 +29,13 @@
 from dateutil.parser import parse
 from functools import reduce
 import sys
+import re
 
 VISTYPE_STRING = 0;
 VISTYPE_NUMERICAL = 1;
 VISTYPE_DATETIME = 2;
 
+ISO8601_REGEX = re.compile(r"^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
 
 def get_datapoint_types(datapoint):
     """Determines the datas visualization-types of a given datapoint.
@@ -90,13 +92,12 @@ def is_string(item):
 
 def is_date(item):
     """Checks if the item is a date."""
-    #TODO: Should this be limited to RFC3339 and ISO8601 formatted datestrings to circumvent strange dateutil behaviour?
-    #   If yes, check datestring with regex
     try:
-        parse(item)
-        return True
+        if ISO8601_REGEX.match(item) is not None and parse(item) is not None:
+            return True
     except (ValueError, TypeError, AttributeError):
-        return False
+        pass
+    return False
 
 
 def is_float(value):
