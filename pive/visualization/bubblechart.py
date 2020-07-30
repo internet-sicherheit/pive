@@ -95,6 +95,30 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
     def getViewport(self):
         return self._viewport
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_viewport"] = self._viewport
+        variables["t_jumplength"] = self._jumplength
+        variables["t_scales"] = self._scales
+        variables["t_datakeys"] = self._datakeys
+        variables["t_circleopacity"] = self._circleopacity
+        variables["t_highlightfactor"] = self._highlightfactor
+        variables["t_minradius"] = self._minradius
+        variables["t_maxradius"] = self._maxradius
+        variables["t_xlabel"] = self._xlabel
+        variables["t_ylabel"] = self._ylabel
+        variables["t_timelabel"] = self._timelabel
+        variables["t_timeformat"] = self._timeformat
+        variables["t_iconwidth"] = self._iconwidth
+        variables["t_iconheight"] = self._iconheight
+        variables["t_iconcolor"] = self._iconcolor
+        variables["t_iconhighlight"] = self._iconhighlight
+        return variables
+
     def set_labels(self, labels):
         self._xlabel = labels[0]
         self._ylabel = labels[1]
@@ -206,3 +230,31 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
             print ("Warning: Negative or zero viewport parameter. Using default settings instead.")
             viewport = default.viewport
         self._viewport = viewport
+
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_viewport" in dictionary:
+            self.setViewport(int(dictionary['t_viewport']))
+        if "t_jumplength" in dictionary:
+            self.setJumplength(int(dictionary['t_jumplength']))
+        if "t_scales" in dictionary:
+            self.setScales(json.loads(dictionary['t_scales'].replace('\'', '\"')))
+        self.set_labels([dictionary.get('t_xlabel', self._xlabel), dictionary('t_ylabel',self._ylabel)])
+        if "t_datakeys" in dictionary:
+            self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if "t_circleopacity" in dictionary:
+            self.setCircleOpacity(float(dictionary['t_circleopacity']))
+        if "t_highlightfactor" in dictionary:
+            self.setHighlightFactor(float(dictionary['t_highlightfactor']))
+        if "t_minradius" in dictionary:
+            self.setMinRadius(int(dictionary['t_minradius']))
+        if "t_maxradius" in dictionary:
+            self.setMaxRadius(int(dictionary['t_maxradius']))
+        self.setTimeProperties(dictionary.get('t_timelabel',self._timelabel),dictionary.get('t_timeformat', self._timeformat))
+        self.setIconProperties(int(dictionary.get('t_iconwidth',self._iconwidth)),
+                               int(dictionary.get('t_iconheight',self._iconheight)),
+                               dictionary.get('t_iconcolor',self._iconcolor),
+                               dictionary.get('t_iconhighlight', self._iconhighlight)
+                               )
+
+

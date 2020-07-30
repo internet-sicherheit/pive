@@ -68,18 +68,9 @@ class Chart(bv.BaseVisualization):
         self.__innerRadius = 40
         self.__outerRadius = 240
 
-
-    def set_title(self, title):
-        self._title = title
-
-
     def setDataKeys(self, datakeys):
         self.__datakeys = datakeys;
 
-
-    def set_chart_colors(self, colors):
-        """Basic Method."""
-        self.__colors = colors
 
 
     def getTypes(self, data):
@@ -98,6 +89,16 @@ class Chart(bv.BaseVisualization):
         #    l.append(src["TYPE"]) # set or dict for unique counts of types.
         #    l.append(trg["TYPE"])
         return l
+
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_innerRadius"] = self.__innerRadius
+        variables["t_outerRadius"] = self.__outerRadius
+        return variables
 
 
     def findNode(self, linkID, data):
@@ -145,14 +146,6 @@ class Chart(bv.BaseVisualization):
         return t.index(type) + 1
 
 
-    def write_dataset_file(self, dataset, destination_url, filename):
-        dest_file = '%s%s' % (destination_url, filename)
-        outp = open(dest_file, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-        print ('Writing: %s' % (dest_file))
-
-
     def create_html(self, template):
         templateVars = {'t_title': self._title,
                         't_div_hook': self._div_hook}
@@ -176,84 +169,7 @@ class Chart(bv.BaseVisualization):
         outputText = template.render(templateVars)
         return outputText
 
-
-    def write_file(self, output, destination_url, filename):
-
-        dest_file = '%s%s' % (destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print ("Folder does not exist. Creating folder '%s'. " % (destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print ('Writing: %s' % (dest_file))
-
-        for line in output:
-            #f.write(line.encode('utf-8'))
-            f.write(line)
-
-        f.close()
-
-
-    def get_js_code(self):
-        dataset_url = '%s.json' % (self._title)
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-        js = self.create_js(js_template, dataset_url)
-        return js
-
-
-    def get_json_dataset(self):
-        return self.generate_visualization_dataset(self.__dataset)
-
-
-    def create_visualization_files(self, destination_url):
-
-        html_template = self.load_template_file('%shtml.jinja' % (self.__template_url))
-        js_template = self.load_template_file('%s%s.jinja' % (self.__template_url, self.__template_name))
-
-        dataset_url = '%s.json' % (self._title)
-
-        js = self.create_js(js_template, dataset_url)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_url, '/%s.html' % (self._title))
-        self.write_file(js, destination_url, '/%s.js' % (self._title))
-
-        visdata = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(visdata, destination_url, '/%s.json' % (self._title))
-
-
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError("Integer expected, got %s instead." % (type(height)))
-        if (height <= 0):
-            print ("Warning: Negative or zero height parameter. Using default settings instead.")
-            height = default.height
-        self.__height = height
-
-
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError("Integer expected, got %s instead." % (type(width)))
-        if (width <= 0):
-            print ("Warning: Negative or zero width parameter. Using default settings instead.")
-            width = default.width
-        self.__width = width
-
-
-    def set_dimension(self, width, height):
-        self.set_width(width)
-        self.set_height(height)
-
-
-    def load_template_file(self, template_url):
-        templateLoader = jinja2.FileSystemLoader(searchpath=[default.template_path, '/'])
-        print ("Opening template: %s" % (template_url))
-
-        templateEnv = jinja2.Environment(loader=templateLoader)
-        TEMPLATE_FILE = template_url
-        template = templateEnv.get_template(TEMPLATE_FILE)
-        return template
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        self.__innerRadius = dictionary["t_innerRadius"]
+        self.__outerRadius = dictionary["t_outerRadius"]
