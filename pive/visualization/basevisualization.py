@@ -38,10 +38,18 @@ class BaseVisualization:
     def __init__(self):
         self._div_hook = default.div_hook
         self._template_url = ''
+
+        realpath = os.path.dirname(os.path.realpath(__file__))
+        self._html_template = '%s%s%s' % (realpath, default.template_path,"html.jinja")
         self._template_name = ''
         self._dataset_url = ''
         self.dataset = []
         self._title = ''
+
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
+        self._label_size = default.label_size
 
     def set_div_hook(self, div_hook):
         assert isinstance(div_hook, str)
@@ -58,6 +66,9 @@ class BaseVisualization:
     def set_title(self, title):
         assert isinstance(title, str)
         self._title = title
+
+    def set_html_template(self, file_path):
+        self._html_template = file_path
 
     def set_labels(self, labels):
         raise NotImplementedError(self.implErrorMessage)
@@ -85,11 +96,35 @@ class BaseVisualization:
         outp.close()
         print ('Writing: %s' % (dataset_url))
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+        return {"t_width": self._width,
+                "t_height": self._height,
+                "t_title": self._title,
+                "t_colors": self._colors,
+                "t_line_stroke": self._line_stroke,
+                "t_shape_rendering": self._shape_rendering,
+                "t_font_size": self._font_size,
+                "t_label_size": self._label_size,
+                "t_padding": self._padding
+                }
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+        #TODO: Decide which format for typehints appropriate here.
+        return {}
 
     def create_html(self, template):
-        templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
-
+        templateVars = {'t_div_hook': self._div_hook}
+        templateVars.update(self.get_modifiable_template_variables())
+        # Add dictionaries of user modifiable variables
+        templateVars.update({'i_variables': self.get_modifiable_template_variables(),
+                             'i_typehints': self.get_modifiable_template_variables_typehints()
+                             })
         outputText = template.render(templateVars)
         return outputText
 
@@ -116,7 +151,7 @@ class BaseVisualization:
 
     def create_visualization_files(self, destination_url):
 
-        html_template = self.load_html_template('%shtml.jinja' % (self._template_url))
+        html_template = self.load_html_template(self._html_template)
         js_template = self.load_js_template('%s%s.jinja' % (self._template_url, self._template_name))
 
         # Default dataset url is used when nothing was explicitly passed.
@@ -207,6 +242,30 @@ class BaseVisualization:
     def load_template(self, environment, template_url):
         path, filename = os.path.split(template_url)
         return environment.get_template(filename)
+
+    def set_css(self, line_stroke, shape_rendering, font_size, axis_label_size):
+        self._line_stroke = line_stroke
+        self._shape_rendering = shape_rendering
+        self._font_size = font_size
+        self._label_size = axis_label_size
+
+    def load_from_dict(self, dictionary):
+        """Load configuration values from a dictionaries.
+        No value is mandatory. In case of missing values current values or default values are valid options.
+        Implementations must only read values they declared in get_modifiable_template_variables.
+        Implementations should check for all values they declared in get_modifiable_template_variables."""
+
+        self.set_dimension(int(dictionary.get('t_width', self._width)), int(dictionary.get('t_height', self._height)))
+        self.set_title(dictionary.get('t_title', self._title))
+        if 't_colors' in dictionary:
+            self.set_chart_colors(json.loads(dictionary['t_colors'].replace('\'', '\"')))
+        self.set_css(dictionary.get('t_line_stroke',self._line_stroke),
+                     dictionary.get('t_shape_rendering',self._shape_rendering),
+                     dictionary.get('t_font_size', self._font_size),
+                     dictionary.get('t_label_size', self._label_size)
+                     )
+        if "t_padding" in dictionary:
+            self._padding = int(dictionary['t_padding'])
 
 
 class JSAutoescape(jinja2.ext.Extension):

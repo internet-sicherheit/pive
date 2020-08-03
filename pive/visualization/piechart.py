@@ -60,6 +60,17 @@ class Chart(bv.BaseVisualization):
         self._colors = default.chartcolors
         self._highlightopacity = default.circleopacity
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_datakeys"] = self._datakeys
+        variables["t_highlightopacity"] = self._highlightopacity
+        return variables
+
+
     def setDataKeys(self, datakeys):
         self._datakeys = datakeys
 
@@ -82,9 +93,6 @@ class Chart(bv.BaseVisualization):
             visdataset.append(visdatapoint)
         return visdataset
 
-    def setScales(self, scales):
-        self._scales = scales
-
     def create_js(self, template, dataset_url):
         templateVars = {'t_width': self._width,
                         't_height': self._height,
@@ -99,3 +107,9 @@ class Chart(bv.BaseVisualization):
         outputText = template.render(templateVars)
         return outputText
 
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_datakeys" in dictionary:
+            self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if "t_highlightopacity" in dictionary:
+            self.sethighlightOpacity(float(dictionary['t_highlightopacity']))

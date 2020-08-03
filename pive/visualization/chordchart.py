@@ -87,6 +87,20 @@ class Chart(bv.BaseVisualization):
         """Basic Method."""
         self._colors = colors
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_datakeys"] = self._datakeys
+        variables["t_textpadding"] = self._textpadding
+        variables["t_elementfontsizse"] = self._elementfontsizse
+        variables["t_tickfontsize"] = self._tickfontsize
+        variables["t_ticksteps"] = self._ticksteps
+        variables["t_tickprefix"] = self._tickprefix
+        return variables
+
     def initMatrixRow(self, elements):
         """Initializes a matrix row with zero values."""
         mrow = []
@@ -162,3 +176,18 @@ class Chart(bv.BaseVisualization):
 
         outputText = template.render(templateVars)
         return outputText
+
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_datakeys" in dictionary:
+            self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if "t_textpadding" in dictionary:
+            self._textpadding = int(dictionary['t_textpadding'])
+        if "t_elementfontsizse" in dictionary:
+            self._elementfontsizse = dictionary['t_elementfontsizse']
+        if "t_tickfontsize" in dictionary:
+            self._tickfontsize = dictionary['t_tickfontsize']
+        if "t_ticksteps" in dictionary:
+            self.setTicksteps( int(dictionary['t_ticksteps']) )
+        if "t_tickprefix" in dictionary:
+            self.setTickprefix((dictionary['t_tickprefix']))
