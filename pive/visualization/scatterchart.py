@@ -230,7 +230,7 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
             self.setJumplength(int(dictionary['t_jumplength']))
         if 't_scales' in dictionary:
             self.setScales(json.loads(dictionary['t_scales'].replace('\'', '\"')))
-        self.set_labels([dictionary.get('t_xlabel', self._xlabel), dictionary('t_ylabel',self._ylabel)])
+        self.set_labels([dictionary.get('t_xlabel', self._xlabel), dictionary.get('t_ylabel',self._ylabel)])
         if "t_datakeys" in dictionary:
             self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
         self.setTimeProperties(dictionary.get('t_timelabel', self._timelabel),

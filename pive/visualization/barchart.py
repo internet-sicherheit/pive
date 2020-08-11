@@ -198,7 +198,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
             self.setJumplength(int(dictionary['t_jumplength']))
         if "t_verticalscale" in dictionary:
             self.setVerticalScale(dictionary['t_verticalscale'])
-        self.set_labels([dictionary.get('t_xlabel', self._xlabel), dictionary('t_ylabel',self._ylabel)])
+        self.set_labels([dictionary.get('t_xlabel', self._xlabel), dictionary.get('t_ylabel',self._ylabel)])
         if "t_datakeys" in dictionary:
             self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
         self.setIconProperties(int(dictionary.get('t_iconwidth', self._iconwidth)),
