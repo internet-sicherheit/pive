@@ -100,6 +100,29 @@ class Chart(bv.BaseVisualization):
         variables["t_outerRadius"] = self.__outerRadius
         return variables
 
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default" : {
+                "t_innerRadius": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_outerRadius": {
+                    "type": "int",
+                    "min": 1
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
 
     def findNode(self, linkID, data):
         """ Finds a node by ID to get access to its WEIGHT.

@@ -104,13 +104,79 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
         variables["t_datakeys"] = self._datakeys
         variables["t_xlabel"] = self._xlabel
         variables["t_ylabel"] = self._ylabel
-        variables["t_timelabel"] = self._timelabel
         variables["t_timeformat"] = self._timeformat
         variables["t_iconwidth"] = self._iconwidth
         variables["t_iconheight"] = self._iconheight
         variables["t_iconcolor"] = self._iconcolor
         variables["t_iconhighlight"] = self._iconhighlight
         return variables
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default" : {
+                "t_viewport": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_jumplength": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_scales": {
+                    "type": "list",
+                    "length": 2,
+                    "item_type": {
+                        "type": "selection",
+                        "multi_selection" : False,
+                        "choices" : ["linear","log","pow","date"]
+                    }
+                },
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_xlabel": {
+                    "type": "string"
+                },
+                "t_ylabel": {
+                    "type": "string"
+                },
+                "t_timeformat": {
+                    "type": "string"
+                },
+                "t_iconwidth": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_iconheight": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_iconcolor": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_iconhighlight": {
+                    "type": "color",
+                    "channels": 3
+                }
+
+
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
 
     def set_labels(self, labels):
         self._xlabel = labels[0]

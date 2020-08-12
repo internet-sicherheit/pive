@@ -101,6 +101,45 @@ class Chart(bv.BaseVisualization):
         variables["t_tickprefix"] = self._tickprefix
         return variables
 
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default" : {
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_textpadding": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_elementfontsizse": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tickfontsize": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tickprefix": {
+                    "type": "string",
+                    "min": 1,
+                    "max": 1
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
     def initMatrixRow(self, elements):
         """Initializes a matrix row with zero values."""
         mrow = []
