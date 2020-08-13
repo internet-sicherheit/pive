@@ -115,8 +115,51 @@ class BaseVisualization:
         """Returns a dictionary of typehints for variables that are modifiable by the client.
         Subclasses should override this method and add their own variables.
         """
-        #TODO: Decide which format for typehints appropriate here.
-        return {}
+        return {
+            "default" : {
+                "t_width" : {
+                    "type" : "int",
+                    "min" : 1
+                },
+                "t_height": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_title": {
+                    "type": "string"
+                },
+                "t_colors": {
+                    "type" : "list",
+                    "length" : len(self._colors),
+                    "item_type" : {
+                        "type" : "color",
+                        "channels" : 3
+                    }
+                },
+                "t_line_stroke" : { #TODO: Get choices for CSS
+                    "type": "selection",
+                    "multi_selection" : False,
+                    "choices" : ["black"]
+                },
+                "t_shape_rendering": {  # TODO: Get choices for CSS
+                    "type": "selection",
+                    "multi_selection" : False,
+                    "choices": ["optimizeSpeed"]
+                },
+                "t_font_size": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_label_size": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_padding": {
+                    "type": "int",
+                    "min": 1
+                }
+            }
+        }
 
     def create_html(self, template):
         templateVars = {'t_div_hook': self._div_hook}

@@ -70,6 +70,34 @@ class Chart(bv.BaseVisualization):
         variables["t_highlightopacity"] = self._highlightopacity
         return variables
 
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default" : {
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_highlightopacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
 
     def setDataKeys(self, datakeys):
         self._datakeys = datakeys
