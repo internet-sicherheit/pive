@@ -2,14 +2,20 @@ import unittest
 
 from traceback import print_exc
 
-from multiprocessing import Process
+import multiprocessing as mp
 
-from pive import inputmanager
+from pive import inputmanager as im
+
+import pickle
 
 class TestInputmanager(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        mp.set_start_method('spawn')
+
     def setUp(self):
-        self.inputmanager = inputmanager.InputManager()
+        self.inputmanager = im.InputManager()
 
     def test_read_inconsistent_files(self):
         #Correctly formatted empty JSON-List
@@ -17,39 +23,32 @@ class TestInputmanager(unittest.TestCase):
             self.inputmanager.read("./testcases/assets/empty1.json")
             self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
+            self.assertEqual(e.args[0], im.NO_DATA_LOADED_ERR_MSG)
 
         # Correctly formatted JSON-List with empty object
         try:
             self.inputmanager.read("./testcases/assets/empty2.json")
             self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NOT_CONSISTENT_ERR_MSG)
+            self.assertEqual(e.args[0], im.NOT_CONSISTENT_ERR_MSG)
 
         # Completely empty file
         try:
             self.inputmanager.read("./testcases/assets/empty3.json")
             self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
+            self.assertEqual(e.args[0], im.NO_DATA_LOADED_ERR_MSG)
 
         # Regular text, not formatted
         try:
             self.inputmanager.read("./testcases/assets/nonsense.txt")
             self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
+            self.assertEqual(e.args[0], im.NO_DATA_LOADED_ERR_MSG)
 
-        #Large Nonsense file, random Base64 encoded data, expecting fast response
-        def large_nonsense():
-            try:
-                self.inputmanager.read("./testcases/assets/big_nonsense.txt")
-            except ValueError as e:
-                self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
-
-        p = Process(target=large_nonsense)
+        p = mp.Process(target=large_nonsense_file, args=(self.inputmanager,))
         p.start()
-        p.join(timeout=5)
+        p.join(timeout=10)
         if p.is_alive():
             p.terminate()
             self.fail("Timeout reached, still processing")
@@ -63,7 +62,7 @@ class TestInputmanager(unittest.TestCase):
             self.inputmanager.read("./testcases/assets/inconsistent.json")
             self.fail(msg="Inconsistent data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NOT_CONSISTENT_ERR_MSG)
+            self.assertEqual(e.args[0], im.NOT_CONSISTENT_ERR_MSG)
 
 
     def test_read_inconsistent_data(self):
@@ -73,52 +72,44 @@ class TestInputmanager(unittest.TestCase):
                 self.inputmanager.read(file.read())
                 self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
+            self.assertEqual(e.args[0], im.NO_DATA_LOADED_ERR_MSG)
 
         try:
             with open("./testcases/assets/empty2.json", "r") as file:
                 self.inputmanager.read(file.read())
                 self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NOT_CONSISTENT_ERR_MSG)
+            self.assertEqual(e.args[0], im.NOT_CONSISTENT_ERR_MSG)
 
         try:
             with open("./testcases/assets/empty3.json", "r") as file:
                 self.inputmanager.read(file.read())
                 self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
+            self.assertEqual(e.args[0], im.NO_DATA_LOADED_ERR_MSG)
 
         try:
             with open("./testcases/assets/nonsense.txt", "r") as file:
                 self.inputmanager.read(file.read())
                 self.fail(msg="No data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
+            self.assertEqual(e.args[0], im.NO_DATA_LOADED_ERR_MSG)
 
-            # Large Nonsense file, random Base64 encoded data, expecting fast response
-            def large_nonsense():
-                try:
-                    with open("./testcases/assets/big_nonsense.txt", "r") as file:
-                        self.inputmanager.read(file.read())
-                except ValueError as e:
-                    self.assertEqual(e.args[0], inputmanager.NO_DATA_LOADED_ERR_MSG)
-
-            p = Process(target=large_nonsense)
-            p.start()
-            p.join(timeout=5)
-            if p.is_alive():
-                p.terminate()
-                self.fail("Timeout reached, still processing")
-            else:
-                self.assertEqual(p.exitcode, 0)
+        p = mp.Process(target=large_nonsense_text, args=(self.inputmanager,))
+        p.start()
+        p.join(timeout=10)
+        if p.is_alive():
+            p.terminate()
+            self.fail("Timeout reached, still processing")
+        else:
+            self.assertEqual(p.exitcode, 0)
 
         try:
             with open("./testcases/assets/inconsistent.json", "r") as file:
                 self.inputmanager.read(file.read())
                 self.fail(msg="Inconsistent data excepted")
         except ValueError as e:
-            self.assertEqual(e.args[0], inputmanager.NOT_CONSISTENT_ERR_MSG)
+            self.assertEqual(e.args[0], im.NOT_CONSISTENT_ERR_MSG)
 
 
     def test_read_consistent_files(self):
@@ -250,3 +241,18 @@ class TestInputmanager(unittest.TestCase):
         except Exception as e:
             print_exc()
             self.fail(e)
+
+# Large Nonsense file, random Base64 encoded data, expecting fast response
+def large_nonsense_text(inputmanager):
+    try:
+        with open("./testcases/assets/big_nonsense.txt", "r") as file:
+            inputmanager.read(file.read())
+    except ValueError as e:
+        assert e.args[0] == im.NO_DATA_LOADED_ERR_MSG
+
+#Large Nonsense file, random Base64 encoded data, expecting fast response
+def large_nonsense_file(inputmanager):
+    try:
+        inputmanager.read("./testcases/assets/big_nonsense.txt")
+    except ValueError as e:
+        assert e.args[0] == im.NO_DATA_LOADED_ERR_MSG
