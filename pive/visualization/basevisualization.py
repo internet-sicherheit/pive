@@ -24,12 +24,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from . import defaults as default
 from abc import ABCMeta, abstractmethod
-import os
 import json
 import jinja2
 import jinja2.ext
 from jinja2.lexer import Token, TOKEN_VARIABLE_END, TOKEN_VARIABLE_BEGIN, TOKEN_PIPE, TOKEN_NAME, TOKEN_LBRACKET, TOKEN_RBRACKET
 from functools import reduce
+
+from pathlib import Path
 
 class BaseVisualization:
     __metaclass__ = ABCMeta
@@ -39,8 +40,7 @@ class BaseVisualization:
         self._div_hook = default.div_hook
         self._template_url = ''
 
-        realpath = os.path.dirname(os.path.realpath(__file__))
-        self._html_template = '%s%s%s' % (realpath, default.template_path,"html.jinja")
+        self._html_template = Path(__file__).resolve().parent.joinpath(default.template_path, "html.jinja")
         self._template_name = ''
         self._dataset_url = ''
         self.dataset = []
@@ -56,7 +56,7 @@ class BaseVisualization:
         self._div_hook = div_hook
 
     def get_js_code(self):
-        js_template = self.load_js_template('%s%s.jinja' % (self._template_url, self._template_name))
+        js_template = self.load_js_template(Path(self._template_url).joinpath('%s.jinja' % self._template_name))
         js = self.create_js(js_template, self._dataset_url)
         return js
 
@@ -68,7 +68,7 @@ class BaseVisualization:
         self._title = title
 
     def set_html_template(self, file_path):
-        self._html_template = file_path
+        self._html_template = Path(file_path)
 
     def set_labels(self, labels):
         raise NotImplementedError(self.implErrorMessage)
@@ -77,8 +77,8 @@ class BaseVisualization:
         raise NotImplementedError(self.implErrorMessage)
 
     def set_dataset_url(self, dataset_url):
-        assert isinstance(dataset_url, str)
-        self._dataset_url = dataset_url
+        assert (isinstance(dataset_url, str) or isinstance(dataset_url, Path))
+        self._dataset_url = Path(dataset_url)
 
     def set_chart_colors(self, colors):
         """Basic Method."""
@@ -91,9 +91,8 @@ class BaseVisualization:
 
 
     def write_dataset_file(self, dataset, dataset_url):
-        outp = open(dataset_url, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
+        with dataset_url.open(mode='w') as output:
+            json.dump(dataset, output, indent=2)
         print ('Writing: %s' % (dataset_url))
 
     def get_modifiable_template_variables(self):
@@ -175,37 +174,35 @@ class BaseVisualization:
     def create_js(self, template, dataset_url):
         return
 
-    def write_file(self, output, destination_url, filename):
+    def write_file(self, output, destination_folder, filename):
 
-        dest_file = '%s%s' % (destination_url, filename)
+        dest_path = destination_folder.joinpath(filename)
 
-        if not os.path.exists(destination_url):
-            print ("Folder does not exist. Creating folder '%s'. " % (destination_url))
-            os.makedirs(destination_url)
+        if not destination_folder.exists():
+            print ("Folder does not exist. Creating folder '%s'. " % destination_folder)
+            destination_folder.mkdir(parents=True)
 
-        f = open(dest_file, 'w')
+        with dest_path.open(mode='w') as f:
+            print ('Writing: %s' % dest_path)
+            for line in output:
+                f.write(line)
 
-        print ('Writing: %s' % (dest_file))
+    def create_visualization_files(self, destination_folder):
 
-        for line in output:
-            f.write(line)
-
-        f.close()
-
-    def create_visualization_files(self, destination_url):
+        destination_folder = Path(destination_folder)
 
         html_template = self.load_html_template(self._html_template)
-        js_template = self.load_js_template('%s%s.jinja' % (self._template_url, self._template_name))
+        js_template = self.load_js_template(Path(self._template_url).joinpath('%s.jinja' % self._template_name))
 
         # Default dataset url is used when nothing was explicitly passed.
-        data_output_path = destination_url + '%s%s.json' % (os.sep, self._title)
+        data_output_path = destination_folder.joinpath('%s.json' % self._title)
 
 
         js = self.create_js(js_template, data_output_path)
         html = self.create_html(html_template)
 
-        self.write_file(html, destination_url, '%s%s.html' % (os.sep, self._title))
-        self.write_file(js, destination_url, '%s%s.js' % (os.sep, self._title))
+        self.write_file(html, destination_folder, '%s.html' % self._title)
+        self.write_file(js, destination_folder, '%s.js' % self._title)
 
         visdata = self.generate_visualization_dataset(self._dataset)
         self.write_dataset_file(visdata, data_output_path)
@@ -233,7 +230,7 @@ class BaseVisualization:
         self.set_height(height)
 
     def load_html_template(self, template_url):
-        path, filename = os.path.split(template_url)
+        path = template_url.resolve().parent
         template_loader = jinja2.FileSystemLoader(searchpath=[path, './'])
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
         return self.load_template(template_env, template_url)
@@ -275,7 +272,7 @@ class BaseVisualization:
                 value = "'{}'".format(value)
             return jinja2.Markup(value)
 
-        path, filename = os.path.split(template_url)
+        path = template_url.resolve().parent
         template_loader = jinja2.FileSystemLoader(searchpath=[path, './'])
         template_env = jinja2.Environment(loader=template_loader, extensions=(JSAutoescape,), autoescape=True)
         template_env.filters['escapejs'] = jinja2_escapejs_filter
@@ -283,7 +280,7 @@ class BaseVisualization:
         return self.load_template(template_env, template_url)
 
     def load_template(self, environment, template_url):
-        path, filename = os.path.split(template_url)
+        filename = template_url.name
         return environment.get_template(filename)
 
     def set_css(self, line_stroke, shape_rendering, font_size, axis_label_size):

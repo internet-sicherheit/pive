@@ -24,24 +24,24 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import json
-from glob import glob
 from collections import OrderedDict
 from functools import reduce
 from .visualization import defaults as default
-import os
+from pathlib import Path
 
 config_path = default.config_path
 # The directory in which pive was installed.
-realpath = os.path.dirname(os.path.realpath(__file__))
-internal_config_path = '%s%s' % (realpath, config_path)
+realpath = Path(__file__).resolve().parent
+internal_config_path = realpath.joinpath(config_path)
 
 
 def open_config_files(default_config_path):
     """Opens all json-config files in a directory and
     returns a list of each files content."""
     configs = []
-    for filename in glob(internal_config_path + '*.json'):
-        with open(filename, 'r') as fp:
+
+    for json_path in internal_config_path.glob('*.json'):
+        with json_path.open(mode='r') as fp:
             conf = json.load(fp, object_pairs_hook=OrderedDict)
         configs.append(conf)
         # configs is type of list

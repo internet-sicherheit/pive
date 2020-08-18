@@ -24,13 +24,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import jinja2
-import os
 import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
 from pive.visualization import viewportvisualization as vv
 from pive.visualization import customscalesvisualization as csv
 
+from pathlib import Path
 
 class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisualization):
     def __init__(self,
@@ -47,13 +47,12 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
         bv.BaseVisualization.__init__(self)
         csv.CustomScalesVisualization.__init__(self)
         vv.ViewportVisualization.__init__(self)
-        realpath = os.path.dirname(os.path.realpath(__file__))
 
         # Metadata
         self._title = 'scatterchart'
         self._template_name = 'scatterchart'
         self._dataset = dataset
-        self._template_url = '%s%s' % (realpath, default.template_path)
+        self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._dataset_url = ''
 
         self._datakeys = []

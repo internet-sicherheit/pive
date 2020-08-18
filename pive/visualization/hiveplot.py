@@ -24,7 +24,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import jinja2
-import os
 import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
@@ -33,6 +32,7 @@ import networkx as nx
 import random
 import json
 import math
+from pathlib import Path
 
 class Chart(bv.BaseVisualization):
     def __init__(self,
@@ -48,8 +48,7 @@ class Chart(bv.BaseVisualization):
         self._title = 'hiveplot'
         self.__template_name = 'hiveplot'
         self.__dataset = dataset
-        realpath = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '%s%s' % (realpath, default.template_path)
+        self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self.__datakeys = []
         self.__version = default.p_version
 

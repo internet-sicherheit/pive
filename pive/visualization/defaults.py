@@ -25,7 +25,7 @@
 
 from pive.visualization import colorthemes
 import sys
-import os
+from pathlib import Path
 
 ####################
 ## Meta Data #######
@@ -34,11 +34,11 @@ title = 'pivechart'
 # Used to locate the modules with dotted namespace.
 module_path = 'pive.visualization'
 # Filepath to the template folder.
-template_path = '%stemplates%s' % (os.sep, os.sep)
+template_path = Path('templates')
 # Path where pive will create the standard output.
-output_path = '%s%soutput' % (sys.path[0], os.sep)
+output_path = Path(sys.argv[0]).joinpath("output")
 # Path where pive locates the visualizations config file.
-config_path = '%svisualization%sconfig%s' % (os.sep, os.sep,os.sep)
+config_path = Path('visualization/config')
 # Div container in which the visualization will be placed.
 div_hook = 'chart'
 # pive version

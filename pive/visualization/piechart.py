@@ -25,10 +25,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import jinja2
-import os
 import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
+
+from pathlib import Path
 
 
 class Chart(bv.BaseVisualization):
@@ -48,8 +49,7 @@ class Chart(bv.BaseVisualization):
         self._dataset = dataset
         self._dataset_url = ''
 
-        realpath = os.path.dirname(os.path.realpath(__file__))
-        self._template_url = '%s%s' % (realpath, default.template_path)
+        self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
 
