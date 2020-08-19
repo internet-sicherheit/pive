@@ -36,7 +36,7 @@ module_path = 'pive.visualization'
 # Filepath to the template folder.
 template_path = Path('templates')
 # Path where pive will create the standard output.
-output_path = Path(sys.argv[0]).joinpath("output")
+output_path = Path(sys.argv[0]).resolve().parent.joinpath("output")
 # Path where pive locates the visualizations config file.
 config_path = Path('visualization/config')
 # Div container in which the visualization will be placed.
