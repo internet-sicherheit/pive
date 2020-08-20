@@ -23,91 +23,137 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import json
-
 import jinja2
-
+import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
 
+from pathlib import Path
+
 
 class Chart(bv.BaseVisualization):
-    """Basic chart class."""
-
     def __init__(self,
                  dataset,
                  template_name,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
-        """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interfaces.
         bv.BaseVisualization.__init__(self)
 
         # Metadata
         self._title = 'chordchart'
-        self.__template_name = 'chordchart'
-        self.__dataset = dataset
-        real_path = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '{}{}'.format(real_path, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._template_name = 'chordchart'
+        self._dataset = dataset
+        self._dataset_url = ''
+
+        self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__colors = default.chartcolors
-        self.__label_size = default.label_size
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._colors = default.chartcolors
+        self._label_size = default.label_size
 
-        # Axis properties.
-        self.__shape_rendering = default.shape_rendering
-        self.__line_stroke = default.line_stroke
-        self.__font_size = default.font_size
+        #Axis properties.
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
 
-        # Chord specific.
-        self.__textpadding = default.textpadding
-        self.__elementfontsizse = default.fontsize
-        self.__tickfontsize = default.ticksize
-        self.__ticksteps = default.ticksteps
-        self.__tickprefix = default.prefix
+        #Chord specific.
+        self._textpadding = default.textpadding
+        self._elementfontsizse = default.fontsize
+        self._tickfontsize = default.ticksize
+        self._ticksteps = default.ticksteps
+        self._tickprefix = default.prefix
 
     def set_title(self, title):
-        """Basic Method."""
         self._title = title
 
-    def set_data_keys(self, datakeys):
-        """Setting the data keys for the visualization."""
-        self.__datakeys = datakeys
+    def setDataKeys(self, datakeys):
+        self._datakeys = datakeys;
 
-    def set_ticksteps(self, ticksteps):
-        """Setting the ticksteps for the visualization."""
-        self.__ticksteps = ticksteps
+    def setTicksteps(self, ticksteps):
+        self._ticksteps = ticksteps;
 
-    def set_tickprefix(self, tickprefix):
-        """Setting the tickprefix for the visualization."""
-        self.__tickprefix = tickprefix
+    def setTickprefix(self, tickprefix):
+        self._tickprefix = tickprefix;
 
     def set_chart_colors(self, colors):
         """Basic Method."""
-        self.__colors = colors
+        self._colors = colors
 
-    def init_matrix_row(self, elements):
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_datakeys"] = self._datakeys
+        variables["t_textpadding"] = self._textpadding
+        variables["t_elementfontsizse"] = self._elementfontsizse
+        variables["t_tickfontsize"] = self._tickfontsize
+        variables["t_ticksteps"] = self._ticksteps
+        variables["t_tickprefix"] = self._tickprefix
+        return variables
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default" : {
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_textpadding": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_elementfontsizse": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tickfontsize": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tickprefix": {
+                    "type": "string",
+                    "min": 1,
+                    "max": 1
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
+    def initMatrixRow(self, elements):
         """Initializes a matrix row with zero values."""
-        m_row = []
+        mrow = []
         for i in range(0, elements):
-            m_row.append(0)
-        return m_row
+            mrow.append(0)
+        return mrow
 
-    def generate_adjacency_matrix(self, elements, dataset):
+    def generateAdjacencyMatrix(self, elements, dataset):
         """Generates the adacency matrix of the graph."""
         matrix = []
         for source in elements:
             i = 0
 
-            m_row = self.init_matrix_row(len(elements))
+            mrow = self.initMatrixRow(len(elements))
 
             for line in dataset:
 
@@ -119,15 +165,15 @@ class Chart(bv.BaseVisualization):
                     for dest in elements:
                         if line[keys[1]] == dest:
                             index = elements.index(dest)
-                            m_row.pop(index)
-                            m_row.insert(index, line[keys[2]])
+                            mrow.pop(index)
+                            mrow.insert(index, line[keys[2]])
                             i += 1
-            matrix.append(m_row)
+            matrix.append(mrow)
         return matrix
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
-        vis_dataset = {}
+        visdataset = {}
 
         elements = []
 
@@ -141,138 +187,46 @@ class Chart(bv.BaseVisualization):
                 elements.append(source)
             if dest not in elements:
                 elements.append(dest)
-        matrix = self.generate_adjacency_matrix(elements, dataset)
+        matrix = self.generateAdjacencyMatrix(elements, dataset)
 
-        vis_dataset['elements'] = elements
-        vis_dataset['matrix'] = matrix
+        visdataset['elements'] = elements
+        visdataset['matrix'] = matrix
 
-        return vis_dataset
+        return visdataset
 
-    def write_dataset_file(self, dataset, destination_url, filename):
-        """Basic Method."""
-        dest_file = '{}{}'.format(destination_url, filename)
-        outp = open(dest_file, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-        print('Writing: {}'.format(dest_file))
-
-    def create_html(self, template):
-        """Basic Method."""
-        template_vars = {'t_title': self._title,
-                         't_div_hook': self._div_hook}
-
-        output_text = template.render(template_vars)
-        return output_text
 
     def create_js(self, template, dataset_url):
-        """Basic Method. Creates the JavaScript code based on the template."""
-        template_vars = {'t_width': self.__width,
-                         't_height': self.__height,
-                         't_padding': self.__padding,
-                         't_url': dataset_url,
-                         't_colors': self.__colors,
-                         't_textpadding': self.__textpadding,
-                         't_elementFontSize': self.__elementfontsizse,
-                         't_tickFontSize': self.__tickfontsize,
-                         't_ticksteps': self.__ticksteps,
-                         't_tickprefix': self.__tickprefix,
-                         't_div_hook': self._div_hook,
-                         't_font_size': self.__font_size,
-                         't_shape_rendering': self.__shape_rendering,
-                         't_line_stroke': self.__line_stroke,
-                         't_pive_version': self.__version,
-                         't_axis_label_size': self.__label_size}
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
+                        't_url': dataset_url,
+                        't_colors': self._colors,
+                        't_textpadding': self._textpadding,
+                        't_elementFontSize': self._elementfontsizse,
+                        't_tickFontSize': self._tickfontsize,
+                        't_ticksteps': self._ticksteps,
+                        't_tickprefix': self._tickprefix,
+                        't_div_hook': self._div_hook,
+                        't_font_size': self._font_size,
+                        't_shape_rendering': self._shape_rendering,
+                        't_line_stroke': self._line_stroke,
+                        't_pive_version' : self._version,
+                        't_axis_label_size' : self._label_size}
 
-        output_text = template.render(template_vars)
-        return output_text
+        outputText = template.render(templateVars)
+        return outputText
 
-    def write_file(self, output, destination_url, filename):
-        """Basic Method."""
-        dest_file = '{}{}'.format(destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print('Folder does not exist. '
-                  + 'Creating folder "{}". '.format(destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print('Writing: {}'.format(dest_file))
-
-        for line in output:
-            # f.write(line.encode('utf-8'))
-            f.write(line)
-
-        f.close()
-
-    def get_js_code(self):
-        """Basic Method."""
-        dataset_url = '{}.json'.format(self._title)
-        js_template = self.load_template_file(
-            '{}{}.jinja'.format(self.__template_url, self.__template_name))
-        js = self.create_js(js_template, dataset_url)
-        return js
-
-    def get_json_dataset(self):
-        """Basic Method."""
-        return self.generate_visualization_dataset(self.__dataset)
-
-    def create_visualization_files(self, destination_url):
-        """Basic Method."""
-        html_template = self.load_template_file(
-            '{}html.jinja'.format(self.__template_url))
-        js_template = self.load_template_file(
-            '{}{}.jinja'.format(self.__template_url, self.__template_name))
-
-        dataset_url = '{}.json'.format(self._title)
-
-        js = self.create_js(js_template, dataset_url)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_url, '/{}.html'.format(self._title))
-        self.write_file(js, destination_url, '/{}.js'.format(self._title))
-
-        vis_data = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(
-            vis_data,
-            destination_url,
-            '/{}.json'.format(self._title))
-
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(height)))
-        if (height <= 0):
-            print(
-                'Warning: Negative or zero height parameter. '
-                + 'Using default settings instead.')
-            height = default.height
-        self.__height = height
-
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(width)))
-        if (width <= 0):
-            print(
-                'Warning: Negative or zero width parameter. '
-                + 'Using default settings instead.')
-            width = default.width
-        self.__width = width
-
-    def set_dimension(self, width, height):
-        """Basic Method."""
-        self.set_width(width)
-        self.set_height(height)
-
-    def load_template_file(self, template_url):
-        """Basic Method."""
-        template_loader = jinja2.FileSystemLoader(
-            searchpath=[default.template_path, '/'])
-        print('Opening template: {}'.format(template_url))
-
-        template_env = jinja2.Environment(loader=template_loader)
-        template = template_env.get_template(template_url)
-        return template
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_datakeys" in dictionary:
+            self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if "t_textpadding" in dictionary:
+            self._textpadding = int(dictionary['t_textpadding'])
+        if "t_elementfontsizse" in dictionary:
+            self._elementfontsizse = dictionary['t_elementfontsizse']
+        if "t_tickfontsize" in dictionary:
+            self._tickfontsize = dictionary['t_tickfontsize']
+        if "t_ticksteps" in dictionary:
+            self.setTicksteps( int(dictionary['t_ticksteps']) )
+        if "t_tickprefix" in dictionary:
+            self.setTickprefix((dictionary['t_tickprefix']))

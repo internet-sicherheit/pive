@@ -22,14 +22,16 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from abc import ABCMeta, abstractmethod
 
+class CustomScalesVisualization():
+    __metaclass__ = ABCMeta
+    implErrorMessage = 'Method required and needs to be implemented.'
 
-class CustomScalesVisualization:
-
-    IMPL_ERROR_MESSAGE = 'Method required and needs to be implemented.'
-
+    @abstractmethod
     def __init__(self):
         pass
 
-    def set_scales(self, scales):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
+    @abstractmethod
+    def setScales(self, scales):
+        raise NotImplementedError(self.implErrorMessage)

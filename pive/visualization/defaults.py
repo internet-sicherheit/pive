@@ -23,29 +23,29 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 from pive.visualization import colorthemes
+import sys
+from pathlib import Path
 
 ####################
-#  Meta Data #######
+## Meta Data #######
 ####################
 title = 'pivechart'
 # Used to locate the modules with dotted namespace.
 module_path = 'pive.visualization'
 # Filepath to the template folder.
-template_path = '/templates/'
+template_path = Path('templates')
 # Path where pive will create the standard output.
-output_path = '{}/output'.format(sys.path[0])
+output_path = Path(sys.argv[0]).resolve().parent.joinpath("output")
 # Path where pive locates the visualizations config file.
-config_path = '/visualization/config/'
+config_path = Path('visualization/config')
 # Div container in which the visualization will be placed.
 div_hook = 'chart'
 # pive version
-p_version = '0.3.3'
+p_version = '0.3.4'
 
 ####################
-#  Default Values ##
+## Default Values ##
 ####################
 width = 900
 height = 600
@@ -64,7 +64,7 @@ barwidth = 20
 threshold = 1
 
 ####################
-#  Axis Rendering ##
+## Axis Rendering ##
 ####################
 shape_rendering = 'optimizeSpeed'
 line_stroke = 'black'
@@ -72,7 +72,7 @@ font_size = 16
 label_size = 18
 
 ####################
-#  Formatting ######
+## Formatting ######
 ####################
 timelabel = '%M %S Sek'
 isotimeformat = "%H:%M:%S"
@@ -83,18 +83,19 @@ xlabel = 'X'
 ylabel = 'Y'
 
 ##########################
-#  Chord Chart specific ##
+## Chord Chart specific ##
 ##########################
 fontsize = '1.25em'
 ticksize = '.75em"'
 textpadding = 45
-# Defaults go for kilo-steps (K, 1000). Always combine them right.
+#Defaults go for kilo-steps (K, 1000). Always combine them right.
 ticksteps = 1000
 prefix = 'K'
 
 ####################
-#  Colors ##########
+## Colors ##########
 ####################
 iconcolor = '#FF2C00'
 iconhighlight = '#FF8B73'
 chartcolors = colorthemes.pive
+

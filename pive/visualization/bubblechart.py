@@ -23,21 +23,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import json
-
 import jinja2
-
+import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
 from pive.visualization import viewportvisualization as vv
 from pive.visualization import customscalesvisualization as csv
 
+from pathlib import Path
 
-class Chart(bv.BaseVisualization, csv.CustomScalesVisualization,
-            vv.ViewportVisualization):
-    """Chart class for viewport driven data with custom scaling."""
-
+class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisualization):
     def __init__(self,
                  dataset,
                  template_name,
@@ -47,7 +42,6 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization,
                  viewport=default.viewport,
                  jumplength=default.jumplength,
                  times=False):
-        """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interfaces.
         bv.BaseVisualization.__init__(self)
@@ -56,107 +50,197 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization,
 
         # Metadata
         self._title = 'bubblechart'
-        self.__template_name = 'bubblechart'
-        self.__dataset = dataset
-        real_path = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '{}{}'.format(real_path, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._template_name = 'bubblechart'
+        self._dataset = dataset
+        self._dataset_url = ''
+
+        self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__viewport = viewport
-        self.__jumplength = jumplength
-        self.__xlabel = default.xlabel
-        self.__ylabel = default.ylabel
-        self.__label_size = default.label_size
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._viewport = viewport
+        self._jumplength = jumplength
+        self._xlabel = default.xlabel
+        self._ylabel = default.ylabel
+        self._label_size = default.label_size
 
         if times:
-            self.__scales = default.timescales
+            self._scales = default.timescales
         else:
-            self.__scales = default.scales
+            self._scales = default.scales
 
-        self.__timelabel = default.timelabel
-        self.__timeformat = default.isotimeformat
-        self.__iconwidth = default.iconwidth
-        self.__iconheight = default.iconheight
-        self.__iconcolor = default.iconcolor
-        self.__iconhighlight = default.iconhighlight
-        self.__colors = default.chartcolors
+        self._timelabel = default.timelabel
+        self._timeformat = default.isotimeformat
+        self._iconwidth = default.iconwidth
+        self._iconheight = default.iconheight
+        self._iconcolor = default.iconcolor
+        self._iconhighlight = default.iconhighlight
+        self._colors = default.chartcolors
 
-        self.__circleopacity = default.circleopacity
-        self.__highlightfactor = default.highlightfactor
-        self.__minradius = default.minradius
-        self.__maxradius = default.maxradius
+        self._circleopacity = default.circleopacity
+        self._highlightfactor = default.highlightfactor
+        self._minradius = default.minradius
+        self._maxradius = default.maxradius
 
-        # Axis properties.
-        self.__shape_rendering = default.shape_rendering
-        self.__line_stroke = default.line_stroke
-        self.__font_size = default.font_size
+        #Axis properties.
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
 
-    def set_title(self, title):
-        """Basic Method."""
-        self._title = title
+    def getViewport(self):
+        return self._viewport
 
-    def get_viewport(self):
-        """Basic method for viewport driven data."""
-        return self.__viewport
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_viewport"] = self._viewport
+        variables["t_jumplength"] = self._jumplength
+        variables["t_scales"] = self._scales
+        variables["t_datakeys"] = self._datakeys
+        variables["t_circleopacity"] = self._circleopacity
+        variables["t_highlightfactor"] = self._highlightfactor
+        variables["t_minradius"] = self._minradius
+        variables["t_maxradius"] = self._maxradius
+        variables["t_xlabel"] = self._xlabel
+        variables["t_ylabel"] = self._ylabel
+        variables["t_timeformat"] = self._timeformat
+        variables["t_iconwidth"] = self._iconwidth
+        variables["t_iconheight"] = self._iconheight
+        variables["t_iconcolor"] = self._iconcolor
+        variables["t_iconhighlight"] = self._iconhighlight
+        return variables
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default" : {
+                "t_viewport": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_jumplength": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_scales": {
+                    "type": "list",
+                    "length": 2,
+                    "item_type": {
+                        "type": "selection",
+                        "multi_selection" : False,
+                        "choices" : ["linear","log","pow","date"]
+                    }
+                },
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_circleopacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_highlightfactor": {
+                    "type": "float",
+                    "min": 0.0,
+                },
+                "t_minradius": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_maxradius": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_xlabel": {
+                    "type": "string"
+                },
+                "t_ylabel": {
+                    "type": "string"
+                },
+                "t_timeformat": {
+                    "type": "string"
+                },
+                "t_iconwidth": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_iconheight": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_iconcolor": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_iconhighlight": {
+                    "type": "color",
+                    "channels": 3
+                }
+
+
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
 
     def set_labels(self, labels):
-        """Basic Method."""
-        self.__xlabel = labels[0]
-        self.__ylabel = labels[1]
+        self._xlabel = labels[0]
+        self._ylabel = labels[1]
 
-    def set_data_keys(self, datakeys):
-        """Setting the data keys for the visualization."""
-        self.__datakeys = datakeys
+    def setDataKeys(self, datakeys):
+        self._datakeys = datakeys
 
-    def set_circle_opacity(self, opacity):
-        """Setting the opacity of individual circles."""
-        self.__circleopacity = opacity
+    def setCircleOpacity(self, opacity):
+        self._circleopacity = opacity
 
-    def set_highlight_factor(self, factor):
-        """Setting the highlighting factor for the circles."""
-        self.__highlightfactor = factor
+    def setHighlightFactor(self, factor):
+        self._highlightfactor = factor
 
-    def set_min_radius(self, radius):
-        """Setting the minimum radius for all circles in this visualization."""
-        self.__minradius = radius
+    def setMinRadius(self, radius):
+        self._minradius = radius
 
-    def set_max_radius(self, radius):
-        """Setting the maximum radius for all circles in this visualization."""
-        self.__maxradius = radius
+    def setMaxRadius(self, radius):
+        self._maxradius = radius
 
-    def set_time_properties(self, timelabel, timeformat):
+    def setTimeProperties(self, timelabel, timeformat):
         """Basic Method for time supporting visualizations."""
-        self.__timeformat = timeformat
-        self.__timelabel = timelabel
+        self._timeformat = timeformat
+        self._timelabel = timelabel
 
-    def set_icon_properties(self, iconwidth, iconheight,
-                            iconcolor, iconhighlight):
+    def setIconProperties(self, iconwidth, iconheight, iconcolor, iconhighlight):
         """Basic Method for viewport driven data.
-
-        Defines the icon properties. All arguments required.
-        """
-        self.__iconwidth = iconwidth
-        self.__iconheight = iconheight
-        self.__iconcolor = iconcolor
-        self.__iconhighlight = iconhighlight
-
-    def set_chart_colors(self, colors):
-        """Basic Method."""
-        self.__colors = colors
+		Defines the icon properties. All arguments required."""
+        self._iconwidth = iconwidth
+        self._iconheight = iconheight
+        self._iconcolor = iconcolor
+        self._iconhighlight = iconhighlight
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
-        vis_dataset = []
+        visdataset = []
 
         for datapoint in dataset:
-            vis_datapoint = {}
+            visdatapoint = {}
             points = list(datapoint.keys())
-            vis_datapoint['x'] = datapoint[points[0]]
+            visdatapoint['x'] = datapoint[points[0]]
             ordinates = []
             radii = []
             for item in points[1::2]:
@@ -169,176 +253,90 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization,
             bubble = []
             for item in bubbles:
                 bubble.append(list(item))
-                vis_datapoint['y'] = bubble
+                visdatapoint['y'] = bubble
 
-            vis_dataset.append(vis_datapoint)
-        return vis_dataset
+            visdataset.append(visdatapoint)
+        return visdataset
 
-    def write_dataset_file(self, dataset, destination_url, filename):
-        """Basic Method."""
-        dest_file = '{}{}'.format(destination_url, filename)
-        outp = open(dest_file, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-        print('Writing: {}'.format(dest_file))
-
-    def set_scales(self, scales):
-        """Basic Method for data with custom scaling."""
-        self.__scales = scales
-
-    def create_html(self, template):
-        """Basic Method."""
-        template_vars = {'t_title': self._title,
-                         't_div_hook': self._div_hook}
-
-        output_text = template.render(template_vars)
-        return output_text
+    def setScales(self, scales):
+        self._scales = scales
 
     def create_js(self, template, dataset_url):
-        """Basic Method. Creates the JavaScript code based on the template."""
-        template_vars = {'t_width': self.__width,
-                         't_height': self.__height,
-                         't_padding': self.__padding,
-                         't_viewport': self.__viewport,
-                         't_jumplength': self.__jumplength,
-                         't_xlabel': self.__xlabel,
-                         't_ylabel': self.__ylabel,
-                         't_timeformat': self.__timeformat,
-                         't_iconwidth': self.__iconwidth,
-                         't_iconheight': self.__iconheight,
-                         't_iconcolor': self.__iconcolor,
-                         't_iconhighlight': self.__iconhighlight,
-                         't_datakeys': self.__datakeys,
-                         't_url': dataset_url,
-                         't_format': self.__timeformat,
-                         't_iso': self.__timeformat,
-                         't_scales': self.__scales,
-                         't_colors': self.__colors,
-                         't_highlightfactor': self.__highlightfactor,
-                         't_minradius': self.__minradius,
-                         't_maxradius': self.__maxradius,
-                         't_circleopacity': self.__circleopacity,
-                         't_div_hook': self._div_hook,
-                         't_font_size': self.__font_size,
-                         't_shape_rendering': self.__shape_rendering,
-                         't_line_stroke': self.__line_stroke,
-                         't_pive_version': self.__version,
-                         't_axis_label_size': self.__label_size}
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
+                        't_padding': self._padding,
+                        't_viewport': self._viewport,
+                        't_jumplength': self._jumplength,
+                        't_xlabel': self._xlabel,
+                        't_ylabel': self._ylabel,
+                        't_timeformat': self._timeformat,
+                        't_iconwidth': self._iconwidth,
+                        't_iconheight': self._iconheight,
+                        't_iconcolor': self._iconcolor,
+                        't_iconhighlight': self._iconhighlight,
+                        't_datakeys': self._datakeys,
+                        't_url': dataset_url,
+                        't_format': self._timeformat,
+                        't_iso': self._timeformat,
+                        't_scales': self._scales,
+                        't_colors': self._colors,
+                        't_highlightfactor': self._highlightfactor,
+                        't_minradius': self._minradius,
+                        't_maxradius': self._maxradius,
+                        't_circleopacity': self._circleopacity,
+                        't_div_hook': self._div_hook,
+                        't_font_size': self._font_size,
+                        't_shape_rendering': self._shape_rendering,
+                        't_line_stroke': self._line_stroke,
+                        't_pive_version' : self._version,
+                        't_axis_label_size' : self._label_size}
 
-        output_text = template.render(template_vars)
-        return output_text
+        outputText = template.render(templateVars)
+        return outputText
 
-    def write_file(self, output, destination_url, filename):
-        """Basic Method."""
-        dest_file = '{}{}'.format(destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print('Folder does not exist. '
-                  + 'Creating folder "{}". '.format(destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print('Writing: {}'.format(dest_file))
-
-        for line in output:
-            f.write(line)
-
-        f.close()
-
-    def get_js_code(self):
-        """Basic Method."""
-        dataset_url = '{}.json'.format(self._title)
-        js_template = self.load_template_file(
-            '{}{}.jinja'.format(self.__template_url, self.__template_name))
-        js = self.create_js(js_template, dataset_url)
-        return js
-
-    def get_json_dataset(self):
-        """Basic Method."""
-        return self.generate_visualization_dataset(self.__dataset)
-
-    def create_visualization_files(self, destination_url):
-        """Basic Method."""
-        html_template = self.load_template_file(
-            '{}html.jinja'.format(self.__template_url))
-        js_template = self.load_template_file(
-            '{}{}.jinja'.format(self.__template_url, self.__template_name))
-
-        dataset_url = '{}.json'.format(self._title)
-
-        js = self.create_js(js_template, dataset_url)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_url, '/{}.html'.format(self._title))
-        self.write_file(js, destination_url, '/{}.js'.format(self._title))
-
-        vis_data = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(
-            vis_data,
-            destination_url,
-            '/{}.json'.format(self._title))
-
-    def set_jumplength(self, jumplength):
+    def setJumplength(self, jumplength):
         """Basic Method for viewport driven data."""
         if not isinstance(jumplength, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(jumplength)))
+            raise ValueError("Integer expected, got %s instead." % (type(jumplength)))
         if (jumplength <= 0):
-            print(
-                'Warning: Negative or zero jumplength parameter. '
-                + 'Using default settings instead.')
+            print ("Warning: Negative or zero jumplength parameter. Using default settings instead.")
             jumplength = default.jumplength
 
-        self.__jumplength = jumplength
+        self._jumplength = jumplength
 
-    def set_viewport(self, viewport):
+    def setViewport(self, viewport):
         """Basic method for viewport driven data."""
         if not isinstance(viewport, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(viewport)))
+            raise ValueError("Integer expected, got %s instead." % (type(viewport)))
         if (viewport <= 0):
-            print(
-                'Warning: Negative or zero viewport parameter. '
-                + 'Using default settings instead.')
+            print ("Warning: Negative or zero viewport parameter. Using default settings instead.")
             viewport = default.viewport
-        self.__viewport = viewport
+        self._viewport = viewport
 
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(height)))
-        if (height <= 0):
-            print(
-                'Warning: Negative or zero height parameter. '
-                + 'Using default settings instead.')
-            height = default.height
-        self.__height = height
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_viewport" in dictionary:
+            self.setViewport(int(dictionary['t_viewport']))
+        if "t_jumplength" in dictionary:
+            self.setJumplength(int(dictionary['t_jumplength']))
+        if "t_scales" in dictionary:
+            self.setScales(json.loads(dictionary['t_scales'].replace('\'', '\"')))
+        self.set_labels([dictionary.get('t_xlabel', self._xlabel), dictionary.get('t_ylabel',self._ylabel)])
+        if "t_datakeys" in dictionary:
+            self.setDataKeys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if "t_circleopacity" in dictionary:
+            self.setCircleOpacity(float(dictionary['t_circleopacity']))
+        if "t_highlightfactor" in dictionary:
+            self.setHighlightFactor(float(dictionary['t_highlightfactor']))
+        if "t_minradius" in dictionary:
+            self.setMinRadius(int(dictionary['t_minradius']))
+        if "t_maxradius" in dictionary:
+            self.setMaxRadius(int(dictionary['t_maxradius']))
+        self.setTimeProperties(self._timelabel,dictionary.get('t_timeformat', self._timeformat))
+        self.setIconProperties(int(dictionary.get('t_iconwidth',self._iconwidth)),
+                               int(dictionary.get('t_iconheight',self._iconheight)),
+                               dictionary.get('t_iconcolor',self._iconcolor),
+                               dictionary.get('t_iconhighlight', self._iconhighlight)
+                               )
 
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(width)))
-        if (width <= 0):
-            print(
-                'Warning: Negative or zero width parameter. '
-                + 'Using default settings instead.')
-            width = default.width
-        self.__width = width
 
-    def set_dimension(self, width, height):
-        """Basic Method."""
-        self.set_width(width)
-        self.set_height(height)
-
-    def load_template_file(self, template_url):
-        """Basic Method."""
-        templateLoader = jinja2.FileSystemLoader(
-            searchpath=[default.template_path, '/'])
-        print('Opening template: {}'.format(template_url))
-
-        template_env = jinja2.Environment(loader=templateLoader)
-        template = template_env.get_template(template_url)
-        return template

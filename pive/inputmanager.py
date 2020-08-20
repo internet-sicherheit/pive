@@ -27,49 +27,50 @@
 """ The input manager reads files and strings containing
 datasets in json and csv format. The data is automatically
 validated and corrected if necessary."""
-from collections import OrderedDict
-import pathlib
+from . import inputreader as reader
+from . import datavalidater as validater
+from . import consistenceprofiler as profiler
+from . import visualizationmapper as vizmapper
+from . import shapeloader as shapeloader
 
-import pive.inputreader as reader
-import pive.visualizationmapper as vizmapper
-import pive.consistenceprofiler as profiler
-import pive.datavalidater as validater
-import pive.shapeloader as shapeloader
+NOT_CONSISTENT_ERR_MSG = "Data is not consistent."
+NO_DATA_LOADED_ERR_MSG = "Unexpected data source."
 
-NOT_CONSISTENT_ERR_MSG = 'Data is not consistent.'
-NO_DATA_LOADED_ERR_MSG = 'Unexpected data source.'
 
 class InputManager(object):
     """Contains and manages the data."""
+    isHive = False
 
     # Input Managers can try to merge false datapoints or not.
     def __init__(self, mergedata=False):
-        """By default Input Managers do not try to merge false datapoints."""
         self.__mergedata = mergedata
+        #TODO: Should __contains_datefields be a property of InputManager
+        #   and if yes, should it be set the way it is
         self.__contains_datefields = False
-
 
     def read(self, source):
         """Reads the input source."""
-        input_data = reader.load_input_source(source)
+        inputdata = reader.load_input_source(source)
 
-        # Raise an error if the data source is empty or not readable.
-        if not input_data:
+        # Raise an error if the data source is empty or nor readable.
+        if not inputdata:
             raise ValueError(NO_DATA_LOADED_ERR_MSG)
 
-        # If the input is geodata in JSON format, change its data structure. Otherwise no changes are made
-        input_data = self.__edit_json_geodata(source, input_data)
-
-        if self.__file_is_map_shape(input_data):
-            self.__shape_data = input_data
+        dataset = self.__validate_input(inputdata)
+        # Raise an error if the dataset is not consistent.
+        for i in dataset:
+            for key,value in i.items():
+                if key == 'LINKS':
+                    isHive = True
+                    break
+        if self.__file_is_map_shape(inputdata):
+            self.__shape_data = inputdata
             self.__shape_source = source
-            dataset = input_data
-        else:
-            dataset = self.__validate_input(input_data)
-            # Raise an error if the dataset is not consistent.
-            if not self.__is_dataset_consistent(dataset):
-                raise ValueError(NOT_CONSISTENT_ERR_MSG)
-        
+            dataset = inputdata
+
+        if not self.__is_dataset_consistent(dataset):
+            raise ValueError(NOT_CONSISTENT_ERR_MSG)
+
         return dataset
 
     def map(self, dataset):
@@ -78,11 +79,12 @@ class InputManager(object):
         properties = vizmapper.get_visualization_properties(dataset, viz_types)
         self.__suitables = vizmapper.check_possibilities(properties)
         self.__contains_datefields = vizmapper.has_date(viz_types)
-        
+
         return self.__suitables
 
     def has_date_points(self):
         """Returns true if the data contains dates."""
+        #FIXME: Value only set after call to map(self, dataset)
         return self.__contains_datefields
 
     def get_map_shape(self, dataset):
@@ -108,32 +110,33 @@ class InputManager(object):
 
     def __get_datapoint_types(self, dataset):
         """Returns all containing visualization types."""
-        viz_types = profiler.get_datapoint_types(dataset[0])
-        return viz_types
+        viztypes = profiler.get_consistent_types(dataset)
+        return viztypes
 
-    def __validate_input(self, input_data):
+    def __validate_input(self, inputdata):
         """Validates the input data:"""
-        valid_data = []
+        validdata = []
         if self.__mergedata:
-            valid_data = self.__merged_dataset_validation(input_data)
+            validdata = self.__merged_dataset_validation(inputdata)
         else:
-            valid_data = self.__dataset_validation(input_data)
-        return valid_data
+            validdata = self.__dataset_validation(inputdata)
+        return validdata
 
-    def __merged_dataset_validation(self, input_data):
+    def __merged_dataset_validation(self, inputdata):
         """Validate the data by merging all shared keys."""
-        all_keys = validater.get_all_keys_in_dataset(input_data)
-        shared_keys = validater.determine_shared_keys_in_dataset(
-            all_keys, input_data)
-        dataset = validater.generate_valid_dataset_from_shared_keys(
-            shared_keys, input_data)
+        allkeys = validater.get_all_keys_in_dataset(inputdata)
+        sharedkeys = validater.determine_shared_keys_in_dataset(allkeys,
+                                                                inputdata)
+        dataset = validater.generate_valid_dataset_from_shared_keys(sharedkeys,
+                                                                    inputdata)
         return dataset
 
-    def __dataset_validation(self, input_data):
-        """Validate the unmerged data by counting the keys."""
-        keycount = validater.count_keys_in_raw_data(input_data)
-        valid_keys = validater.validate_data_keys(keycount)
-        dataset = validater.generate_valid_dataset(valid_keys, input_data)
+    def __dataset_validation(self, inputdata):
+        """Validate the unmerged data by counting the keys and
+        filtering out data points with minority keysets"""
+        keycount = validater.count_keys_in_raw_data(inputdata)
+        validkeys = validater.validate_data_keys(keycount)
+        dataset = validater.generate_valid_dataset(validkeys, inputdata)
         return dataset
 
     def __get_json_features(self, json):
@@ -181,7 +184,7 @@ class InputManager(object):
                 self.__is_shape = True
         except KeyError:
             self.__is_shape = False
-        
+
         return self.__is_shape
 
     def dataset_is_shape(self):

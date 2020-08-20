@@ -5,12 +5,12 @@ setup(
     packages=['pive', 'pive/visualization'],
     use_2to3=True,
     include_package_data=True,
-    version='0.3.3',
+    version='0.3.4',
     url='https://github.com/daboth/pive',
-    download_url='https://github.com/daboth/pive/tarball/0.3.3',
+    download_url='https://github.com/daboth/pive/tarball/0.3.4',
     license='BSD',
     description='Interactive visualization tool',
-    long_description=open('README.md').read(),
+    long_description=open('README.txt').read(),
     author='David Bothe',
     author_email='davbothe@googlemail.com',
     classifiers=[
@@ -24,6 +24,7 @@ setup(
         'Topic :: Scientific/Engineering :: Visualization',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    install_requires=['jinja2']
+    install_requires=['jinja2','py-dateutil', 'pyveplot',  'networkx'],
+    test_suite = 'testcases'
 
 )

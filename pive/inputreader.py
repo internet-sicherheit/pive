@@ -29,12 +29,10 @@ from collections import OrderedDict
 
 
 def load_input_source(input_source):
-    """Load data from an arbitrary input source.
-
-    Currently supported: JSON, JSON-String, CSV, CSV-String.
-    Returns an empty list if no data is available.
-    """
-    input_data = []
+    """Load data from an arbitrary input source. Currently supported:
+	JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
+	is available."""
+    input_data = None
     try:
         input_data = load_json_from_file(input_source)
     except ValueError as e:
@@ -45,7 +43,6 @@ def load_input_source(input_source):
         pass
     else:
         return input_data
-
     if not input_data:
         try:
             input_data = load_json_string(input_source)
@@ -55,7 +52,6 @@ def load_input_source(input_source):
             pass
         except Exception as e:
             pass
-
     if not input_data:
         try:
             input_data = load_csv_from_file(input_source)
@@ -65,7 +61,6 @@ def load_input_source(input_source):
             pass
         except Exception as e:
             pass
-
     if not input_data:
         try:
             input_data = load_csv_string(input_source)
@@ -73,30 +68,29 @@ def load_input_source(input_source):
             pass
     return input_data
 
-
 def load_json_from_file(json_input):
     """Load a JSON File."""
-    fp = open(json_input, 'r')
-    inpt = json.load(fp, object_pairs_hook=OrderedDict)
-    return inpt
+    with open(json_input, 'r') as fp:
+        inpt = json.load(fp)
+        return parse_json_to_internal(inpt)
 
 
 def load_json_string(json_input):
     """Load a JSON-String."""
-    inpt = json.loads(json_input, object_pairs_hook=OrderedDict)
-    return inpt
+    inpt = json.loads(json_input)
+    return parse_json_to_internal(inpt)
 
 
 def load_csv_string(csv_input):
     """Load a CSV-String."""
-    input_string = csv_input.split('\n')
+    inputstring = csv_input.split('\n')
     data = []
-    dialect = csv.Sniffer().sniff(csv_input)
-    delimiter_char = dialect.delimiter
-    input_data = csv.DictReader(input_string)
-    header = input_data.fieldnames
+    dialect = csv.Sniffer().sniff(csv_input[:4096])
+    delimiterchar = dialect.delimiter
+    inputdata = csv.DictReader(inputstring)
+    header = inputdata.fieldnames
 
-    for row in input_data:
+    for row in inputdata:
         od = OrderedDict()
 
         for item in header:
@@ -108,39 +102,36 @@ def load_csv_string(csv_input):
 
 
 def load_csv_from_file(csv_input):
-    """Loads the input from a csv file.
-
-    Returns a list of ordered dictionaries for further processing.
-    """
+    """Loads the input from a csv file and returns
+	a list of ordered dictionaries for further processing."""
     data = []
-    csv_file = open(csv_input)
-    csv_file.seek(0)
-    dialect = csv.Sniffer().sniff(csv_file.read())
-    csv_file.seek(0)
-    is_header = csv.Sniffer().has_header(csv_file.read())
-    csv_file.seek(0)
-    # The delimiter used in the dialect.
-    delimiter_char = dialect.delimiter
-    # Opens the input file with the determined delimiter.
-    dict_reader = csv.DictReader(csv_file, dialect=dialect)
+    with open(csv_input) as csvfile:
+        csvfile.seek(0)
+        dialect = csv.Sniffer().sniff(csvfile.read(4096))
+        csvfile.seek(0)
+        isHeader = csv.Sniffer().has_header(csvfile.read(4096))
+        csvfile.seek(0)
+        # The delimiter used in the dialect.
+        delimiterchar = dialect.delimiter
+        # Opens the input file with the determined delimiter.
+        dictreader = csv.DictReader(csvfile, dialect=dialect)
 
-    header = dict_reader.fieldnames
+        header = dictreader.fieldnames
 
-    # Translate the data into a list of dictionaries.
-    for row in dict_reader:
+        #Translate the data into a list of dictionaries.
+        for row in dictreader:
 
-        ordered_data = OrderedDict()
-        for item in header:
-            value = parse_value_type(row[item])
+            ordered_data = OrderedDict()
+            for item in header:
+                value = parse_value_type(row[item])
 
-            ordered_data[item] = value
+                ordered_data[item] = value
 
-        data.append(ordered_data)
-    return data
+            data.append(ordered_data)
+        return data
 
 
 def parse_value_type(value):
-    """Parses the passed value to either int or float representation."""
     if is_int(value):
         value = int(value)
     elif is_float(value):
@@ -149,7 +140,6 @@ def parse_value_type(value):
 
 
 def is_float(value):
-    """Checks if the passed value is a float value."""
     try:
         number = float(value)
     except ValueError:
@@ -159,7 +149,6 @@ def is_float(value):
 
 
 def is_int(value):
-    """Checks if the passed value is an int value."""
     try:
         num_a = float(value)
         num_b = int(num_a)
@@ -167,3 +156,71 @@ def is_int(value):
         return False
     else:
         return num_a == num_b
+
+def parse_json_to_internal(json_element):
+
+    def name_gen(length):
+        index = 0
+        while index < length:
+            if index == 0:
+                yield 'x'
+            elif index == 1:
+                yield 'y'
+            elif index == 2:
+                yield 'z'
+            else:
+                yield 'a' + str(index-3)
+            index += 1
+
+
+    data = []
+
+    #check if there is an order tag
+    if type(json_element) == dict:
+        if json_element.get("order"):
+            for datapoint in json_element["data"]:
+                if len(datapoint) != len(json_element["order"]):
+                    raise ValueError("Length mismatch between datapoint and order")
+                internal_datapoint = OrderedDict()
+                for k,v in zip(json_element["order"],datapoint):
+                    internal_datapoint[k] = v
+                data.append(internal_datapoint)
+        else:
+            raise ValueError("Root JSON Element is an object, but has no order metadata")
+    #Otherwise the element should be a list
+    elif type(json_element) == list:
+        #If no input data exists we dont need to do anything further
+        if len(json_element) != 0:
+            first = json_element[0]
+            if type(first) == list:
+                if len(first) != 0:
+                    if type(first[0]) == dict and len(first[0].keys()) == 1:
+                        #if length other than 1 assume complex object
+                        #KV-Pairs available
+                        for datapoint in json_element:
+                            internal_datapoint = OrderedDict()
+                            for datum in datapoint:
+                                internal_datapoint[list(datum.keys())[0]] = list(datum.values())[0]
+                            data.append(internal_datapoint)
+                    else:
+                        for datapoint in json_element:
+                            internal_datapoint = OrderedDict()
+                            for k,v in zip(name_gen(len(datapoint)),datapoint):
+                                internal_datapoint[k] = v
+                            data.append(internal_datapoint)
+            elif "LINKS" in first:
+                #FIXME: Workaround for Hiveplot
+                for datapoint in json_element:
+                    internal_datapoint = OrderedDict()
+                    internal_datapoint["ID"] = datapoint["ID"]
+                    internal_datapoint["TYPE"] = datapoint["TYPE"]
+                    internal_datapoint["WEIGHT"] = datapoint["WEIGHT"]
+                    internal_datapoint["LINKS"] = datapoint["LINKS"]
+                    data.append(internal_datapoint)
+            else:
+                raise ValueError("Expected a list of coordinates")
+
+    else:
+        raise ValueError("Unsupported format")
+    return data
+
