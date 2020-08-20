@@ -23,10 +23,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import requests
 import geojson_rewind
+import json
+
 
 import pive.consistenceprofiler as profiler
 import pive.reversegeocoder as geocoder
+
+from pive.reversegeocoder import API_SHAPE
 
 def get_all_coordinates(dataset):
     """Returns every pair of coordinates from the dataset."""
@@ -149,52 +154,78 @@ def build_heatmap(dataset):
 
 def __get_city(dataset):
     """Returns the city according to the most occuring districts in a heatmap dataset."""
-    city = ''
-    num = 0
-    result = {}
+    # city = ''
+    # num = 0
+    # result = {}
+    #
+    # gelsenkirchen = ['Altstadt', 'Schalke', 'Schalke-Nord', 'Bismarck', 'Bulmke-Hüllen', 'Feldmark', 'Heßler',
+    #                  'Buer', 'Scholven', 'Hassel', 'Horst', 'Beckhausen', 'Beckhausen-Schaffrath', 'Erle', 'Resse', 'Resser Mark',
+    #                  'Neustadt', 'Ückendorf', 'Rotthausen']
+    #
+    # wuppertal = ['Nächstebreck', 'Barmen', 'Schöller', 'Vohwinkel', 'Elberfeld', 'Beyenburg', 'Langerfeld',
+    #              'Ronsdorf', 'Cronenberg', 'Dönberg']
+    #
+    # aachen = ['Richterich', 'Laurensberg', 'Haaren', 'Eilendorf', 'Aachen-Mitte', 'Brand', 'Kornelimünster/Walheim']
+    #
+    # for elem in dataset:
+    #     for key in elem:
+    #         if key == 'Stadtteil':
+    #             district = elem[key]
+    #             if district in gelsenkirchen:
+    #                 result['Gelsenkirchen'] = result.get('Gelsenkirchen', 0) + 1
+    #             elif district in wuppertal:
+    #                 result['Wuppertal'] = result.get('Wuppertal', 0) + 1
+    #             elif district in aachen:
+    #                 result['Aachen'] = result.get('Aachen', 0) + 1
+    #
+    # # Get the city with the highest count of districts
+    # for key in result:
+    #     if result[key] > num:
+    #         num = result[key]
+    #         city = key
+    #
+    # return city
 
-    gelsenkirchen = ['Altstadt', 'Schalke', 'Schalke-Nord', 'Bismarck', 'Bulmke-Hüllen', 'Feldmark', 'Heßler',
-                     'Buer', 'Scholven', 'Hassel', 'Horst', 'Beckhausen', 'Beckhausen-Schaffrath', 'Erle', 'Resse', 'Resser Mark',
-                     'Neustadt', 'Ückendorf', 'Rotthausen']
-
-    wuppertal = ['Nächstebreck', 'Barmen', 'Schöller', 'Vohwinkel', 'Elberfeld', 'Beyenburg', 'Langerfeld',
-                 'Ronsdorf', 'Cronenberg', 'Dönberg']
-
-    aachen = ['Richterich', 'Laurensberg', 'Haaren', 'Eilendorf', 'Aachen-Mitte', 'Brand', 'Kornelimünster/Walheim']
-
+    city_candidates = {}
     for elem in dataset:
         for key in elem:
             if key == 'Stadtteil':
                 district = elem[key]
-                if district in gelsenkirchen:
-                    result['Gelsenkirchen'] = result.get('Gelsenkirchen', 0) + 1
-                elif district in wuppertal:
-                    result['Wuppertal'] = result.get('Wuppertal', 0) + 1
-                elif district in aachen:
-                    result['Aachen'] = result.get('Aachen', 0) + 1
+                # FIXME: OSM Administrative boundary level for districts is country dependant.
+                # Check https://wiki.openstreetmap.org/wiki/Tag:boundary=administrative for details.
+                # Defaulting to O10 for Germany
+                r = requests.get("{API_SHAPE}areas/{district}?type=O10".format(API_SHAPE=API_SHAPE, district=district))
+                if r.status_code == 200:
+                    district_response = json.loads(r.content)
+                    for district_id in district_response.keys():
+                        # FIXME: OSM Administrative boundary level for cities is country dependant.
+                        # Check https://wiki.openstreetmap.org/wiki/Tag:boundary=administrative for details.
+                        # Defaulting to O6 for Germany
+                        r = requests.get("{API_SHAPE}area/{district_id}/covered?type=O06".format(API_SHAPE=API_SHAPE, district_id=district_id))
+                        if r.status_code == 200:
+                            city_response = json.loads(r.content)
+                            for city_id in city_response.keys():
+                                name = city_response[city_id]["name"]
+                                city_candidates[name] = city_candidates.get(name, 0) + 1
 
-    # Get the city with the highest count of districts
-    for key in result:
-        if result[key] > num:
-            num = result[key]
-            city = key
-
+    city = max(city_candidates, key=city_candidates.get)
     return city
+
 
 def __get_area_id(city):
     """Returns city specific area ids."""
-    area_id = ''
-    
-    if city == 'Gelsenkirchen':
-        area_id = '979239'
-    elif city == 'Aachen':
-        area_id = '1062739'
-    elif city == 'Wuppertal':
-        area_id = '979208'
-
-    return area_id
+    # FIXME: OSM Administrative boundary level for cities is country dependant.
+    # Check https://wiki.openstreetmap.org/wiki/Tag:boundary=administrative for details.
+    # Defaulting to O6 for Germa
+    r = requests.get("{API_SHAPE}areas/{city}?type=O06".format(API_SHAPE=API_SHAPE, city=city))
+    if r.status_code == 200:
+        city_response = json.loads(r.content)
+        for city_id in city_response.keys():
+            # return first id in dict, there should be only one anyway
+            return city_id
 
 def __get_id(city):
+    #FIXME: Differenciate between city and district
     """Returns an id for given cities and districts."""
     return {
         'Gelsenkirchen': 'GE',

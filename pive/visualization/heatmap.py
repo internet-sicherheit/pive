@@ -38,7 +38,6 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
-                 filename,
                  shape,
                  inner,
                  city,
@@ -57,13 +56,14 @@ class Map(mv.MapVisualization):
         real_path = os.path.dirname(os.path.realpath(__file__))
         self.__template_url = '{}{}'.format(real_path, default.template_path)
         self.__datakeys = []
+        #FIXME: Is this the same as the datakeys?
+        self.__headers = list(dataset[0].keys())
         self.__version = default.p_version
 
         # Visualization properties.
         self.__width = width
         self.__height = height
         self.__padding = padding
-        self.__filename = filename
         self.__shape = shape
         self.__city = city
 
@@ -188,15 +188,16 @@ class Map(mv.MapVisualization):
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
-        vis_dataset = []
-
-        for datapoint in dataset:
-            vis_datapoint = {}
-            points = list(datapoint.keys())
-            vis_datapoint['label'] = datapoint[points[0]]
-            vis_datapoint['value'] = datapoint[points[1]]
-            vis_dataset.append(vis_datapoint)
-        return vis_dataset
+        # vis_dataset = []
+        #
+        # # for datapoint in dataset:
+        # #     vis_datapoint = {}
+        # #     points = list(datapoint.keys())
+        # #     vis_datapoint['label'] = datapoint[points[0]]
+        # #     vis_datapoint['value'] = datapoint[points[1]]
+        # #     vis_dataset.append(vis_datapoint)
+        # return vis_dataset
+        return dataset
 
     def write_dataset_file(self, dataset, destination_url, filename):
         """Basic Method."""
@@ -221,7 +222,7 @@ class Map(mv.MapVisualization):
         """Basic Method. Creates the JavaScript code based on the template."""
         template_vars = {'t_width': self.__width,
                          't_height': self.__height,
-                         't_filename': self.__filename,
+                         't_filename': dataset_url,
                          't_shape': shape_file,
                          't_city': self.__city,
                          't_scale': self.__scale,
@@ -246,7 +247,8 @@ class Map(mv.MapVisualization):
                          't_mouseover_opacity': self.__mouseover_opacity,
                          't_mouseout_opacity': self.__mouseout_opacity,
                          't_legendborder': self.__legendborder,
-                         't_pive_version': self.__version}
+                         't_pive_version': self.__version,
+                         't_headers': self.__headers}
 
         output_text = template.render(template_vars)
         return output_text

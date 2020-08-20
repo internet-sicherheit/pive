@@ -28,7 +28,7 @@
 
 var width = "{{ t_width }}"
 var height = "{{ t_height }}"
-var filename = "../{{ t_filename }}";
+var filename = "{{ t_filename }}";
 var map_shape = "{{ t_shape }}";
 var city = "{{ t_city }}";
 var scale = {{ t_scale }};
@@ -51,7 +51,8 @@ var legendwidth = {{ t_legendwidth }};
 var legendheight = {{ t_legendheight }};
 var legendmargin = {{ t_legendmargin }};
 var legendticksize = {{ t_legendticksize }};
-var legendborder = "{{ t_legendborder }}"
+var legendborder = "{{ t_legendborder }}";
+var headers = {{ t_headers }};
 var color = d3.scaleQuantize()
     .range({{ t_colors }});
 //Colors taken from colorbrewer.js, included in the D3 download  
@@ -190,10 +191,10 @@ function configMap(scaleAdjust, transExtent, xTranslate, yTranslate) {
 // Parameters: CSV file, GeoJSON file
 function vizHeatmap(filename, json_file) {    
     
-    // Load in CSV data
-    d3.csv(filename, function(data) {
+    // Load in JSON data
+    d3.json(filename, function(data) {
         // Read header from CSV
-        var header = getHeader(data.columns);
+        var header = getHeader();
 
         // Parse min and max from data to int for d3 min/max function
         var min = d3.min(data, function (d) { return parseInt(d[header[1]]); });
@@ -257,7 +258,7 @@ function vizHeatmap(filename, json_file) {
                     d3.select(this).style("fill-opacity", mouseout_opacity);
                 })
                 .on("click", function(d) {
-                    var header = getHeader(d.properties);
+                    var header = getHeader();
                     showTooltip(d.properties, header);
                 });
 
@@ -633,17 +634,6 @@ function continuousLegend() {
 
 // Access data to get column names/names of properties
 // Parameter: Data of CSV or JSON file
-function getHeader(data) {
-    var header = [];
-    
-    for(var key in data) {
-        if(Array.isArray(data)) {
-            header.push(data[key]);
-        } else {
-            header.push(key);
-        }
-        
-    }
-
-    return header;
+function getHeader() {
+    return headers;
 }
