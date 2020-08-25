@@ -39,7 +39,6 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
-                 filename,
                  shape,
                  inner,
                  city,
@@ -64,7 +63,6 @@ class Map(mv.MapVisualization):
         self.__width = width
         self.__height = height
         self.__padding = padding
-        self.__filename = filename
         self.__shape = shape
         self.__city = city
         self.__max_poi = default.max_poi
@@ -88,8 +86,6 @@ class Map(mv.MapVisualization):
         self.__circle_stroke_width = default.circle_stroke_width
 
 
-        # File extension
-        self.__file_extension = self.__get_file_extension(filename)
         # Scale and translate values for map alignment
         self.align_map_view(city)
 
@@ -182,7 +178,7 @@ class Map(mv.MapVisualization):
         """Basic Method. Creates the JavaScript code based on the template."""
         template_vars = {'t_width': self.__width,
                          't_height': self.__height,
-                         't_filename': self.__filename,
+                         't_filename': "poi.json",
                          't_shape': shape_file,
                          't_city': self.__city,
                          't_scale': self.__scale,
@@ -192,7 +188,7 @@ class Map(mv.MapVisualization):
                          't_x_translate': self.__x_translate,
                          't_y_translate': self.__y_translate,
                          't_max_poi': self.__max_poi,
-                         't_file_extension': self.__file_extension,
+                         't_file_extension': ".json",
                          't_zoom_threshold': self.__zoom_threshold,
                          't_div_hook_map': self._div_hook_map,
                          't_div_hook_tooltip': self._div_hook_tooltip,

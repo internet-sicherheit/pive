@@ -38,7 +38,6 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
-                 filename,
                  shape,
                  inner,
                  city,
