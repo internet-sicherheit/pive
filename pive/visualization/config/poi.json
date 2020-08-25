@@ -5,12 +5,13 @@
     "multiple_data": true,
     "datesupport": false,
     "lexical_required": false,
+    "mapping_parameter_count": 2,
     "vistypes": [
         {
-            "latitude": "coordinate"
+            "latitude": "latitude"
         },
         {
-            "longitude": "coordinate"
+            "longitude": "longitude"
         },
         {
             "label": "string"

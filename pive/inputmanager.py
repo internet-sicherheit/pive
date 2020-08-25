@@ -27,6 +27,8 @@
 """ The input manager reads files and strings containing
 datasets in json and csv format. The data is automatically
 validated and corrected if necessary."""
+from collections import OrderedDict
+
 from . import inputreader as reader
 from . import datavalidater as validater
 from . import consistenceprofiler as profiler
