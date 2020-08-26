@@ -98,3 +98,54 @@ iconcolor = '#FF2C00'
 iconhighlight = '#FF8B73'
 chartcolors = colorthemes.pive
 
+###############################
+## CSS Configuration ##########
+###############################
+# fill with content
+line_div_hook = 'line'
+line_stroke = 0.25
+line_fill = ['none'] #standard werte
+line_stroke_width = 2.5
+
+tooltip_div_hook = 'tooltip'
+tooltip_color = ['blue', 'red', 'white']
+tooltip_line_height = 1
+tooltip_padding = 12
+tooltip_font_weight = ['italic']
+tooltip_font_family = ['arial']
+tooltip_border_radius = 5
+
+axis_path_div_hook = 'axis_path'
+axis_path_fill = ['none']
+# axis_path_stroke -> strokes sollten eigentlich alle gleich sein
+axis_path_shape_rendering = ['auto', 'optimizeSpeed', 'crispEdges', 'geometricPrecision']
+
+axis_line_div_hook = 'axis_line'
+#axis_line_stroke -> s.o.
+axis_line_shape_rendering = ['auto', 'optimizeSpeed', 'crispEdges', 'geometricPrecision']
+
+path_area_div_hook = 'path_area'
+path_area_fill = ['blue']
+
+axis_text_div_hook = 'axis_text'
+axis_text_font_family = ['sans-serif']
+axis_text_font_size = 0.25
+
+xlabel_text_div_hook = 'xlabel_text'
+xlabel_text_font_family = ['helvetica']
+xlabel_text_font_size = 0.25
+
+ylabel_text_div_hook = 'ylabel_text'
+ylabel_text_font_family = ['helvetica']
+ylabel_text_font_size = 0.25
+
+x_axis_line_div_hook = 'x_axis_line'
+x_axis_line_stroke = ['grey']
+x_axis_line_stroke_opacity = 0.25
+x_axis_line_stroke_width = 2.5
+
+y_axis_line_div_hook = 'y_axis_line'
+y_axis_line_stroke = ['grey']
+y_axis_line_stroke_opacity = 0.25
+y_axis_line_stroke_width = 2.5
+
