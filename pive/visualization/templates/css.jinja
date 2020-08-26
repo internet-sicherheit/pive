@@ -1,0 +1,31 @@
+
+{# ############################# #}
+{# CSS inline styles definition. #}
+{# Essential when including into #}
+{# another div container.        #}
+{# ############################# #}
+
+{# Acquire the div container that includes the visualization. #}
+var root_div = document.getElementById(div_hook);
+
+{# JavaScript String is immutable, so single strings are defined for readability. #}
+var css_line = '#{{ t_line_div_hook }} .line { stroke: {{ t_line_stroke }}; fill: {{ t_line_fill }}; stroke-width: {{t_line_stroke_width}}px\n',
+    css_tooltip = '#{{ t_tooltip_div_hook }} .tooltip {color: {{t_tooltip_color}}; line-height:{{t_tooltip_line_height}}; padding: {{t_tooltip_padding }}px; font-weight: {{t_tooltip_font_weight}}; font-family: {{t_tooltip_font_family}}; border-radius: {{t_tooltip_border_radius}}px;}\n';
+    css_axis_path = '#{{ t_axis_path_div_hook }} .axis path { fill: {{t_axis_path_fill}}; stroke: {{ t_line_stroke }}; shape-rendering: {{t_axis_path_shape_rendering }};}\n',
+    css_axis_line = '#{{ t_axis_line_div_hook  }} .axis line { stroke: {{ t_line_stroke }}; shape-rendering: {{ t_axis_line_shape_rendering }};}\n',
+    css_path_area = '#{{ t_path_area_div_hook }} .path area { fill: {{t_path_area_fill}}; }\n';
+    css_axis_text = '#{{ t_axis_text_div_hook }} .axis text {font-family: {{t_axis_text_font_family}}; font-size: {{ t_axis_text_font_size }}px }\n',
+    css_xlabel_text = '#{{ t_xlabel_text_div_hook }} .xlabel {font-family: {{t_xlabel_text_font_family}}; font-size: {{ t_xlabel_text_font_size }}px }\n',
+    css_ylabel_text = '#{{ t_ylabel_text_div_hook }} .ylabel {font-family: {{t_ylabel_text_font_family}}; font-size: {{ t_ylabel_text_font_size }}px }\n',
+    css_x_axis_line = '#{{ t_x_axis_line_div_hook }} .x.axis line { stroke: {{t_x_axis_line_stroke}}; stroke-opacity: {{t_x_axis_line_stroke_opacity}}; stroke-width: {{t_x_axis_line_stroke_width}}px}\n',
+    css_y_axis_line = '#{{ t_y_axis_line_div_hook }} .y.axis line { stroke: {{t_y_axis_line_stroke}}; stroke-opacity: {{t_y_axis_line_stroke_opacity}}; stroke-width: {{t_x_axis_line_stroke_width}}px}';
+
+{# The style definitions are concatinated into a single string. #}
+var css = css_line.concat(css_tooltip).concat(css_axis_path).concat(css_axis_line).concat(css_path_area).concat(css_axis_text)
+          .concat(css_xlabel_text).concat(css_ylabel_text).concat(css_x_axis_line).concat(css_y_axis_line);
+
+{# The style element in the dom is created and included into the root div. #}
+var style = document.createElement('style');
+style.type = 'text/css';
+style.appendChild(document.createTextNode(css));
+root_div.appendChild(style);

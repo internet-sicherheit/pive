@@ -29,7 +29,7 @@ import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
 from pive.visualization import viewportvisualization as vv
-
+from pive.visualization.css import CssTemplate
 
 class Chart(bv.BaseVisualization, vv.ViewportVisualization):
     def __init__(self,
@@ -46,6 +46,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         vv.ViewportVisualization.__init__(self)
 
         # Metadata
+        self.css = self.get_css()
         self._title = 'barchart'
         self.__template_name = 'barchart'
         self.__dataset = dataset
@@ -146,6 +147,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         templateVars = {'t_width': self.__width,
                         't_height': self.__height,
                         't_padding': self.__padding,
+                        't_css': self.css,
                         't_viewport': self.__viewport,
                         't_jumplength': self.__jumplength,
                         't_xlabel': self.__xlabel,
@@ -266,3 +268,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         TEMPLATE_FILE = template_url
         template = templateEnv.get_template(TEMPLATE_FILE)
         return template
+
+    def get_css(self):
+        cssHeader = CssTemplate("title")
+        return cssHeader.css_output
