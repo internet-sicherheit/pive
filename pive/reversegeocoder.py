@@ -29,7 +29,7 @@ import requests
 API_LOCATE = "https://reverse.geocoder.api.here.com/6.2/reversegeocode.json"
 # Request available map shapes
 API_SHAPE = "https://global.mapit.mysociety.org/"
-SRID = "/point/4326/"
+SRID = "point/4326/"
 
 def request_location(lat, lon):
     """Returns a location for passed latitude and longitude coordinates."""
@@ -140,10 +140,9 @@ def get_shape_name(area_id):
     try:
         # Area in JSON format
         map_data = r.json()
+        # Read shape name out of the JSON
+        name = map_data['all_names']['default'][1]
     except ValueError:
         print("Error " + str(r.status_code))
-
-    # Read shape name out of the JSON
-    name = map_data['all_names']['default'][1]
 
     return name

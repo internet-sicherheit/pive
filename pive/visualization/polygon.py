@@ -63,7 +63,6 @@ class Map(mv.MapVisualization):
         self.__height = height
         self.__padding = padding
         self.__shape = shape
-        self.__inner = inner
         self.__city = city
 
         # Starting, min and max values for zoom levels on the map
@@ -139,8 +138,9 @@ class Map(mv.MapVisualization):
         for datapoint in dataset:
             vis_datapoint = {}
             points = list(datapoint.keys())
-            vis_datapoint['label'] = datapoint[points[0]]
-            vis_datapoint['value'] = datapoint[points[1]]
+            vis_datapoint['geometry'] = { "type":"Polygon", "coordinates":[datapoint[points[0]]]}
+            vis_datapoint['properties'] = {"name": datapoint[points[1]], "id":datapoint[points[1]]}
+            vis_datapoint["type"] = "Feature"
             vis_dataset.append(vis_datapoint)
         return vis_dataset
 
@@ -168,7 +168,7 @@ class Map(mv.MapVisualization):
         template_vars = {'t_width': self.__width,
                          't_height': self.__height,
                          't_shape': shape_file,
-                         't_inner': self.__inner,
+                         't_inner': "polygon.json",
                          't_city': self.__city,
                          't_scale': self.__scale,
                          't_scale_extent': self.__scale_extent,

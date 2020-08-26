@@ -49,6 +49,8 @@ def get_datapoint_types(datapoint):
 
         if isinstance(item, list):
             typeset.add("list")
+            if is_polygon(item):
+                typeset.add("polygon")
 
         # If the datapoint contains a float or int it will
         # be considered as a numerical datapoint.
@@ -73,19 +75,32 @@ def is_gps_latitude(value):
     """Checks if the passed value is a coordinate."""
     try:
         if isinstance(value, str):
-            value = float.parse(value)
+            value = float(value)
         return -90 <= value <= 90
-    except:
+    except Exception as e:
         return False
 
 def is_gps_longitude(value):
     """Checks if the passed value is a coordinate."""
     try:
         if isinstance(value, str):
-            value = float.parse(value)
+            value = float(value)
         return -180 <= value <= 180
-    except:
+    except Exception as e:
         return False
+
+def is_polygon(gps_list):
+    try:
+        matches_mapshape = True
+        if len(gps_list) >= 3:
+           for point in gps_list:
+               matches_mapshape = matches_mapshape & is_gps_latitude(point[0]) & is_gps_longitude(point[1])
+        else:
+            matches_mapshape = False
+    except Exception as e:
+        matches_mapshape = False
+        print(e)
+    return matches_mapshape
 
 def is_coordinate(item):
     return is_gps_longitude(item) or is_gps_latitude(item)

@@ -29,7 +29,7 @@
 var width = "{{ t_width }}"
 var height = "{{ t_height }}"
 var map_shape = "{{ t_shape }}";
-var inner_shape = "../{{ t_inner }}";
+var inner_shape = "{{ t_inner }}";
 var city = "{{ t_city }}"
 var scale = {{ t_scale }};
 var scaleExtent = {{ t_scale_extent }};
@@ -224,7 +224,7 @@ function vizPolygon(json_file, inner_shape) {
 
         // Bind data and create one path per GeoJSON feature
         inner_map.selectAll("path")
-            .data(inner_json.features)
+            .data(inner_json)
             .enter()
             .append("path")
             .attr("class", "json_path")

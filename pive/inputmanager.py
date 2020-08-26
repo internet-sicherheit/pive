@@ -95,15 +95,13 @@ class InputManager(object):
         # If the dataset contains coordinates
         if 'poi' in self.__suitables or 'polygon' in self.__suitables:
             # If the chosen dataset is the map shape
-            if 'polygon' in self.__suitables:
-                inner_shape = self.__shape_source
             coordinates = shapeloader.get_all_coordinates(dataset)
             (shape, city) = shapeloader.find_map_shape(coordinates)
         # If the dataset is suitable for a heatmap
         elif 'heatmap' in self.__suitables:
             (shape, city) = shapeloader.build_heatmap(dataset)
 
-        return (shape, inner_shape, city)
+        return (shape, None, city)
 
     def __is_dataset_consistent(self, dataset):
         """Checks if the dataset is consistent."""

@@ -48,16 +48,14 @@ def get_all_coordinates(dataset):
                 result.append(coord_pair)
                 break
         # Polygon
-        try:
-            if item['type'] == 'Polygon':
-                lat = str(item['Polygon'][0][1])
-                lon = str(item['Polygon'][0][0])
-                if profiler.is_coordinate(lat) and profiler.is_coordinate(lon):
-                    coord_pair = [lat, lon]
-                    result.append(coord_pair)
-        except KeyError:
-            pass
-            
+        key = list(item.keys())[0]
+        for point in item[key]:
+            #FIXME: Officially released data is ordered backwards.
+            lat = str(point[1])
+            lon = str(point[0])
+            if profiler.is_coordinate(lat) and profiler.is_coordinate(lon):
+                coord_pair = [lat, lon]
+                result.append(coord_pair)
     return result
 
 def find_map_shape(coordinates):
