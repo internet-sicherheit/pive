@@ -28,6 +28,7 @@ import os
 import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
+from pive.visualization.css import CssTemplate
 
 
 class Chart(bv.BaseVisualization):
@@ -42,6 +43,7 @@ class Chart(bv.BaseVisualization):
         bv.BaseVisualization.__init__(self)
 
         # Metadata
+        self.css = self.get_css()
         self._title = 'piechart'
         self.__template_name = 'piechart'
         self.__dataset = dataset
@@ -105,6 +107,7 @@ class Chart(bv.BaseVisualization):
         templateVars = {'t_width': self.__width,
                         't_height': self.__height,
                         't_padding': self.__padding,
+                        't_css': self.css,
                         't_datakeys': self.__datakeys,
                         't_url': dataset_url,
                         't_colors': self.__colors,
@@ -191,3 +194,7 @@ class Chart(bv.BaseVisualization):
         TEMPLATE_FILE = template_url
         template = templateEnv.get_template(TEMPLATE_FILE)
         return template
+
+    def get_css(self):
+        cssHeader = CssTemplate("title")
+        return cssHeader.css_output

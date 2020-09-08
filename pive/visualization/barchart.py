@@ -39,7 +39,8 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
                  height=default.height,
                  padding=default.padding,
                  viewport=default.viewport,
-                 jumplength=default.jumplength):
+                 jumplength=default.jumplength,
+                 div_hook = default.div_hook):
 
         # Initializing the inherited pseudo-interfaces.
         bv.BaseVisualization.__init__(self)
@@ -54,6 +55,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         self.__template_url = '%s%s' % (realpath, default.template_path)
         self.__datakeys = []
         self.__version = default.p_version
+        self._div_hook = div_hook
 
 
         # Visualization properties.
@@ -148,6 +150,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
                         't_height': self.__height,
                         't_padding': self.__padding,
                         't_css': self.css,
+                        #'t_css': "Hello",
                         't_viewport': self.__viewport,
                         't_jumplength': self.__jumplength,
                         't_xlabel': self.__xlabel,
@@ -170,6 +173,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
                         't_axis_label_size' : self.__label_size}
 
         outputText = template.render(templateVars)
+        print (outputText)
         return outputText
 
     def write_file(self, output, destination_url, filename):
@@ -270,5 +274,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         return template
 
     def get_css(self):
-        cssHeader = CssTemplate("title")
+        cssHeader = CssTemplate("chart")
+        # print (cssHeader.css_output)
         return cssHeader.css_output
+       # print(get_css())
