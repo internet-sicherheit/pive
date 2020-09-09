@@ -527,7 +527,9 @@ function showTooltip(data, header) {
     var div = root_div_hook_tooltip;
     var text = "";
 
-    for(i = 0; i < header.length; i++) {
+    text += header[0] + ": " + data.name +"\n";
+    text += header[1] + ": " + data.value;
+    for(i = 2; i < header.length; i++) {
         var name = header[i];
         if(name != lat && name != lon && name != "id") {
             var value = data[name];
@@ -535,7 +537,7 @@ function showTooltip(data, header) {
                 text = text + "\n" + name + ": " + value;
             } else {
                 text = name + ": " + value;
-            }  
+            }
         }
     }
     if(div.innerHTML != text) {

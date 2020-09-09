@@ -93,9 +93,12 @@ class InputManager(object):
         """Returns the map shape representing the dataset."""
         inner_shape = ''
         # If the dataset contains coordinates
-        if 'poi' in self.__suitables or 'polygon' in self.__suitables:
+        if 'poi' in self.__suitables:
             # If the chosen dataset is the map shape
-            coordinates = shapeloader.get_all_coordinates(dataset)
+            coordinates = shapeloader.get_all_coordinates_poi(dataset)
+            (shape, city) = shapeloader.find_map_shape(coordinates)
+        elif 'polygon' in self.__suitables:
+            coordinates = shapeloader.get_all_coordinates_polygon(dataset)
             (shape, city) = shapeloader.find_map_shape(coordinates)
         # If the dataset is suitable for a heatmap
         elif 'heatmap' in self.__suitables:

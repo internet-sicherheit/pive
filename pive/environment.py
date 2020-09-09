@@ -97,9 +97,8 @@ class Environment(object):
         self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
 
         # Loads the corresponding map shape if suitable for visualization
-        for x in self.__suitables:
-            if x in ['heatmap', 'poi', 'polygon']:
-                (self.__map_shape, self.__inner_shape, self.__city) = self.__inputmanager.get_map_shape(inputdata)
+        if len(set(['heatmap', 'poi', 'polygon']) & set(self.__suitables)) != 0:
+            (self.__map_shape, self.__inner_shape, self.__city) = self.__inputmanager.get_map_shape(inputdata)
 
         return self.__suitables
 

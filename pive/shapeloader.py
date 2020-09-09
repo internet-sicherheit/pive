@@ -23,19 +23,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import requests
-import geojson_rewind
-import json
-
-
 import pive.consistenceprofiler as profiler
-import pive.reversegeocoder as geocoder
 
-from pive.reversegeocoder import API_SHAPE
+from re import split as resplit
+from math import ceil
 
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from pive import overpass
 
-def get_all_coordinates(dataset):
+def get_all_coordinates_poi(dataset):
     """Returns every pair of coordinates from the dataset."""
     result = []
     for item in dataset:
@@ -47,7 +42,12 @@ def get_all_coordinates(dataset):
             if len(coord_pair) == 2:
                 result.append(coord_pair)
                 break
-        # Polygon
+    return result
+
+def get_all_coordinates_polygon(dataset):
+    """Returns every pair of coordinates from the dataset."""
+    result = []
+    for item in dataset:
         key = list(item.keys())[0]
         for point in item[key]:
             #FIXME: Officially released data is ordered backwards.
@@ -66,85 +66,55 @@ def find_map_shape(coordinates):
     result = []
     candidate = []
     level = '0'
-    city = ''
 
-    for pair in coordinates:
-        possible = []
-        lat = str(pair[0])
-        lon = str(pair[1])
-        # Get name of city covered by this dataset
-        city = geocoder.request_location(lat, lon)
-        # Only 2580 Requests at once
-        shapes = geocoder.get_possible_shapes(lat, lon)
-        if shapes:
-            for shape in shapes:
-                map_shape = tuple(shape)
-                possible.append(map_shape)
-            if not result:
-                result = possible
-            elif result != possible:
-                # Only keep common shapes in the result list
-                result = set(result) & set(possible)
-    # The higher the area level the smaller the map shape
-    for elem in result:
-        area_level = elem[1]
-        if area_level > level:
-            level = area_level
-            candidate = elem
-    result = candidate
+    common_shapes = overpass.get_common_shapes(coordinates)
+    #FIXME: Hardcoded admin_level
+    #FIXME: Will break if a single point is outside of the city
+    city_shape = [ element for element in common_shapes if element["tags"]["admin_level"] == '6'][0]
+    smallest_shape = max(common_shapes, key=lambda element: int(element["tags"]["admin_level"]))
 
-    # Get the map shape by its area id
-    area_id = result[0]
-    map_shape = geocoder.request_map_shape(area_id)
-    # Get name and id of the shape location
-    shape_name = geocoder.get_shape_name(area_id)
-    shape_id = __get_id(shape_name)
+    shape_name = smallest_shape["tags"]["name"]
+    city_name = city_shape["tags"]["name"]
+    #FIXME: Get City tag for zoom levels
+    shape_id = "XYZ"
+
     # If the shape is not a city but a district, display the city name in addition to the district
-    if city != shape_name:
-        (shape_name, shape_id) = __concat_city_district(shape_name, shape_id, city)
+    if city_name != shape_name:
+        (shape_name, shape_id) = __concat_city_district(shape_name, shape_id, city_name)
 
-    shape_json = __edit_shape(map_shape, shape_name, shape_id)
+    shape_json = __edit_shape(overpass.geojsonify(smallest_shape), shape_name, shape_id)
     shape_json = __edit_json(shape_json)
 
-    if shape_name == 'Aachen' or shape_name == 'Gelsenkirchen':
-        shape_json = geojson_rewind.rewind(shape_json, False)
-
-    return (shape_json, city)
+    return (shape_json, city_name)
 
 def build_heatmap(dataset):
     """Builds a heatmap for the given city."""
     full_shape = ''
-    city = __get_city(dataset)
-
+    district_names = [element['Stadtteil'] for element in dataset]
+    #city = __get_city(dataset)
+    city, city_id = overpass.get_city_for_districts(district_names)
     result = {}
-    num = 0
-    area_levels = ''
 
     # Get all districts covered by this city
-    area_id = __get_area_id(city)
-    districts = geocoder.get_covered_districts(area_id)
+    districts = overpass.get_districts_for_city_id(city_id)
 
     # Find the correct area level, which is the most occurring
-    for key in districts:
-        level = districts[key]['type'][1:]
+    for district in districts:
+        level = district["tags"]["admin_level"]
         result[level] = result.get(level, 0) + 1
 
-    for key in result:
-        if result[key] > num:
-            num = result[key]
-            area_levels = key
+    area_levels = max(result, key=result.get)
 
     # Find the right districts with their name and id
-    for key in districts:
-        area_id = key
-        name = districts[key]['name']
-        #FIXME: ???
-        # Cut from string for Wuppertal districts
-        name = name.replace('Gemarkung ', '')
-        district_id = __get_id(name)
-        level = districts[key]['type'][1:]
+    shortened_names = __get_shortened_names({district["tags"]["name"] for district in districts})
+
+    for district in districts:
+        area_id = district["id"]
+        name = district["tags"]['name']
+        district_id = shortened_names[name]
+        level = district["tags"]["admin_level"]
         if level == area_levels:
-            shape = geocoder.request_map_shape(area_id)
+            shape = overpass.geojsonify(district)
             json = __edit_shape(shape, name, district_id)
             # Append the districts JSON data
             full_shape = full_shape + json
@@ -154,118 +124,38 @@ def build_heatmap(dataset):
 
     return (shape_json, city)
 
-def __get_city(dataset):
-    """Returns the city according to the most occuring districts in a heatmap dataset."""
-    city_candidates = {}
-    # Get all citiy districts with this name. For each district, get the city that this district is in.
-    # Choose the city that pops up the most.
-    thread_pool = ThreadPoolExecutor(max_workers=10)
+def __get_shortened_names(names, tag_length=2):
 
-    def get_city_name_from_district_id(district_id):
-        # FIXME: OSM Administrative boundary level for cities is country dependant.
-        # Check https://wiki.openstreetmap.org/wiki/Tag:boundary=administrative for details.
-        # Defaulting to O6 for Germany
-        name = None
-        r = requests.get("{API_SHAPE}area/{district_id}/covered?type=O06".format(API_SHAPE=API_SHAPE, district_id=district_id))
-        if r.status_code == 200:
-            city_response = json.loads(r.content)
-            # With the way the query is specified there should only be one result
-            for city_id in city_response.keys():
-                # TODO: Save city-ID alongside name for faster lookup later
-                name = city_response[city_id]["name"]
-        else:
-            print(f"Error at district_id {district_id}: {r.status_code}")
-        return name
+    def find_duplicates(sn):
+        occurrences = {}
+        for key in sn:
+            if sn[key] in occurrences:
+                occurrences[sn[key]].append(key)
+            else:
+                occurrences[sn[key]] = [key]
+        duplicates = set()
+        for o in occurrences:
+            if len(occurrences[o]) > 1:
+                duplicates.update(occurrences[o])
+        return duplicates
 
-
-    #TODO: API calls are expensive, cache results
-    for elem in dataset:
-        for key in elem:
-            if key == 'Stadtteil': #FIXME: Some cities name there Stadtbezirke Stadtteile. Not much one can do here though
-                district = elem[key]
-                # FIXME: OSM Administrative boundary level for districts is country dependant.
-                # Check https://wiki.openstreetmap.org/wiki/Tag:boundary=administrative for details.
-                # Defaulting to O10 for Germany
-                r = requests.get("{API_SHAPE}areas/{district}?type=O10".format(API_SHAPE=API_SHAPE, district=district))
-                if r.status_code == 200:
-                    district_response = json.loads(r.content)
-                    futures = []
-                    for district_id in district_response.keys():
-                        futures.append(thread_pool.submit(get_city_name_from_district_id, district_id))
-                    for future in futures:
-                        try:
-                            name = future.result(timeout=10)
-                            if name != None:
-                                city_candidates[name] = city_candidates.get(name, 0) + 1
-                            else:
-                                # FIXME: At a certain error count the results become unusable. Count them and return a useful error
-                                pass
-                        except TimeoutError:
-                            # FIXME: At a certain error count the results become unusable. Count them and return a useful error
-                            pass
-
-    city = max(city_candidates, key=city_candidates.get)
-    return city
-
-
-def __get_area_id(city):
-    """Returns city specific area ids."""
-    # FIXME: OSM Administrative boundary level for cities is country dependant.
-    # Check https://wiki.openstreetmap.org/wiki/Tag:boundary=administrative for details.
-    # Defaulting to O6 for Germa
-    r = requests.get("{API_SHAPE}areas/{city}?type=O06".format(API_SHAPE=API_SHAPE, city=city))
-    if r.status_code == 200:
-        city_response = json.loads(r.content)
-        for city_id in city_response.keys():
-            # return first id in dict, there should be only one anyway
-            return city_id
-
-def __get_id(city):
-    #FIXME: Differenciate between city and district
-    """Returns an id for given cities and districts."""
-    return {
-        'Gelsenkirchen': 'GE',
-        'Altstadt': 'AL',
-        'Schalke': 'SC',
-        'Schalke-Nord': 'SN',
-        'Bismarck': 'BI',
-        'Bulmke-Hüllen': 'BH',
-        'Feldmark': 'FE',
-        'Heßler': 'HE',
-        'Buer': 'BU',
-        'Scholven': 'SV',
-        'Hassel': 'HA',
-        'Horst': 'HO',
-        'Beckhausen': 'BE',
-        'Beckhausen-Schaffrath': 'BS',
-        'Erle': 'ER',
-        'Resse': 'RE',
-        'Resser Mark': 'RM',
-        'Neustadt': 'NE',
-        'Ückendorf': 'UE',
-        'Rotthausen': 'RO',
-
-        'Aachen': 'AC',
-        'Richterich': 'RI',
-        'Laurensberg': 'LA',
-        'Haaren': 'HA',
-        'Eilendorf': 'EI',
-        'Aachen-Mitte': 'AM',
-        'Brand': 'BR',
-        'Kornelimünster/Walheim': 'KW',
-
-        'Wuppertal': 'WU',
-        'Nächstebreck': 'NB',
-        'Barmen': 'BA',
-        'Schöller': 'SC',
-        'Vohwinkel': 'VO',
-        'Elberfeld': 'EL',
-        'Beyenburg': 'BE',
-        'Langerfeld': 'LA',
-        'Ronsdorf': 'RO',
-        'Cronenberg': 'CR',
-        'Dönberg': 'DB'
-    }.get(city, '')
+    shortened_names = {}
+    for name in names:
+        shortened = ""
+        splitted = resplit("([\-, ])",name)
+        segment_count = len(splitted)
+        remaining_length_total = max(tag_length, segment_count)
+        for segment in splitted:
+            segment_length = min(ceil(tag_length / segment_count), remaining_length_total, len(segment))
+            shortened += segment[0:segment_length]
+            remaining_length_total -= segment_length
+        shortened_names[name] = shortened.upper()
+    # If the length of the set of shortened names is equal to the length of unique names, that means every unique name has a unique shortened version mapped
+    duplicates = find_duplicates(shortened_names)
+    while duplicates:
+        shortened_names.update(__get_shortened_names(duplicates, tag_length=tag_length+1))
+        duplicates = find_duplicates(shortened_names)
+    return shortened_names
 
 def __edit_shape(shape, name, name_id):
     """Edit Shape data to fit visualization requirements.
@@ -288,7 +178,7 @@ def __edit_json(json):
 
 def __concat_city_district(district, district_id, city):
     """Combines city and district names and ids."""
-    city_id = __get_id(city)
+    city_id = 'XXX'
 
     name = city + ' ' + district
     id_ = city_id + ' ' + district_id
