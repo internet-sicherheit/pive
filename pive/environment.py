@@ -82,7 +82,6 @@ class Environment(object):
             inputdata = self.__inputmanager.read(source)
             self.__suitables = self.__inputmanager.map(inputdata)
             self.__data = inputdata
-            #print("after try (inpurtdata): ", inputdata)
         except ValueError as e:
             print ("Failed to load the dataset: %s" % e)
             raise
@@ -95,10 +94,6 @@ class Environment(object):
 
         # Converting the datakeys into strings.
         self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
-
-        # Loads the corresponding map shape if suitable for visualization
-        if len(set(['heatmap', 'poi', 'polygon']) & set(self.__suitables)) != 0:
-            (self.__map_shape, self.__inner_shape, self.__city) = self.__inputmanager.get_map_shape(inputdata)
 
         return self.__suitables
 
@@ -141,6 +136,7 @@ class Environment(object):
 
         # When dates occur the constructor is called differently.
         if self.__is_geodata:
+            (self.__map_shape, self.__inner_shape, self.__city) = self.__inputmanager.get_map_shape(self.__data)
             chart_decision = class_(self.__data, modname, self.__map_shape, self.__inner_shape, self.__city)
         elif self.__has_datefields:
             chart_decision = class_(self.__data, modname, times=True)
