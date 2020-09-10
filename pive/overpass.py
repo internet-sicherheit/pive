@@ -1,19 +1,36 @@
 import requests
 from time import sleep
 import json
+import csv
 
 API_URL = 'http://overpass-api.de/api/interpreter'
 
-def execute_query(query, api_url=API_URL):
+def execute_query(query, api_url=API_URL, output_format="json"):
     response = requests.post(api_url, data=query)
     if response.status_code != 200:
         pass
     try:
-        data = response.json()
+        if output_format:
+            if output_format == "json":
+                data = response.json()
+            elif output_format == "csv":
+                data = csv.DictReader(response.content.decode('utf-8').splitlines(), delimiter='\t')
+            else:
+                raise ValueError("Unsupported format")
+        else:
+            data = response.content
     except:
         sleep(5)
         response = requests.post(api_url, data=query)
-        data = response.json()
+        if output_format:
+            if output_format == "json":
+                data = response.json()
+            elif output_format == "csv":
+                data = csv.reader(response.content.decode('utf-8').splitlines(), delimiter='\t')
+            else:
+                raise ValueError("Unsupported format")
+        else:
+            data = response.content
     return data
 
 def get_shape_at_point(lat, lon, admin_level):
@@ -52,6 +69,7 @@ out geom;"""
     return execute_query(overpass_query)["elements"]
 
 def get_city_candidates_for_district(district_name):
+    # TODO: Create a single-call version that outputs cheaper CSV
     # TODO: Get admin_level for city depending on which country this is in
     query = f"""[out:json];
 rel["name"="{district_name}"]["boundary"="administrative"] -> .a;
@@ -62,15 +80,47 @@ rel(pivot.a)["boundary"="administrative"]["admin_level"=6];
 out center;"""
     return execute_query(query)["elements"]
 
+def get_city_candidates_for_districts(districts):
+    # TODO: Create a single-call version that outputs cheaper CSV
+    # TODO: Get admin_level for city depending on which country this is in
+    query = f"""[out:csv(name, ::id, ::lat, ::lon)];
+"""
+    for district_name in districts:
+        query += f"""rel["name"="{district_name}"]["boundary"="administrative"] -> .a;
+.a > -> .a;
+node.a -> .a;
+.a is_in -> .a;
+rel(pivot.a)["boundary"="administrative"]["admin_level"=6];
+out center;"""
+    return execute_query(query, output_format="csv")
+
+def get_common_city(districts):
+    # TODO: Create a single-call version that outputs cheaper CSV
+    # TODO: Get admin_level for city depending on which country this is in
+    query = f"""[out:csv(name, ::id, ::lat, ::lon)];
+rel["name"="{districts[0]}"]["boundary"="administrative"] -> .a;
+.a > -> .a;
+node.a -> .a;
+.a is_in -> .a;
+rel(pivot.a)["boundary"="administrative"]["admin_level"=6] -> .collected;
+out center;
+"""
+    for district_name in districts[1:]:
+        query += f"""rel["name"="{district_name}"]["boundary"="administrative"] -> .a;
+.a > -> .a;
+node.a -> .a;
+.a is_in -> .a;
+rel.collected(pivot.a)["boundary"="administrative"]["admin_level"=6] -> .collected;
+out center;"""
+    return execute_query(query, output_format="csv")
 
 def get_city_for_districts(district_names):
-    #FIXME: Expensive, there has to be a cheaper call
+    #TODO: Expensive, there has to be a cheaper call
     candidate_count = {}
-    for district_name in district_names:
-        candidates = get_city_candidates_for_district(district_name)
-        for candidates in candidates:
-            city_id = (candidates["tags"]["name"], candidates["id"])
-            candidate_count[city_id] = candidate_count.get(city_id, 0) + 1
+    result = get_city_candidates_for_districts(district_names)
+    for line in result:
+        city_id = (line["name"], int(line["@id"]))
+        candidate_count[city_id] = candidate_count.get(city_id, 0) + 1
     city = max(candidate_count, key=candidate_count.get)
     return city
 
@@ -91,9 +141,6 @@ def get_district_shape_at_point(lat, lon):
     return get_shape_at_point(lat, lon, 10)
 
 def geojsonify(shape):
-    #FIXME: Multipolygon support?
-
-
     coordinates = []
     for member in shape['members']:
         coordinate_entry = []
@@ -141,8 +188,6 @@ def reorder_segments(coordinates):
                 current_polygon.append(segment)
                 coordinates.pop(index)
                 break
-
-
         if not found_next_segment:
             raise ValueError('Missing Segments')
     current_polygon = flatten_coordinates(current_polygon)
@@ -150,8 +195,6 @@ def reorder_segments(coordinates):
         current_polygon.reverse()
     reordered_segments.append([current_polygon])
     return reordered_segments
-
-
 
 def flatten_coordinates(coordinates):
     flattened = []
