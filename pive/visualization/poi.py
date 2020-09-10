@@ -84,6 +84,7 @@ class Map(mv.MapVisualization):
         self.__circle_stroke = default.circle_stroke
         self.__circle_radius = default.circle_radius
         self.__circle_stroke_width = default.circle_stroke_width
+        self.__headers = ['Longitude','Latitude'] + list(dataset[0].keys())[2:]
 
 
         # Scale and translate values for map alignment
@@ -148,10 +149,14 @@ class Map(mv.MapVisualization):
         """Basic Method."""
         vis_dataset = []
 
+        keys = list(dataset[0].keys())
         for datapoint in dataset:
             vis_datapoint = {}
-            vis_datapoint['Latitude'] = datapoint['Latitude']
-            vis_datapoint['Longitude'] = datapoint['Longitude']
+
+            vis_datapoint['Latitude'] = datapoint[keys[0]]
+            vis_datapoint['Longitude'] = datapoint[keys[1]]
+            for other_keys in keys[2:]:
+                vis_datapoint[other_keys] = datapoint[other_keys]
             vis_dataset.append(vis_datapoint)
         return vis_dataset
 
@@ -203,7 +208,8 @@ class Map(mv.MapVisualization):
                          't_circle_stroke': self.__circle_fill,
                          't_circle_radius': self.__circle_radius,
                          't_circle_stroke_width': self.__circle_stroke_width,
-                         't_pive_version': self.__version}
+                         't_pive_version': self.__version,
+                         't_headers': self.__headers}
 
         output_text = template.render(template_vars)
         return output_text
