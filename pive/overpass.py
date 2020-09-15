@@ -191,7 +191,7 @@ def reorder_segments(coordinates):
         if not found_next_segment:
             raise ValueError('Missing Segments')
     current_polygon = flatten_coordinates(current_polygon)
-    if not is_clockwise(current_polygon):
+    if is_clockwise(current_polygon):
         current_polygon.reverse()
     reordered_segments.append([current_polygon])
     return reordered_segments
@@ -209,4 +209,4 @@ def is_clockwise(polygon):
         p1 = polygon[index]
         p2 = polygon[(index+1)%len(polygon)]
         summed_orientation += (p2[0]-p1[0])*(p2[1]-p1[1])
-    return summed_orientation >= 0
+    return summed_orientation > 0.0
