@@ -32,11 +32,8 @@ var map_shape = "{{ t_shape }}";
 var inner_shape = "{{ t_inner }}";
 var city = "{{ t_city }}"
 var scale = {{ t_scale }};
-var scaleExtent = {{ t_scale_extent }};
-var scaleAdjust = {{ t_scale_adjust }};
-var transExtent = {{ t_trans_extent }};
-var xTranslate = {{ t_x_translate }};
-var yTranslate = {{ t_y_translate }};
+var scaleExtent = {{  t_scale_extent }};
+var transExtent = [[0,0],[width,height]];
 var zoom_threshold = {{ t_zoom_threshold }};
 var div_hook_map = "{{ t_div_hook_map }}";
 var div_hook_tooltip = "{{ t_div_hook_tooltip }}";
@@ -48,6 +45,8 @@ var stroke_opacity = {{ t_stroke_opacity }};
 var mouseover_opacity = {{ t_mouseover_opacity }};
 var mouseout_opacity = {{ t_mouseout_opacity }};
 var outer_map_fill = "{{ t_outer_map_fill }}";
+var fontsize = 12; {# TODO: Set dynamically #}
+var moveAmount = 20; {# TODO: Set dynamically #}
 
 
 var hashtag = "#";
@@ -61,7 +60,7 @@ var root_div_hook_tooltip = document.getElementById(div_hook_tooltip);
 var css_pan_zoom_rect = "#{{ t_div_hook_map }} .pan rect, .zoom rect { fill: black; opacity: 0.2; }\n",
     css_pan_zoom_text = "#{{ t_div_hook_map }} .pan text, .zoom text { fill: black; font-size: 18px; text-anchor: middle; }\n",
     css_pan_zoom_hover = "#{{ t_div_hook_map }} .pan:hover rect, .pan:hover text, .zoom:hover rect, .zoom:hover text { fill:blue; }\n",
-    css_text_label = "#{{ t_div_hook_map }} .label { font-family: Helvetica, sans-serif; font-size: 8px; text-anchor: middle; fill: black; }\n",
+    css_text_label = "#{{ t_div_hook_map }} .label { font-family: Helvetica, sans-serif; text-anchor: middle; fill: black; }\n",
     css_tooltip = "#{{ t_div_hook_tooltip }} { font-family: Helvetica, sans-serif; margin-top: 10px; padding: 5px; white-space: pre-wrap; width: 590px; }\n";
 
 {# The style definitions are concatinated into a single string. #}
@@ -84,7 +83,7 @@ var zoom;
 
 
 // Configure the map
-configMap(scaleAdjust, transExtent, xTranslate, yTranslate);            
+configMap();
 
 // Determine and execute the method for visualization
 visualize(map_shape, inner_shape);
@@ -92,10 +91,9 @@ visualize(map_shape, inner_shape);
 
 // Set up the map
 // Parameters: Scale factor for zooming, translate extent for panning borders and translate value for starting viewpoint
-function configMap(scaleAdjust, transExtent, xTranslate, yTranslate) {
+function configMap() {
     // Define map projection
-    projection = d3.geoMercator()
-        .translate([0, 0]);
+    projection = d3.geoMercator();
 
     // Define path generator
     path = d3.geoPath()
@@ -108,64 +106,29 @@ function configMap(scaleAdjust, transExtent, xTranslate, yTranslate) {
         .attr("height", height);
 
     // Define what to do when panning or zooming
-    var zooming = function(d) {
+    var zoom_rescale = function(d) {
+        // Column names for lat and lon data
+        var size = d3.event.transform.k;
 
-        // New offset array
-        var offset = [d3.event.transform.x, d3.event.transform.y];
-
-        // Calculate new scale
-        var newScale = d3.event.transform.k * scaleAdjust;
-
-        // Update projection with new offset
-        projection.translate(offset)
-            .scale(newScale);
-
-        // Update all paths and labels
-        svg.selectAll("path")
-            .attr("d", path);
         svg.selectAll(".label")
-            .attr("x", function(d) {
-                return path.centroid(d)[0];
-            })
-            .attr("y", function(d) {
-                return path.centroid(d)[1];
-            })
-            // Bind font-size to zoom-level
-            .style("font-size", function() {
-                var size = d3.event.transform.k;
-                if(size >= zoom_threshold) {
-                    size = size / 2;
-                }
-                return size + "px";
-            })
-            // While zoomed out display district id rather than the full name
-            .text(function(d) {
-                var zoomLevel = d3.event.transform.k;
-                if(zoomLevel < zoom_threshold) {
-                    return d.properties.id;
-                } else {
-                    return d.properties.name;
-                }
-            })
+            .attr("font-size", fontsize/size);
+
     }
 
     // Then define the zoom behavior
     zoom = d3.zoom()
         .scaleExtent(scaleExtent)
         .translateExtent(transExtent)
-        .on("zoom", zooming);
+        .on("zoom", function (d) {
+                map.attr("transform", d3.event.transform)
+                zoom_rescale()
+            })
 
-    // The center of the country, roughly
-    var center = projection([0, 0]);
 
     // Create a container in which all pan-able elements will live
     map = svg.append("g")
         .attr("id", "map")
-        .call(zoom)   // Bind the zoom behaviour
-        .call(zoom.transform, d3.zoomIdentity  // Then apply the initial transform
-            .translate(xTranslate, yTranslate)
-            .scale(scale)
-            .translate(-center[0], -center[1]));
+        .call(zoom);
 
 
     // Create a new, invisible background rect to catch drag events
@@ -187,6 +150,8 @@ function vizPolygon(json_file, inner_shape) {
 
     // Load in GeoJSON data
     d3.json(json_file, function(json) {
+
+        projection.fitExtent([[width*0.1,height*0.1],[width*0.9,height*0.9]], json);
 
         // Bind data and create one path per GeoJSON feature
         outer_map.selectAll("path")
@@ -217,34 +182,36 @@ function vizPolygon(json_file, inner_shape) {
                     return d.properties.name;
                 }
             });
+        // Load in GeoJSON data
+        // Must be inside the other d3.json call or inside a following Promise, otherwise the projection update gets lost in a race condition
+        d3.json(inner_shape, function(inner_json) {
+
+            // Bind data and create one path per GeoJSON feature
+            inner_map.selectAll("path")
+                .data(inner_json)
+                .enter()
+                .append("path")
+                .attr("class", "json_path")
+                .attr("d", path)
+                .style("fill", map_fill)
+                .style("stroke", map_stroke)
+                .style("fill-opacity", fill_opacity)
+                .style("stroke-opacity", stroke_opacity)
+                // Increase opacity while hovering over a polygon
+                .on("mouseover", function() {
+                    d3.select(this).style("fill-opacity", mouseover_opacity);
+                })
+                .on("mouseout", function() {
+                    d3.select(this).style("fill-opacity", mouseout_opacity);
+                })
+                .on("click", function(d) {
+                    var header = getHeader(d.properties);
+                    showTooltip(d.properties, header);
+                });
+            });
+
     });
 
-    // Load in GeoJSON data
-    d3.json(inner_shape, function(inner_json) {
-
-        // Bind data and create one path per GeoJSON feature
-        inner_map.selectAll("path")
-            .data(inner_json)
-            .enter()
-            .append("path")
-            .attr("class", "json_path")
-            .attr("d", path)
-            .style("fill", map_fill)
-            .style("stroke", map_stroke)
-            .style("fill-opacity", fill_opacity)
-            .style("stroke-opacity", stroke_opacity)
-            // Increase opacity while hovering over a polygon
-            .on("mouseover", function() {
-                d3.select(this).style("fill-opacity", mouseover_opacity);
-            })
-            .on("mouseout", function() {
-                d3.select(this).style("fill-opacity", mouseout_opacity);
-            })
-            .on("click", function(d) {
-                var header = getHeader(d.properties);
-                showTooltip(d.properties, header);
-            });
-        });
 }
 
 // Determine method for visualization
@@ -370,9 +337,6 @@ function createPanButtons() {
 
     d3.selectAll(".pan")
         .on("click", function () {
-
-            // Set how much to move on each click
-            var moveAmount = 1;
 
             // Set x/y to zero for now
             var x = 0;

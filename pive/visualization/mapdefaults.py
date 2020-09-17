@@ -67,8 +67,8 @@ tooltip_div_border = '2px solid lightblue'
 ##########################
 # Scales for zoom level ##
 ##########################
-scale = 16
-scale_extent = [9, 42]
+scale = 1
+scale_extent = [1, 20]
 
 ########################
 #  POI Map specific ####

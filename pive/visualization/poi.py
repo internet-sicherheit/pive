@@ -87,9 +87,6 @@ class Map(mv.MapVisualization):
         self.__headers = ['Longitude','Latitude'] + list(dataset[0].keys())[2:]
 
 
-        # Scale and translate values for map alignment
-        self.align_map_view(city)
-
 
     def set_title(self, title):
         """Basic Method."""
@@ -98,26 +95,6 @@ class Map(mv.MapVisualization):
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
         self.__datakeys = datakeys
-
-    def align_map_view(self, city):
-        """Setting scale and translate values for map alignment depending on the city."""
-        if city == "Gelsenkirchen":
-            # Scale factor for zooming
-            self.__scale_adjust = 5000
-            # Translate extent for panning borders and translate value for starting viewpoint
-            self.__trans_extent = [[602, -5280], [633, -5252]]
-            self.__x_translate = -9580
-            self.__y_translate = 84475
-        elif city == "Aachen":
-            self.__scale_adjust = 4000
-            self.__trans_extent = [[410, -4140], [443, -4112]]
-            self.__x_translate = -6524
-            self.__y_translate = 66207
-        elif city == "Wuppertal":
-            self.__scale_adjust = 5000
-            self.__trans_extent = [[608.75, -5238], [643, -5212]]
-            self.__x_translate = -9714
-            self.__y_translate = 83801
 
     def set_scales(self, scale, scale_extent):
         """Setting scale and scale extent for the map."""
@@ -188,10 +165,6 @@ class Map(mv.MapVisualization):
                          't_city': self.__city,
                          't_scale': self.__scale,
                          't_scale_extent': self.__scale_extent,
-                         't_scale_adjust': self.__scale_adjust,
-                         't_trans_extent': self.__trans_extent,
-                         't_x_translate': self.__x_translate,
-                         't_y_translate': self.__y_translate,
                          't_max_poi': self.__max_poi,
                          't_file_extension': ".json",
                          't_zoom_threshold': self.__zoom_threshold,
