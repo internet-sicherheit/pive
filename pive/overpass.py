@@ -1,6 +1,6 @@
 import requests
 from time import sleep
-import json
+from geojson_rewind import rewind
 import csv
 
 API_URL = 'http://overpass-api.de/api/interpreter'
@@ -141,62 +141,79 @@ def get_district_shape_at_point(lat, lon):
     return get_shape_at_point(lat, lon, 10)
 
 def geojsonify(shape):
-    coordinates = []
+    segments = []
     for member in shape['members']:
-        coordinate_entry = []
-        if member['type'] == 'way':
+        segment_points = []
+        #TODO: Stop ignoring holes (role: inner)
+        if member['type'] == 'way' and member['role'] == 'outer':
             for point in member['geometry']:
-                coordinate_entry.append([point['lon'], point['lat']])
-            coordinates.append(coordinate_entry)
-    coordinates = reorder_segments(coordinates)
-    if len(coordinates) == 1:
+                segment_points.append([point['lon'], point['lat']])
+            segments.append(segment_points)
+    polygons = build_polygons(segments)
+    if len(polygons) == 1:
         geojson_object = {'type': 'Polygon'}
-        geojson_object['coordinates'] = coordinates[0]
+        geojson_object['coordinates'] = polygons[0]
     else:
         geojson_object = {'type': 'MultiPolygon'}
-        geojson_object['coordinates'] = coordinates
+        geojson_object['coordinates'] = polygons
     return geojson_object
 
-def reorder_segments(coordinates):
-    reordered_segments = []
-    current_polygon = [coordinates.pop(0)]
-    first_point = current_polygon[0][0]
-    while coordinates:
-        last_point = current_polygon[-1][-1]
-        if last_point == first_point:
-            found_next_segment = True
-            current_polygon = flatten_coordinates(current_polygon)
-            if not is_clockwise(current_polygon):
-                current_polygon.reverse()
-            reordered_segments.append([current_polygon])
-            # reset current polygon
-            current_polygon = [coordinates.pop(0)]
-            first_point = current_polygon[0][0]
-            last_point = current_polygon[-1][-1]
-        found_next_segment = False
-        for (index, segment) in zip(range(len(coordinates)), coordinates):
-            if segment[0] == last_point:
-                #Next segment found, append to output, remove from input, break out of foreach an continue search
-                found_next_segment = True
-                current_polygon.append(segment)
-                coordinates.pop(index)
-                break
-            elif segment[-1] == last_point:
-                # Next segment found, but in reversed order, append to output, remove from input, break out of foreach an continue search
-                found_next_segment = True
-                segment.reverse()
-                current_polygon.append(segment)
-                coordinates.pop(index)
-                break
-        if not found_next_segment:
-            raise ValueError('Missing Segments')
-    current_polygon = flatten_coordinates(current_polygon)
-    if is_clockwise(current_polygon):
-        current_polygon.reverse()
-    reordered_segments.append([current_polygon])
-    return reordered_segments
+def build_polygons(segments):
+
+    polygons = []
+    # Search until all segments are used up
+    while segments:
+        current_polygon_segments = [segments.pop(0)]
+        first_point = current_polygon_segments[0][0]
+        last_point = current_polygon_segments[-1][-1]
+
+        #Search until current segments create a closed loop
+        while first_point != last_point:
+            found_another_segment = False
+            for (index, segment) in zip(range(len(segments)), segments):
+                if segment[0] == last_point:
+                    # Next segment found, in the same order as the previous ones
+                    _ = segments.pop(index)
+                    current_polygon_segments.append(segment)
+                    found_another_segment = True
+                    break
+                elif segment[-1] == last_point:
+                    # Next segment found, in the reversed order as the previous ones
+                    _ = segments.pop(index)
+                    segment.reverse()
+                    current_polygon_segments.append(segment)
+                    found_another_segment = True
+                    break
+
+            # If no new segments could be found that match the current segment no closed loop can be formed
+            if not found_another_segment:
+                raise ValueError("Segments dont form a closed loop, cant construct polygon")
+
+            # Update last point
+            last_point = current_polygon_segments[-1][-1]
+
+        #Closed loop found, flatten and make sure that winding is counter-clockwise, as clockwise winding indicates holes
+        polygon = flatten_coordinates(current_polygon_segments)
+        """Spherical polygons also require a winding order convention to determine which side
+        of the polygon is the inside: the exterior ring for polygons smaller than a hemisphere must be clockwise,
+        while the exterior ring for polygons larger than a hemisphere must be anticlockwise.
+        Interior rings representing holes must use the opposite winding order of their exterior ring.
+        This winding order convention is also used by TopoJSON and ESRI shapefiles;
+        however, it is the opposite convention of GeoJSON’s RFC 7946.
+        (Also note that standard GeoJSON WGS84 uses planar equirectangular coordinates, not spherical coordinates,
+        and thus may require stitching to remove antimeridian cuts.)
+        
+        https://github.com/d3/d3-geo"""
+        if not is_clockwise(polygon):
+            polygon.reverse()
+        polygons.append([polygon])
+    return polygons
+
+
 
 def flatten_coordinates(coordinates):
+    """Connect a list of line snippets to a single polygon."""
+
     flattened = []
     for segment in coordinates:
         for point in segment:
@@ -204,9 +221,11 @@ def flatten_coordinates(coordinates):
     return flattened
 
 def is_clockwise(polygon):
+    """Check if a polygons winding is clockwise. The expected input order for points is [Longitude, Latitude].
+    If the input order is reversed, the result will be reversed too."""
     summed_orientation = 0
     for index in range(len(polygon)):
         p1 = polygon[index]
         p2 = polygon[(index+1)%len(polygon)]
-        summed_orientation += (p2[0]-p1[0])*(p2[1]-p1[1])
+        summed_orientation += (p2[0]-p1[0])*(p2[1]+p1[1])
     return summed_orientation > 0.0
