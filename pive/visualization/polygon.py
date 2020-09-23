@@ -24,12 +24,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import json
-
-import jinja2
 
 from pive.visualization import mapdefaults as default
 from pive.visualization import mapvisualization as mv
+
+from pathlib import Path
 
 
 class Map(mv.MapVisualization):
@@ -47,65 +46,60 @@ class Map(mv.MapVisualization):
         """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interface.
-        mv.MapVisualization.__init__(self)
+        mv.MapVisualization.__init__(self, shape)
 
         # Metadata
         self._title = 'polygon'
-        self.__template_name = 'polygon'
-        self.__dataset = dataset
-        real_path = os.path.dirname(os.path.realpath(__file__))
-        self.__template_url = '{}{}'.format(real_path, default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._template_name = 'polygon'
+        self._dataset = dataset
+        self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__padding = padding
-        self.__shape = shape
-        self.__city = city
+        self._width = width
+        self._height = height
+        self._padding = padding
+        self._shape = shape
+        self._city = city
 
         # Starting, min and max values for zoom levels on the map
-        self.__scale = default.scale
-        self.__scale_extent = default.scale_extent
+        self._scale = default.scale
+        self._scale_extent = default.scale_extent
 
         # Map rendering
-        self.__zoom_threshold = default.zoom_threshold
-        self.__tooltip_div_border = default.tooltip_div_border
-        self.__map_fill = default.map_fill
-        self.__map_stroke = default.map_stroke
-        self.__fill_opacity = default.fill_opacity
-        self.__stroke_opacity = default.stroke_opacity
-        self.__mouseover_opacity = default.mouseover_opacity
-        self.__mouseout_opacity = default.mouseout_opacity
-        self.__outer_map_fill = default.outer_map_fill
+        self._zoom_threshold = default.zoom_threshold
+        self._tooltip_div_border = default.tooltip_div_border
+        self._map_fill = default.map_fill
+        self._map_stroke = default.map_stroke
+        self._fill_opacity = default.fill_opacity
+        self._stroke_opacity = default.stroke_opacity
+        self._mouseover_opacity = default.mouseover_opacity
+        self._mouseout_opacity = default.mouseout_opacity
+        self._outer_map_fill = default.outer_map_fill
 
-
-    def set_title(self, title):
-        """Basic Method."""
-        self._title = title
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
-        self.__datakeys = datakeys
+        self._datakeys = datakeys
 
     def set_scales(self, scale, scale_extent):
         """Setting scale and scale extent for the map."""
-        self.__scale = scale
-        self.__scale_extent = scale_extent
+        self._scale = scale
+        self._scale_extent = scale_extent
 
     def set_inner_map_color(self, color):
         """Setting the color for the inner map."""
-        self.__map_fill = color
+        self._map_fill = color
 
     def set_outer_map_color(self, color):
         """Setting the color for the outer map."""
-        self.__outer_map_fill = color
+        self._outer_map_fill = color
 
     def set_fill_opacity(self, opacity):
         """Setting the opacity for the map."""
-        self.__fill_opacity = opacity
-        self.__mouseout_opacity = opacity
+        self._fill_opacity = opacity
+        self._mouseout_opacity = opacity
 
     def generate_visualization_dataset(self, dataset):
         """Basic Method."""
@@ -120,140 +114,27 @@ class Map(mv.MapVisualization):
             vis_dataset.append(vis_datapoint)
         return vis_dataset
 
-    def write_dataset_file(self, dataset, destination_url, filename):
-        """Basic Method."""
-        dest_file = '{}{}'.format(destination_url, filename)
-        outp = open(dest_file, 'w')
-        json.dump(dataset, outp, indent=2)
-        outp.close()
-
-        print('Writing: {}'.format(dest_file))
-
-    def create_html(self, template):
-        """Basic Method."""
-        template_vars = {'t_title': self._title,
-                         't_div_hook_map': self._div_hook_map,
-                         't_div_hook_legend': self._div_hook_legend,
-                         't_div_hook_tooltip': self._div_hook_tooltip}
-
-        output_text = template.render(template_vars)
-        return output_text
-
-    def create_js(self, template, dataset_url, shape_file):
+    def create_js(self, template, dataset_url):
         """Basic Method. Creates the JavaScript code based on the template."""
-        template_vars = {'t_width': self.__width,
-                         't_height': self.__height,
-                         't_shape': shape_file,
+        template_vars = {'t_width': self._width,
+                         't_height': self._height,
+                         't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
                          't_inner': "polygon.json",
-                         't_city': self.__city,
-                         't_scale': self.__scale,
-                         't_scale_extent': self.__scale_extent,
-                         't_zoom_threshold': self.__zoom_threshold,
+                         't_city': self._city,
+                         't_scale': self._scale,
+                         't_scale_extent': self._scale_extent,
+                         't_zoom_threshold': self._zoom_threshold,
                          't_div_hook_map': self._div_hook_map,
                          't_div_hook_tooltip': self._div_hook_tooltip,
-                         't_tooltip_div_border': self.__tooltip_div_border,
-                         't_map_fill': self.__map_fill,
-                         't_map_stroke': self.__map_stroke,
-                         't_fill_opacity': self.__fill_opacity,
-                         't_stroke_opacity': self.__stroke_opacity,
-                         't_mouseover_opacity': self.__mouseover_opacity,
-                         't_mouseout_opacity': self.__mouseout_opacity,
-                         't_outer_map_fill': self.__outer_map_fill,
-                         't_pive_version': self.__version}
+                         't_tooltip_div_border': self._tooltip_div_border,
+                         't_map_fill': self._map_fill,
+                         't_map_stroke': self._map_stroke,
+                         't_fill_opacity': self._fill_opacity,
+                         't_stroke_opacity': self._stroke_opacity,
+                         't_mouseover_opacity': self._mouseover_opacity,
+                         't_mouseout_opacity': self._mouseout_opacity,
+                         't_outer_map_fill': self._outer_map_fill,
+                         't_pive_version': self._version}
 
         output_text = template.render(template_vars)
         return output_text
-
-    def write_file(self, output, destination_url, filename):
-        """Basic Method."""
-        dest_file = '{}{}'.format(destination_url, filename)
-
-        if not os.path.exists(destination_url):
-            print('Folder does not exist. '
-                  + 'Creating folder "{}". '.format(destination_url))
-            os.makedirs(destination_url)
-
-        f = open(dest_file, 'w')
-
-        print('Writing: {}'.format(dest_file))
-
-        for line in output:
-            f.write(line)
-
-        f.close()
-
-    def get_js_code(self):
-        """Basic Method."""
-        dataset_url = '{}.json'.format(self._title)
-        js_template = self.load_template_file(
-            '{}{}.jinja'.format(self.__template_url, self.__template_name))
-        shape_filename = '{}_shape.json'.format(self._title)
-        js = self.create_js(js_template, dataset_url, shape_filename)
-        return js
-
-    def get_json_dataset(self):
-        """Basic Method."""
-        return self.generate_visualization_dataset(self.__dataset)
-
-    def create_visualization_files(self, destination_url):
-        """Basic Method."""
-        html_template = self.load_template_file(
-            '{}map_html.jinja'.format(self.__template_url))
-
-        js_template = self.load_template_file(
-            '{}{}.jinja'.format(self.__template_url, self.__template_name))
-
-        shape_filename = '{}_shape.json'.format(self._title)
-        self.write_file(self.__shape, destination_url, '/' + shape_filename)
-
-        dataset_url = '{}.json'.format(self._title)
-        js = self.create_js(js_template, dataset_url, shape_filename)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_url, '/{}.html'.format(self._title))
-        self.write_file(js, destination_url, '/{}.js'.format(self._title))
-
-        vis_data = self.generate_visualization_dataset(self.__dataset)
-        self.write_dataset_file(
-            vis_data,
-            destination_url,
-            '/{}.json'.format(self._title))
-
-    def set_height(self, height):
-        """Basic method for height driven data."""
-        if not isinstance(height, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(height)))
-        if (height <= 0):
-            print(
-                'Warning: Negative or zero height parameter. '
-                + 'Using default settings instead.')
-            height = default.height
-        self.__height = height
-
-    def set_width(self, width):
-        """Basic method for width driven data."""
-        if not isinstance(width, int):
-            raise ValueError(
-                'Integer expected, got {} instead.'.format(type(width)))
-        if (width <= 0):
-            print(
-                'Warning: Negative or zero width parameter. '
-                + 'Using default settings instead.')
-            width = default.width
-        self.__width = width
-
-    def set_dimension(self, width, height):
-        """Basic Method."""
-        self.set_width(width)
-        self.set_height(height)
-
-    def load_template_file(self, template_url):
-        """Basic Method."""
-        template_loader = jinja2.FileSystemLoader(
-            searchpath=[default.template_path, '/'])
-        print('Opening template: {}'.format(template_url))
-
-        template_env = jinja2.Environment(loader=template_loader)
-        template = template_env.get_template(template_url)
-        return template

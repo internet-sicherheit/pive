@@ -23,15 +23,25 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 from . import mapdefaults as default
+from .basevisualization import BaseVisualization
+
+from pathlib import Path
 
 
-class MapVisualization(object):
+class MapVisualization(BaseVisualization):
     IMPL_ERROR_MESSAGE = 'Method required and needs to be implemented.'
 
-    def __init__(self):
+    def __init__(self, shape):
+        BaseVisualization.__init__(self)
+
+        self._html_template = Path(__file__).resolve().parent.joinpath(default.template_path, "map_html.jinja")
         self._div_hook_map = default.div_hook_map
         self._div_hook_legend = default.div_hook_legend
         self._div_hook_tooltip = default.div_hook_tooltip
+        self._shape = shape
+
+    def set_div_hook(self, div_hook):
+        self.set_div_hook_map(div_hook)
 
     def set_div_hook_map(self, div_hook):
         assert isinstance(div_hook, str)
@@ -45,48 +55,9 @@ class MapVisualization(object):
         assert isinstance(div_hook, str)
         self._div_hook_tooltip = div_hook
 
-    def set_title(self, title):
-        assert isinstance(title, str)
-        self._title = title
+    def get_shapefile_path(self, output_folder):
+        return output_folder.joinpath('%s_shape.json' % self._title)
 
-    def align_map_view(self, city):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def set_scales(self, scale, scale_extent):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def generate_visualization_dataset(self, dataset):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def write_dataset_file(self, dataset, destination_url, filename):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def create_html(self, template):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def create_js(self, template, dataset_url):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def write_file(self, output, destination_url, filename):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def get_js_code(self):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def get_json_dataset(self):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def create_visualization_files(self, destination_url):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def set_height(self, height):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def set_width(self, width):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def set_dimension(self, width, height):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
-
-    def load_template_file(self, template_url):
-        raise NotImplementedError(self.IMPL_ERROR_MESSAGE)
+    def create_visualization_files(self, destination_folder):
+        super().create_visualization_files(destination_folder)
+        self.write_file(self._shape, destination_folder, '%s_shape.json' % self._title)

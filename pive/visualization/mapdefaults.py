@@ -26,33 +26,15 @@
 import sys
 
 from pive.visualization import colorthemes
+from pive.visualization.defaults import *
 
 ####################
 #  Meta Data #######
 ####################
-title = 'pivechart'
-# Used to locate the modules with dotted namespace.
-module_path = 'pive.visualization'
-# Filepath to the template folder.
-template_path = '/templates/'
-# Path where pive will create the standard output.
-output_path = '{}/output'.format(sys.path[0])
-# Path where pive locates the visualizations config file.
-config_path = '/visualization/config/'
-# Div container in which the map, legend and tooltip will be placed.
+# # Div container in which the map, legend and tooltip will be placed.
 div_hook_map = 'map'
 div_hook_legend = 'legend'
 div_hook_tooltip = 'tooltip'
-# pive version
-p_version = '0.3.3'
-
-####################
-#  Default Values ##
-####################
-width = 600
-height = 400
-padding = 60
-
 
 ####################
 #  Map Rendering ##

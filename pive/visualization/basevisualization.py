@@ -51,6 +51,8 @@ class BaseVisualization:
         self._font_size = default.font_size
         self._label_size = default.label_size
 
+        self._colors = []
+
     def set_div_hook(self, div_hook):
         assert isinstance(div_hook, str)
         self._div_hook = div_hook
@@ -161,7 +163,7 @@ class BaseVisualization:
         }
 
     def create_html(self, template):
-        templateVars = {'t_div_hook': self._div_hook}
+        templateVars = { "t" + key:self.__dict__[key] for key in self.__dict__.keys() if key.startswith("_") }
         templateVars.update(self.get_modifiable_template_variables())
         # Add dictionaries of user modifiable variables
         templateVars.update({'i_variables': self.get_modifiable_template_variables(),
