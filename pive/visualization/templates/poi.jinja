@@ -110,27 +110,18 @@ function configMap() {
         .attr("width", width)
         .attr("height", height);
 
-    // Define what to do when panning or zooming
-    var zoom_rescale = function(d) {
-        // Column names for lat and lon data
-        var size = d3.event.transform.k;
 
-        svg.selectAll(".label")
-            .attr("font-size", fontsize/size);
-
-        svg.selectAll("circle")
-            .attr("r", circle_radius/size)
-            .style("stroke-width", circle_stroke_width/size);
-
-    }
 
     // Then define the zoom behavior
     zoom = d3.zoom()
         .scaleExtent(scaleExtent)
         .translateExtent(transExtent)
         .on("zoom", function (d) {
-                map.attr("transform", d3.event.transform)
-                zoom_rescale()
+                map.selectAll("path").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
+                map.selectAll(".label").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
+                map.selectAll("circle").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
+                map.selectAll(".label").attr("font-size", fontsize/d3.event.transform.k);
+                map.selectAll("circle").attr("r", circle_radius/d3.event.transform.k).style("stroke-width", circle_stroke_width/d3.event.transform.k);
             })
 
 
