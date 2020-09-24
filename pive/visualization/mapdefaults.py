@@ -39,7 +39,7 @@ div_hook_tooltip = 'tooltip'
 ####################
 #  Map Rendering ##
 ####################
-zoom_threshold = 10
+zoom_threshold = 2
 fill_opacity = 0.5
 stroke_opacity = 0.6
 mouseover_opacity = 1

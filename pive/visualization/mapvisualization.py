@@ -24,6 +24,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from . import mapdefaults as default
 from .basevisualization import BaseVisualization
+from abc import abstractmethod
+from json import dumps
 
 from pathlib import Path
 
@@ -31,14 +33,13 @@ from pathlib import Path
 class MapVisualization(BaseVisualization):
     IMPL_ERROR_MESSAGE = 'Method required and needs to be implemented.'
 
-    def __init__(self, shape):
+    def __init__(self):
         BaseVisualization.__init__(self)
 
         self._html_template = Path(__file__).resolve().parent.joinpath(default.template_path, "map_html.jinja")
         self._div_hook_map = default.div_hook_map
         self._div_hook_legend = default.div_hook_legend
         self._div_hook_tooltip = default.div_hook_tooltip
-        self._shape = shape
 
     def set_div_hook(self, div_hook):
         self.set_div_hook_map(div_hook)
@@ -60,4 +61,8 @@ class MapVisualization(BaseVisualization):
 
     def create_visualization_files(self, destination_folder):
         super().create_visualization_files(destination_folder)
-        self.write_file(self._shape, destination_folder, '%s_shape.json' % self._title)
+        self.write_file(dumps(self._shape), destination_folder, '%s_shape.json' % self._title)
+
+    @abstractmethod
+    def get_map_shape(self):
+        pass

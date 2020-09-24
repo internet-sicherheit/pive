@@ -136,8 +136,8 @@ class Environment(object):
 
         # When dates occur the constructor is called differently.
         if self.__is_geodata:
-            (self.__map_shape, self.__inner_shape, self.__city) = self.__inputmanager.get_map_shape(self.__data)
-            chart_decision = class_(self.__data, modname, self.__map_shape, self.__inner_shape, self.__city)
+            chart_decision = class_(self.__data, modname)
+            chart_decision.get_map_shape()
         elif self.__has_datefields:
             chart_decision = class_(self.__data, modname, times=True)
         else:

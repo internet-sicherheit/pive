@@ -27,6 +27,7 @@ import os
 
 from pive.visualization import mapdefaults as default
 from pive.visualization import mapvisualization as mv
+from pive import shapeloader
 
 from pathlib import Path
 
@@ -37,16 +38,13 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
-                 shape,
-                 inner,
-                 city,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
         """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interface.
-        mv.MapVisualization.__init__(self, shape)
+        mv.MapVisualization.__init__(self)
 
         # Metadata
         self._title = 'polygon'
@@ -60,8 +58,6 @@ class Map(mv.MapVisualization):
         self._width = width
         self._height = height
         self._padding = padding
-        self._shape = shape
-        self._city = city
 
         # Starting, min and max values for zoom levels on the map
         self._scale = default.scale
@@ -77,6 +73,10 @@ class Map(mv.MapVisualization):
         self._mouseover_opacity = default.mouseover_opacity
         self._mouseout_opacity = default.mouseout_opacity
         self._outer_map_fill = default.outer_map_fill
+
+    def get_map_shape(self):
+        coordinates = shapeloader.get_all_coordinates_polygon(self._dataset)
+        (self._shape, self._city, self._shortend_names) = shapeloader.find_map_shape(coordinates, [datapoint['name'] for datapoint in self._dataset])
 
 
     def set_data_keys(self, datakeys):
@@ -107,9 +107,8 @@ class Map(mv.MapVisualization):
 
         for datapoint in dataset:
             vis_datapoint = {}
-            points = list(datapoint.keys())
-            vis_datapoint['geometry'] = { "type":"Polygon", "coordinates":[datapoint[points[0]]]}
-            vis_datapoint['properties'] = {"name": datapoint[points[1]], "id":datapoint[points[1]]}
+            vis_datapoint['geometry'] = {"type": "Polygon", "coordinates": [datapoint['polygon']]}
+            vis_datapoint['properties'] = {"name": datapoint['name'], "id": self._shortend_names[datapoint['name']]}
             vis_datapoint["type"] = "Feature"
             vis_dataset.append(vis_datapoint)
         return vis_dataset

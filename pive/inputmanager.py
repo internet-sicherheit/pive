@@ -89,23 +89,6 @@ class InputManager(object):
         #FIXME: Value only set after call to map(self, dataset)
         return self.__contains_datefields
 
-    def get_map_shape(self, dataset):
-        """Returns the map shape representing the dataset."""
-        inner_shape = ''
-        # If the dataset contains coordinates
-        if 'poi' in self.__suitables:
-            # If the chosen dataset is the map shape
-            coordinates = shapeloader.get_all_coordinates_poi(dataset)
-            (shape, city) = shapeloader.find_map_shape(coordinates)
-        elif 'polygon' in self.__suitables:
-            coordinates = shapeloader.get_all_coordinates_polygon(dataset)
-            (shape, city) = shapeloader.find_map_shape(coordinates)
-        # If the dataset is suitable for a heatmap
-        elif 'heatmap' in self.__suitables:
-            (shape, city) = shapeloader.build_heatmap(dataset)
-
-        return (shape, None, city)
-
     def __is_dataset_consistent(self, dataset):
         """Checks if the dataset is consistent."""
         consistent = profiler.is_dataset_consistent(dataset)

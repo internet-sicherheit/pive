@@ -31,6 +31,7 @@ import jinja2
 
 from pive.visualization import mapdefaults as default
 from pive.visualization import mapvisualization as mv
+from pive import shapeloader
 
 
 class Map(mv.MapVisualization):
@@ -39,16 +40,13 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
-                 shape,
-                 inner,
-                 city,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
         """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interface.
-        mv.MapVisualization.__init__(self, shape)
+        mv.MapVisualization.__init__(self)
 
         # Metadata
         self._title = 'poi'
@@ -62,8 +60,6 @@ class Map(mv.MapVisualization):
         self._width = width
         self._height = height
         self._padding = padding
-        self._shape = shape
-        self._city = city
         self._max_poi = default.max_poi
 
         # Starting, min and max values for zoom levels on the map
@@ -85,6 +81,9 @@ class Map(mv.MapVisualization):
         self._circle_stroke_width = default.circle_stroke_width
         self._headers = ['Longitude','Latitude'] + list(dataset[0].keys())[2:]
 
+    def get_map_shape(self):
+        coordinates = shapeloader.get_all_coordinates_poi(self._dataset)
+        (self._shape, self._city, self._shortend_names) = shapeloader.find_map_shape(coordinates)
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""

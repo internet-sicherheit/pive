@@ -58,7 +58,7 @@ def get_all_coordinates_polygon(dataset):
                 result.append(coord_pair)
     return result
 
-def find_map_shape(coordinates):
+def find_map_shape(coordinates, other_names = []):
     """Returns a map shape fitting every coordinate pair.
     
     Iterates through every pair of the coordinate list.
@@ -75,17 +75,15 @@ def find_map_shape(coordinates):
 
     shape_name = smallest_shape["tags"]["name"]
     city_name = city_shape["tags"]["name"]
-    #FIXME: Get City tag for zoom levels
-    shape_id = "XYZ"
+    shortend_names = get_shortened_names(other_names + [shape_name, city_name])
 
-    # If the shape is not a city but a district, display the city name in addition to the district
+    features = []
     if city_name != shape_name:
-        (shape_name, shape_id) = __concat_city_district(shape_name, shape_id, city_name)
+        features.append(create_geojson_feature(overpass.geojsonify(smallest_shape), shape_name, shortend_names[shape_name]))
+    features.append(create_geojson_feature(overpass.geojsonify(city_shape), city_name, shortend_names[city_name]))
+    shape_json = add_geojson_header(features)
 
-    shape_json = __edit_shape(overpass.geojsonify(smallest_shape), shape_name, shape_id)
-    shape_json = __edit_json(shape_json)
-
-    return (shape_json, city_name)
+    return (shape_json, city_name, shortend_names)
 
 def build_heatmap(dataset):
     """Builds a heatmap for the given city."""
@@ -106,25 +104,22 @@ def build_heatmap(dataset):
     area_levels = max(result, key=result.get)
 
     # Find the right districts with their name and id
-    shortened_names = __get_shortened_names({district["tags"]["name"] for district in districts})
+    shortened_names = get_shortened_names({district["tags"]["name"] for district in districts})
 
+    features = []
     for district in districts:
         area_id = district["id"]
         name = district["tags"]['name']
-        district_id = shortened_names[name]
         level = district["tags"]["admin_level"]
         if level == area_levels:
             shape = overpass.geojsonify(district)
-            json = __edit_shape(shape, name, district_id)
-            # Append the districts JSON data
-            full_shape = full_shape + json
+            features.append(create_geojson_feature(shape, name, shortened_names[name]))
 
-    # Final formatting to JSON data to fit visualization requirements
-    shape_json = __edit_json(full_shape)
+    shape = add_geojson_header(features)
 
-    return (shape_json, city)
+    return (shape, city)
 
-def __get_shortened_names(names, tag_length=2):
+def get_shortened_names(names, tag_length=2):
     """Search for shortest possible abbreviation of a list of names
     by iterative deepening of allowed abbreviation length"""
 
@@ -175,34 +170,19 @@ def __get_shortened_names(names, tag_length=2):
     while duplicates:
         # As long as there are conflicts keep searching recursively
         # Include previously clean names, as different segment names might cause new conflicts
-        shortened_names.update(__get_shortened_names(duplicates, tag_length=tag_length+1))
+        shortened_names.update(get_shortened_names(duplicates, tag_length=tag_length+1))
         duplicates = find_duplicates(shortened_names)
     return shortened_names
 
-def __edit_shape(shape, name, name_id):
+def create_geojson_feature(shape, name, name_id):
     """Edit Shape data to fit visualization requirements.
 
     Add its name and id to the properties."""
-    shape_str = str(shape)
-    shape_str = shape_str.replace("'", '"')
+
     # Append this to Shape string for it to be readable by d3.json() method
-    new_str = '{"type":"Feature","properties":{"name":"' + name + '", "id":"' + name_id + '"},"geometry":' + shape_str + '},'
-    return new_str
 
-def __edit_json(json):
+    return {"type":"Feature", "properties": {"name": name, "id": name_id}, "geometry": shape}
+
+def add_geojson_header(feature_list):
     """Edit JSON data to fit visualization requirements."""
-    json_str = str(json)
-    # Remove comma after last element of shape string
-    json_str = json_str[:-1]
-    # Append this to JSON string for it to be readable by d3.json() method
-    new_str = '{"type":"FeatureCollection","features":[' + json_str + ']}'
-    return new_str
-
-def __concat_city_district(district, district_id, city):
-    """Combines city and district names and ids."""
-    city_id = 'XXX'
-
-    name = city + ' ' + district
-    id_ = city_id + ' ' + district_id
-    
-    return (name, id_)
+    return {"type": "FeatureCollection", "features": feature_list}

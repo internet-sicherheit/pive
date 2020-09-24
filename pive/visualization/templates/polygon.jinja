@@ -111,8 +111,16 @@ function configMap() {
         .translateExtent(transExtent)
         .on("zoom", function (d) {
                 map.selectAll("path").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
-                map.selectAll("text").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
-                map.selectAll("text").attr("font-size", fontsize/d3.event.transform.k);
+                map.selectAll("text")
+                    .attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")")
+                    .attr("font-size", fontsize/d3.event.transform.k)
+                    .text(function(d) {
+                        if(d3.event.transform.k < zoom_threshold) {
+                            return d.properties.id;
+                        } else {
+                            return d.properties.name;
+                        }
+                    });
             })
 
 
@@ -169,9 +177,7 @@ function vizPolygon(json_file, inner_shape) {
                 return path.centroid(d)[1];
             })
             .text(function (d) {
-                if (d.properties.name) {
-                    return d.properties.name;
-                }
+                    return d.properties.id;
             });
         // Load in GeoJSON data
         // Must be inside the other d3.json call or inside a following Promise, otherwise the projection update gets lost in a race condition
@@ -198,9 +204,23 @@ function vizPolygon(json_file, inner_shape) {
                 .on("click", function(d) {
                     var header = getHeader(d.properties);
                     showTooltip(d.properties, header);
-                });
-            });
+                })
 
+            inner_map.selectAll("text")
+                .data(inner_json)
+                .enter()
+                .append("text")
+                .attr("class", "label")
+                .attr("x", function (d) {
+                    return path.centroid(d)[0];
+                })
+                .attr("y", function (d) {
+                    return path.centroid(d)[1];
+                })
+                .text(function (d) {
+                        return d.properties.id;
+                });
+        });
     });
 
 }

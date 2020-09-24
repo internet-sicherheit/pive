@@ -122,7 +122,14 @@ function configMap() {
         .on("zoom", function (d) {
                 map.selectAll("path").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
                 map.selectAll("text").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
-                svg.selectAll(".label").attr("font-size", fontsize/d3.event.transform.k);
+                svg.selectAll(".label").attr("font-size", fontsize/d3.event.transform.k)
+                    .text(function(d) {
+                        if(d3.event.transform.k < zoom_threshold) {
+                            return d.properties.id;
+                        } else {
+                            return d.properties.name;
+                        }
+                    });
             })
 
     // Create a container in which all pan-able elements will live
@@ -233,7 +240,7 @@ function vizHeatmap(filename, json_file) {
                 })
                 .text(function (d) {
                     if (d.properties.name) {
-                        return d.properties.name;
+                        return d.properties.id;
                     }
                 });
 
@@ -517,14 +524,14 @@ function continuousLegend() {
         // Display size of canvas element
         .style("height", (legendheight - legendmargin.top - legendmargin.bottom) + "px")
         .style("width", (legendwidth - legendmargin.left - legendmargin.right) + "px")
-        // Border and position with margin of canvas element 
+        // Border and position with margin of canvas element
         .style("border", legendborder)
         .style("position", "absolute")
         .style("top", (legendmargin.top) + "px")
         .style("left", (legendmargin.left) + "px")
         // Get the canvas element of this selection
         .node();
-    
+
     // Get a two-dimensional rendering context for canvas element (CanvasRenderingContext2D object)
     var ctx = canvas.getContext("2d");
 

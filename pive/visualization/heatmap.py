@@ -28,7 +28,7 @@ import os
 from pive.visualization import mapdefaults as default
 from pive.visualization import mapvisualization as mv
 from pathlib import Path
-
+from pive import shapeloader
 
 class Map(mv.MapVisualization):
     """Map class for heatmap data."""
@@ -36,16 +36,13 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
-                 shape,
-                 inner,
-                 city,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
         """Initializing the chart with default settings."""
 
         # Initializing the inherited pseudo-interface.
-        mv.MapVisualization.__init__(self, shape)
+        mv.MapVisualization.__init__(self)
 
         # Metadata
         self._title = 'heatmap'
@@ -60,8 +57,6 @@ class Map(mv.MapVisualization):
         self._width = width
         self._height = height
         self._padding = padding
-        self._shape = shape
-        self._city = city
 
         # Starting, min and max values for zoom levels on the map
         self._scale = default.scale
@@ -83,6 +78,9 @@ class Map(mv.MapVisualization):
         self._legendmargin = default.legendmargin
         self._legendticksize = default.legendticksize
         self._colors = default.heatmapcolors
+
+    def get_map_shape(self):
+        (self._shape, self._city) = shapeloader.build_heatmap(self._dataset)
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
