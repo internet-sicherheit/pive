@@ -125,34 +125,56 @@ def build_heatmap(dataset):
     return (shape_json, city)
 
 def __get_shortened_names(names, tag_length=2):
+    """Search for shortest possible abbreviation of a list of names
+    by iterative deepening of allowed abbreviation length"""
 
     def find_duplicates(sn):
+        """Get all names, that are still not resolved to a unique abbreviation by testing for bijective mapping"""
         occurrences = {}
+        #For all abbreviation, create a mapping from abbreviation to unabbreviated names
         for key in sn:
             if sn[key] in occurrences:
                 occurrences[sn[key]].append(key)
             else:
                 occurrences[sn[key]] = [key]
         duplicates = set()
+        # For all abbreviations, search for abbreviations that map to more than 1 unabbreviated name
         for o in occurrences:
             if len(occurrences[o]) > 1:
                 duplicates.update(occurrences[o])
         return duplicates
 
     shortened_names = {}
+    # Make sure that there are no duplicate names. Duplicate names should map to the same abbreviation anyway
+    names = set(names)
     for name in names:
-        shortened = ""
+        # split names along dashes and spaces
         splitted = resplit("([\-, ])",name)
         segment_count = len(splitted)
+        # shortened name needs to be at least 1 character per token
         remaining_length_total = max(tag_length, segment_count)
-        for segment in splitted:
-            segment_length = min(ceil(tag_length / segment_count), remaining_length_total, len(segment))
-            shortened += segment[0:segment_length]
-            remaining_length_total -= segment_length
-        shortened_names[name] = shortened.upper()
-    # If the length of the set of shortened names is equal to the length of unique names, that means every unique name has a unique shortened version mapped
+        segment_offset = 0
+        segment_part = [""] * segment_count
+        prev_remaining_length_total = None
+        while remaining_length_total and prev_remaining_length_total != remaining_length_total:
+            prev_remaining_length_total = remaining_length_total
+            # Try to equally distribute all remaining characters over all segments by round-robin
+            for index in range(len(splitted)):
+                segment = splitted[index]
+                # Check if there are characters left in this segment
+                if len(segment) > segment_offset:
+                    segment_part[index] += segment[segment_offset]
+                    remaining_length_total -= 1
+                    if remaining_length_total == 0:
+                        # No more characters available, stop searching
+                        break
+            segment_offset += 1
+        shortened_names[name] = "".join(segment_part)
+    # Search all names without unique abbreviation
     duplicates = find_duplicates(shortened_names)
     while duplicates:
+        # As long as there are conflicts keep searching recursively
+        # Include previously clean names, as different segment names might cause new conflicts
         shortened_names.update(__get_shortened_names(duplicates, tag_length=tag_length+1))
         duplicates = find_duplicates(shortened_names)
     return shortened_names

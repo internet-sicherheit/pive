@@ -119,6 +119,7 @@ class Environment(object):
             raise ValueError('Visualization not possible.')
 
         # Depending on the users choice mark the visualization method as geodata
+        #TODO: Check class if it is geodata class instead of hardcoding
         if chart in ['heatmap', 'poi', 'polygon']:
             self.__is_geodata = True
 
@@ -128,7 +129,6 @@ class Environment(object):
         modname = self.__suitables[index]
         module = self.__modules[index]
 
-        #FIXME: Select depending on user decison
         if self.__is_geodata:
             class_ = getattr(module, 'Map')
         else:
