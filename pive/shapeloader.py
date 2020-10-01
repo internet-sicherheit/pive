@@ -87,31 +87,16 @@ def find_map_shape(coordinates, other_names = []):
 
 def build_heatmap(dataset):
     """Builds a heatmap for the given city."""
-    full_shape = ''
+
     district_names = [element['Stadtteil'] for element in dataset]
-    #city = __get_city(dataset)
     city, city_id = overpass.get_city_for_districts(district_names)
-    result = {}
-
-    # Get all districts covered by this city
     districts = overpass.get_districts_for_city_id(city_id)
-
-    # Find the correct area level, which is the most occurring
-    for district in districts:
-        level = district["tags"]["admin_level"]
-        result[level] = result.get(level, 0) + 1
-
-    area_levels = max(result, key=result.get)
-
-    # Find the right districts with their name and id
     shortened_names = get_shortened_names({district["tags"]["name"] for district in districts})
 
     features = []
     for district in districts:
-        area_id = district["id"]
         name = district["tags"]['name']
-        level = district["tags"]["admin_level"]
-        if level == area_levels:
+        if name in district_names:
             shape = overpass.geojsonify(district)
             features.append(create_geojson_feature(shape, name, shortened_names[name]))
 
