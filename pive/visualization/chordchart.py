@@ -131,6 +131,10 @@ class Chart(bv.BaseVisualization):
                     "type": "string",
                     "min": 1,
                     "max": 1
+                },
+                "t_ticksteps": {
+                    "type": "int",
+                    "min": 1
                 }
             }
         }
