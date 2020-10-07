@@ -29,6 +29,8 @@
  processing the visualizations. """
 import importlib
 from .visualization import defaults as default
+from .overpass import API_URL
+import pive.shapeloader as shapeloader
 
 # Accessor to choose the charts. Corresponding with
 # the config files 'title' attribute in
@@ -60,12 +62,27 @@ class Environment(object):
     __datakeys = []
 
 
-    def __init__(self, inputmanager=None, outputpath=default.output_path):
+    def __init__(self, inputmanager=None, outputpath=default.output_path, country="DE", overpass_endpoint=API_URL):
         """ The Environment needs an input manager instance to work, but is
         optional at creation. Leaving the user to configure the
         input manager first. """
         self.__inputmanager = inputmanager
         self.__outputpath = outputpath
+        self.__country = country
+        self.__endpoint = overpass_endpoint
+        self.__shapeloader = None
+        self.reset_map_config()
+
+    def set_map_country(self, country):
+        self.__country = country
+        self.reset_map_config()
+
+    def set_map_api_endpoint(self, endpoint):
+        self.__endpoint = endpoint
+        self.reset_map_config()
+
+    def reset_map_config(self):
+        self.__shapeloader = shapeloader.Shapeloader(self.__country, self.__endpoint)
 
     def set_output_path(self, outputpath):
         """Set the output path of all visualization files."""
@@ -136,7 +153,7 @@ class Environment(object):
 
         # When dates occur the constructor is called differently.
         if self.__is_geodata:
-            chart_decision = class_(self.__data, modname)
+            chart_decision = class_(self.__data, modname, self.__shapeloader)
             chart_decision.get_map_shape()
         elif self.__has_datefields:
             chart_decision = class_(self.__data, modname, times=True)

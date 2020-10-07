@@ -30,6 +30,57 @@ from math import ceil
 
 from pive import overpass
 
+class Shapeloader(object):
+
+    def __init__(self, country, endpoint):
+        self.client = overpass.Client(country, endpoint)
+
+    def find_map_shape(self, coordinates, other_names = []):
+        """Returns a map shape fitting every coordinate pair.
+
+        Iterates through every pair of the coordinate list.
+        Finds the smallest possible map shape they have in common."""
+        result = []
+        candidate = []
+        level = '0'
+
+        common_shapes = self.client.get_common_shapes(coordinates)
+        #FIXME: Hardcoded admin_level
+        #FIXME: Will break if a single point is outside of the city
+        city_shape = [ element for element in common_shapes if element["tags"]["admin_level"] == '6'][0]
+        smallest_shape = max(common_shapes, key=lambda element: int(element["tags"]["admin_level"]))
+
+        shape_name = smallest_shape["tags"]["name"]
+        city_name = city_shape["tags"]["name"]
+        shortend_names = get_shortened_names(other_names + [shape_name, city_name])
+
+        features = []
+        if city_name != shape_name:
+            features.append(create_geojson_feature(overpass.geojsonify(smallest_shape, ccw=False), shape_name, shortend_names[shape_name]))
+        features.append(create_geojson_feature(overpass.geojsonify(city_shape, ccw=False), city_name, shortend_names[city_name]))
+        shape_json = add_geojson_header(features)
+
+        return (shape_json, city_name, shortend_names)
+
+    def build_heatmap(self, dataset):
+        """Builds a heatmap for the given city."""
+
+        district_names = [element['Stadtteil'] for element in dataset]
+        city, city_id = self.client.get_city_for_districts(district_names)
+        districts = self.client.get_districts_for_city_id(city_id)
+        shortened_names = get_shortened_names({district["tags"]["name"] for district in districts})
+
+        features = []
+        for district in districts:
+            name = district["tags"]['name']
+            if name in district_names:
+                shape = overpass.geojsonify(district, ccw=False)
+                features.append(create_geojson_feature(shape, name, shortened_names[name]))
+
+        shape = add_geojson_header(features)
+
+        return (shape, city)
+
 def get_all_coordinates_poi(dataset):
     """Returns every pair of coordinates from the dataset."""
     result = []
@@ -57,52 +108,6 @@ def get_all_coordinates_polygon(dataset):
                 coord_pair = [lat, lon]
                 result.append(coord_pair)
     return result
-
-def find_map_shape(coordinates, other_names = []):
-    """Returns a map shape fitting every coordinate pair.
-    
-    Iterates through every pair of the coordinate list.
-    Finds the smallest possible map shape they have in common."""
-    result = []
-    candidate = []
-    level = '0'
-
-    common_shapes = overpass.get_common_shapes(coordinates)
-    #FIXME: Hardcoded admin_level
-    #FIXME: Will break if a single point is outside of the city
-    city_shape = [ element for element in common_shapes if element["tags"]["admin_level"] == '6'][0]
-    smallest_shape = max(common_shapes, key=lambda element: int(element["tags"]["admin_level"]))
-
-    shape_name = smallest_shape["tags"]["name"]
-    city_name = city_shape["tags"]["name"]
-    shortend_names = get_shortened_names(other_names + [shape_name, city_name])
-
-    features = []
-    if city_name != shape_name:
-        features.append(create_geojson_feature(overpass.geojsonify(smallest_shape), shape_name, shortend_names[shape_name]))
-    features.append(create_geojson_feature(overpass.geojsonify(city_shape), city_name, shortend_names[city_name]))
-    shape_json = add_geojson_header(features)
-
-    return (shape_json, city_name, shortend_names)
-
-def build_heatmap(dataset):
-    """Builds a heatmap for the given city."""
-
-    district_names = [element['Stadtteil'] for element in dataset]
-    city, city_id = overpass.get_city_for_districts(district_names)
-    districts = overpass.get_districts_for_city_id(city_id)
-    shortened_names = get_shortened_names({district["tags"]["name"] for district in districts})
-
-    features = []
-    for district in districts:
-        name = district["tags"]['name']
-        if name in district_names:
-            shape = overpass.geojsonify(district)
-            features.append(create_geojson_feature(shape, name, shortened_names[name]))
-
-    shape = add_geojson_header(features)
-
-    return (shape, city)
 
 def get_shortened_names(names, tag_length=2):
     """Search for shortest possible abbreviation of a list of names
