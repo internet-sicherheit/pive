@@ -63,7 +63,6 @@ class Map(mv.MapVisualization):
         self._max_poi = default.max_poi
 
         # Starting, min and max values for zoom levels on the map
-        self._scale = default.scale
         self._scale_extent = default.scale_extent
 
         # Map rendering
@@ -81,6 +80,128 @@ class Map(mv.MapVisualization):
         self._circle_stroke_width = default.circle_stroke_width
         self._headers = ['Longitude','Latitude'] + list(dataset[0].keys())[2:]
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_datakeys"] = self._datakeys
+        variables["t_zoom_threshold"] = self._zoom_threshold
+        variables["t_tooltip_div_border"] = self._tooltip_div_border
+        variables["t_map_fill"] = self._map_fill
+        variables["t_map_stroke"] = self._map_stroke
+        variables["t_mouseover_opacity"] = self._mouseover_opacity
+        variables["t_fill_opacity"] = self._fill_opacity
+        variables["t_mouseout_opacity"] = self._mouseout_opacity
+        variables["t_max_poi"] = self._max_poi
+        variables["t_circle_fill"] = self._circle_fill
+        variables["t_circle_stroke"] = self._circle_stroke
+        variables["t_circle_radius"] = self._circle_radius
+        variables["t_circle_stroke_width"] = self._circle_stroke_width
+        return variables
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        typehints = super().get_modifiable_template_variables_typehints()
+        new_typehints = {
+            "default": {
+                "t_zoom_threshold": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tooltip_div_border": {
+                    "type": "string"
+                },
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_map_fill": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_map_stroke": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_mouseover_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_fill_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_mouseout_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_max_poi": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_circle_fill": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_circle_stroke": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_circle_radius": {
+                    "type": "float",
+                    "min": 0.0
+                },
+                "t_circle_stroke_width": {
+                    "type": "float",
+                    "min": 0.0
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_datakeys" in dictionary:
+            self.set_data_keys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if 't_zoom_threshold' in dictionary:
+            self._zoom_threshold = int(dictionary['t_zoom_threshold'])
+        if 't_tooltip_div_border' in dictionary:
+            self._tooltip_div_border = dictionary['t_tooltip_div_border']
+        if 't_map_fill' in dictionary:
+            self._map_fill = dictionary['t_map_fill']
+        if 't_map_stroke' in dictionary:
+            self._map_stroke = dictionary['t_map_stroke']
+        if 't_fill_opacity' in dictionary:
+            self._fill_opacity = dictionary['t_fill_opacity']
+        if "t_mouseover_opacity" in dictionary:
+            self._mouseover_opacity = float(dictionary['t_mouseover_opacity'])
+        if "t_mouseout_opacity" in dictionary:
+            self._mouseout_opacity = float(dictionary['t_mouseout_opacity'])
+        if "t_max_poi" in dictionary:
+            self.set_max_poi(int(dictionary['t_max_poi']))
+        if "t_circle_fill" in dictionary:
+            self.set_circle_color(dictionary['t_circle_fill'])
+        if "t_circle_stroke" in dictionary:
+            self._circle_stroke = dictionary['t_circle_stroke']
+        if "t_circle_stroke_width" in dictionary:
+            self._circle_stroke_width = dictionary['t_circle_stroke_width']
+
+
     def get_map_shape(self):
         coordinates = shapeloader.get_all_coordinates_poi(self._dataset)
         (self._shape, self._city, self._shortend_names) = shapeloader.find_map_shape(coordinates)
@@ -89,10 +210,6 @@ class Map(mv.MapVisualization):
         """Setting the data keys for the visualization."""
         self._datakeys = datakeys
 
-    def set_scales(self, scale, scale_extent):
-        """Setting scale and scale extent for the map."""
-        self._scale = scale
-        self._scale_extent = scale_extent
 
     def set_max_poi(self, max_poi):
         """Setting the maximum number of points of interest to visualize."""
@@ -137,7 +254,6 @@ class Map(mv.MapVisualization):
                          't_filename': "poi.json",
                          't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
                          't_city': self._city,
-                         't_scale': self._scale,
                          't_scale_extent': self._scale_extent,
                          't_max_poi': self._max_poi,
                          't_file_extension': ".json",

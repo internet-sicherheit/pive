@@ -29,6 +29,7 @@ from pive.visualization import mapdefaults as default
 from pive.visualization import mapvisualization as mv
 from pathlib import Path
 from pive import shapeloader
+import json
 
 class Map(mv.MapVisualization):
     """Map class for heatmap data."""
@@ -59,7 +60,6 @@ class Map(mv.MapVisualization):
         self._padding = padding
 
         # Starting, min and max values for zoom levels on the map
-        self._scale = default.scale
         self._scale_extent = default.scale_extent
 
         # Map rendering
@@ -79,17 +79,122 @@ class Map(mv.MapVisualization):
         self._legendticksize = default.legendticksize
         self._colors = default.heatmapcolors
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_datakeys"] = self._datakeys
+        variables["t_zoom_threshold"] = self._zoom_threshold
+        variables["t_tooltip_div_border"] = self._tooltip_div_border
+        variables["t_fill_opacity"] = self._fill_opacity
+        variables["t_map_stroke"] = self._map_stroke
+        variables["t_stroke_opacity"] = self._stroke_opacity
+        variables["t_mouseover_opacity"] = self._mouseover_opacity
+        variables["t_mouseout_opacity"] = self._mouseout_opacity
+        variables["t_legendborder"] = self._legendborder
+        variables["t_legendwidth"] = self._legendwidth
+        variables["t_legendheight"] = self._legendheight
+        variables["t_legendticksize"] = self._legendticksize
+        return variables
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default": {
+                "t_zoom_threshold": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tooltip_div_border": {
+                    "type": "string"
+                },
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_fill_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_map_stroke": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_mouseover_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_mouseout_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_legendborder": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_legendwidth": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_legendheight": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_legendticksize": {
+                    "type": "int",
+                    "min": 1
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_datakeys" in dictionary:
+            self.set_data_keys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if 't_zoom_threshold' in dictionary:
+            self._zoom_threshold = int(dictionary['t_zoom_threshold'])
+        if 't_tooltip_div_border' in dictionary:
+            self._tooltip_div_border = dictionary['t_tooltip_div_border']
+        if 't_fill_opacity' in dictionary:
+            self._fill_opacity = dictionary['t_fill_opacity']
+        if 't_map_stroke' in dictionary:
+            self._map_stroke = dictionary['t_map_stroke']
+        if "t_mouseover_opacity" in dictionary:
+            self._mouseover_opacity = float(dictionary['t_mouseover_opacity'])
+        if "t_mouseout_opacity" in dictionary:
+            self._mouseout_opacity = float(dictionary['t_mouseout_opacity'])
+        if 't_legendborder' in dictionary:
+            self._legendborder = dictionary['t_legendborder']
+        if 't_legendwidth' in dictionary:
+            self.set_legendwidth(int(dictionary['t_legendwidth']))
+        if 't_legendheight' in dictionary:
+            self._legendheight = dictionary['t_legendheight']
+        if 't_legendticksize' in dictionary:
+            self._legendticksize = dictionary['t_legendticksize']
+
     def get_map_shape(self):
         (self._shape, self._city) = shapeloader.build_heatmap(self._dataset)
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
         self._datakeys = datakeys
-
-    def set_scales(self, scale, scale_extent):
-        """Setting scale and scale extent for the map."""
-        self._scale = scale
-        self._scale_extent = scale_extent
 
     def set_legendheight(self, legendheight):
         """Basic method for height driven data."""
@@ -182,7 +287,6 @@ class Map(mv.MapVisualization):
                          't_filename': dataset_url,
                          't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
                          't_city': self._city,
-                         't_scale': self._scale,
                          't_scale_extent': self._scale_extent,
                          't_legendwidth': self._legendwidth,
                          't_legendheight': self._legendheight,

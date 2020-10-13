@@ -30,6 +30,7 @@ from pive.visualization import mapvisualization as mv
 from pive import shapeloader
 
 from pathlib import Path
+import json
 
 
 class Map(mv.MapVisualization):
@@ -60,7 +61,6 @@ class Map(mv.MapVisualization):
         self._padding = padding
 
         # Starting, min and max values for zoom levels on the map
-        self._scale = default.scale
         self._scale_extent = default.scale_extent
 
         # Map rendering
@@ -74,6 +74,102 @@ class Map(mv.MapVisualization):
         self._mouseout_opacity = default.mouseout_opacity
         self._outer_map_fill = default.outer_map_fill
 
+    def get_modifiable_template_variables(self):
+        """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        variables = super().get_modifiable_template_variables()
+        variables["t_datakeys"] = self._datakeys
+        variables["t_zoom_threshold"] = self._zoom_threshold
+        variables["t_tooltip_div_border"] = self._tooltip_div_border
+        variables["t_map_fill"] = self._map_fill
+        variables["t_map_stroke"] = self._map_stroke
+        variables["t_fill_opacity"] = self._fill_opacity
+        variables["t_mouseover_opacity"] = self._mouseover_opacity
+        variables["t_mouseout_opacity"] = self._mouseout_opacity
+        variables["t_outer_map_fill"] = self._outer_map_fill
+        return variables
+
+    def get_modifiable_template_variables_typehints(self):
+        """Returns a dictionary of typehints for variables that are modifiable by the client.
+        Subclasses should override this method and add their own variables.
+        """
+
+        typehints = super().get_modifiable_template_variables_typehints();
+        new_typehints = {
+            "default": {
+                "t_zoom_threshold": {
+                    "type": "int",
+                    "min": 1
+                },
+                "t_tooltip_div_border": {
+                    "type": "string"
+                },
+                "t_datakeys": {
+                    "type": "list",
+                    "length": len(self._datakeys),
+                    "item_type": {
+                        "type": "string"
+                    }
+                },
+                "t_map_fill": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_map_stroke": {
+                    "type": "color",
+                    "channels": 3
+                },
+                "t_fill_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_mouseover_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_mouseout_opacity": {
+                    "type": "float",
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "t_outer_map_fill": {
+                    "type": "color",
+                    "channels": 3
+                }
+            }
+        }
+        for key in new_typehints.keys():
+            if key not in typehints.keys():
+                typehints[key] = {}
+            typehints[key].update(new_typehints[key])
+        return typehints
+
+    def load_from_dict(self, dictionary):
+        super().load_from_dict(dictionary)
+        if "t_datakeys" in dictionary:
+            self.set_data_keys(json.loads(dictionary['t_datakeys'].replace('\'', '\"')))
+        if 't_zoom_threshold' in dictionary:
+            self._zoom_threshold = int(dictionary['t_zoom_threshold'])
+        if 't_tooltip_div_border' in dictionary:
+            self._tooltip_div_border = dictionary['t_tooltip_div_border']
+        if 't_map_fill' in dictionary:
+            self._map_fill = dictionary['t_map_fill']
+        if 't_map_stroke' in dictionary:
+            self._map_stroke = dictionary['t_map_stroke']
+        if 't_fill_opacity' in dictionary:
+            self._fill_opacity = dictionary['t_fill_opacity']
+        if "t_mouseover_opacity" in dictionary:
+            self._mouseover_opacity = float(dictionary['t_mouseover_opacity'])
+        if "t_mouseout_opacity" in dictionary:
+            self._mouseout_opacity = float(dictionary['t_mouseout_opacity'])
+        if "t_outer_map_fill" in dictionary:
+            self.set_outer_map_color(dictionary['t_outer_map_fill'])
+
+
     def get_map_shape(self):
         coordinates = shapeloader.get_all_coordinates_polygon(self._dataset)
         (self._shape, self._city, self._shortend_names) = shapeloader.find_map_shape(coordinates, [datapoint['name'] for datapoint in self._dataset])
@@ -82,11 +178,6 @@ class Map(mv.MapVisualization):
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
         self._datakeys = datakeys
-
-    def set_scales(self, scale, scale_extent):
-        """Setting scale and scale extent for the map."""
-        self._scale = scale
-        self._scale_extent = scale_extent
 
     def set_inner_map_color(self, color):
         """Setting the color for the inner map."""
@@ -120,7 +211,6 @@ class Map(mv.MapVisualization):
                          't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
                          't_inner': "polygon.json",
                          't_city': self._city,
-                         't_scale': self._scale,
                          't_scale_extent': self._scale_extent,
                          't_zoom_threshold': self._zoom_threshold,
                          't_div_hook_map': self._div_hook_map,

@@ -178,7 +178,7 @@ class BaseVisualization:
 
     def write_file(self, output, destination_folder, filename):
 
-        dest_path = destination_folder.joinpath(filename)
+        dest_path = Path(destination_folder).joinpath(filename)
 
         if not destination_folder.exists():
             print ("Folder does not exist. Creating folder '%s'. " % destination_folder)
