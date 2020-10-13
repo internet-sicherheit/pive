@@ -1,6 +1,5 @@
 import requests
 from time import sleep
-from geojson_rewind import rewind
 import csv
 import pive.visualization.nuts2osm as nuts2osm
 
