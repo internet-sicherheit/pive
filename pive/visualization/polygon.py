@@ -39,6 +39,7 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
+                 shapeloader,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
@@ -54,6 +55,8 @@ class Map(mv.MapVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+
+        self.__shapeloader = shapeloader
 
         # Visualization properties.
         self._width = width
@@ -172,7 +175,7 @@ class Map(mv.MapVisualization):
 
     def get_map_shape(self):
         coordinates = shapeloader.get_all_coordinates_polygon(self._dataset)
-        (self._shape, self._city, self._shortend_names) = shapeloader.find_map_shape(coordinates, [datapoint['name'] for datapoint in self._dataset])
+        (self._shape, self._city, self._shortend_names) = self.__shapeloader.find_map_shape(coordinates, [datapoint['name'] for datapoint in self._dataset])
 
 
     def set_data_keys(self, datakeys):

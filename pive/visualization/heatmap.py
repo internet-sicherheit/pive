@@ -37,6 +37,7 @@ class Map(mv.MapVisualization):
     def __init__(self,
                  dataset,
                  template_name,
+                 shapeloader,
                  width=default.width,
                  height=default.height,
                  padding=default.padding):
@@ -53,6 +54,8 @@ class Map(mv.MapVisualization):
         self._datakeys = []
         self._headers = list(dataset[0].keys())
         self._version = default.p_version
+
+        self.__shapeloader = shapeloader
 
         # Visualization properties.
         self._width = width
@@ -190,7 +193,7 @@ class Map(mv.MapVisualization):
             self._legendticksize = dictionary['t_legendticksize']
 
     def get_map_shape(self):
-        (self._shape, self._city) = shapeloader.build_heatmap(self._dataset)
+        (self._shape, self._city) = self.__shapeloader.build_heatmap(self._dataset)
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
