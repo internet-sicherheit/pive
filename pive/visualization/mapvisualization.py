@@ -41,6 +41,10 @@ class MapVisualization(BaseVisualization):
         self._div_hook_legend = default.div_hook_legend
         self._div_hook_tooltip = default.div_hook_tooltip
 
+    #FIXME: Compatibility funtion, codebase needs to adhere to uniform naming standard
+    def setDataKeys(self, datakeys):
+        self.set_data_keys(datakeys)
+
     def set_div_hook(self, div_hook):
         self.set_div_hook_map(div_hook)
 

@@ -139,6 +139,8 @@ class Environment(object):
         #TODO: Check class if it is geodata class instead of hardcoding
         if chart in ['heatmap', 'poi', 'polygon']:
             self.__is_geodata = True
+        else:
+            self.__is_geodata = False
 
         # Automatically create the chart instance and
         # return it to the user.
@@ -160,7 +162,7 @@ class Environment(object):
         else:
             chart_decision = class_(self.__data, modname)
 
-        chart_decision.set_data_keys(self.__datakeys)
+        chart_decision.setDataKeys(self.__datakeys)
         return chart_decision
 
 
