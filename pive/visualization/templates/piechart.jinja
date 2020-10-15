@@ -74,7 +74,7 @@ root_div.appendChild(style);
 {# Begin of D3.js Visualization. #}
 {# ############################# #}
 
-d3.json(url, function(data){
+d3.json(url).then(function(data) {
 	//The complete dataset.
 	var dataset = data;
 
@@ -105,13 +105,13 @@ d3.json(url, function(data){
 				.attr("width", width)
 				.attr("height", height);
 
-    var arc = d3.svg.arc().outerRadius(radius);
-    var pie = d3.layout.pie().value(function(d) {
+    var arc = d3.arc().innerRadius(0).outerRadius(radius);
+    var pie = d3.pie().value(function(d) {
     	return d.value;
     });
 
     var arcs = svg.selectAll("g.arc")
-    			  .data(pie)
+    			  .data(pie(data))
     			  .enter()
     			  .append("g")
     			  .attr("class", "arc")
@@ -123,11 +123,11 @@ d3.json(url, function(data){
         })
         .attr("d", arc)
         .on("mouseover", function(d, i){
-        	var tx = d3.mouse(this)[0];
-        	var ty = d3.mouse(this)[1];
+        	var tx = d3.pointer(d)[0];
+        	var ty = d3.pointer(d)[1];
         	d3.select(this).transition()
         		           .attr("opacity", highlightopacity);
-        	showTooltip([d.value, dataset[i].label], [tx, ty], i);
+        	showTooltip([i.data.value, i.data.label], [tx, ty], i);
         })
         .on("mouseout", function(){
 		    	hideTooltip();

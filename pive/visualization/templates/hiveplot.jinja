@@ -94,10 +94,7 @@ root_div.appendChild(style);
 {# Begin of D3.js Visualization. #}
 {# ############################# #}
 
-d3.json(url, function(error, data){
-
-  if (error) throw error;   // Exceptions handling
-    console.log("Data has ended: " + error);
+d3.json(url).then(function(data) {
 
 	var innerRadius = 40,
       outerRadius = 240,
@@ -106,12 +103,12 @@ d3.json(url, function(error, data){
       types = getTypes(data), // TYPE of data for axis.
       range = types.length; // count of TYPE for count of axis.
 
-	var angle = d3.scale.ordinal()
+	var angle = d3.scalePoint()
               .domain(d3.range(range + 1))
-              .rangePoints([0, 2 * Math.PI]), // angle from axis to axis
-    radius = d3.scale.linear()
+              .range([0, 2 * Math.PI]), // angle from axis to axis
+    radius = d3.scaleLinear()
               .range([innerRadius, outerRadius]), // scale of lines
-    color = d3.scale.category10()
+    color = d3.scaleOrdinal(d3.schemeCategory10)
               .domain(d3.range(20))
     
   /* SVG - Body  */
@@ -176,7 +173,8 @@ d3.json(url, function(error, data){
 	}
 
 	/* node-hover stati and changes from on and off. */
-	function nodeMouseover(d) {
+	function nodeMouseover(d, d2) {
+      //FIXME: This broke, but i dont understand what it does
 	  svg.selectAll(".link")
 	    .classed("turnedOn", function(dl) {
 	      return dl.source === d || dl.target === d;
@@ -184,8 +182,8 @@ d3.json(url, function(error, data){
 	    .classed("turnedOff", function(dl) {
 	      return !(dl.source === d || dl.target === d)
 	    });    
-    var tx = d3.mouse(this)[0];
-	 	var ty = d3.mouse(this)[1];
+    var tx = d3.pointer(d)[0];
+	 	var ty = d3.pointer(d)[1];
 	 	var ind;
 	 	
 	 	for(var i = 0; i < nodes.length; i++) {

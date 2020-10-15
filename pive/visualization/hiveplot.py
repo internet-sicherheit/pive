@@ -23,14 +23,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import jinja2
-import json
 from pive.visualization import defaults as default
 from pive.visualization import basevisualization as bv
-from pyveplot import Hiveplot, Axis, Node
-import networkx as nx
-import random
-import json
 import math
 from pathlib import Path
 
@@ -46,29 +40,29 @@ class Chart(bv.BaseVisualization):
 
         # Metadata
         self._title = 'hiveplot'
-        self.__template_name = 'hiveplot'
-        self.__dataset = dataset
+        self._template_name = 'hiveplot'
+        self._dataset = dataset
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
-        self.__datakeys = []
-        self.__version = default.p_version
+        self._datakeys = []
+        self._version = default.p_version
 
         # Visualization properties.
-        self.__width = width
-        self.__height = height
-        self.__colors = default.chartcolors
-        self.__label_size = default.label_size
+        self._width = width
+        self._height = height
+        self._colors = default.chartcolors
+        self._label_size = default.label_size
 
         #Axis properties.
-        self.__shape_rendering = default.shape_rendering
-        self.__line_stroke = default.line_stroke
-        self.__font_size = default.font_size
+        self._shape_rendering = default.shape_rendering
+        self._line_stroke = default.line_stroke
+        self._font_size = default.font_size
 
         #Hive specific.
-        self.__innerRadius = 40
-        self.__outerRadius = 240
+        self._innerRadius = 40
+        self._outerRadius = 240
 
     def setDataKeys(self, datakeys):
-        self.__datakeys = datakeys;
+        self._datakeys = datakeys;
 
 
 
@@ -95,8 +89,8 @@ class Chart(bv.BaseVisualization):
         """
 
         variables = super().get_modifiable_template_variables()
-        variables["t_innerRadius"] = self.__innerRadius
-        variables["t_outerRadius"] = self.__outerRadius
+        variables["t_innerRadius"] = self._innerRadius
+        variables["t_outerRadius"] = self._outerRadius
         return variables
 
     def get_modifiable_template_variables_typehints(self):
@@ -177,21 +171,21 @@ class Chart(bv.BaseVisualization):
 
 
     def create_js(self, template, dataset_url):
-        templateVars = {'t_width': self.__width,
-                        't_height': self.__height,
+        templateVars = {'t_width': self._width,
+                        't_height': self._height,
                         't_url': dataset_url,
-                        't_colors': self.__colors,
+                        't_colors': self._colors,
                         't_div_hook': self._div_hook,
-                        't_font_size': self.__font_size,
-                        't_shape_rendering': self.__shape_rendering,
-                        't_line_stroke': self.__line_stroke,
-                        't_pive_version' : self.__version,
-                        't_axis_label_size' : self.__label_size}
+                        't_font_size': self._font_size,
+                        't_shape_rendering': self._shape_rendering,
+                        't_line_stroke': self._line_stroke,
+                        't_pive_version' : self._version,
+                        't_axis_label_size' : self._label_size}
 
         outputText = template.render(templateVars)
         return outputText
 
     def load_from_dict(self, dictionary):
         super().load_from_dict(dictionary)
-        self.__innerRadius = dictionary["t_innerRadius"]
-        self.__outerRadius = dictionary["t_outerRadius"]
+        self._innerRadius = dictionary["t_innerRadius"]
+        self._outerRadius = dictionary["t_outerRadius"]

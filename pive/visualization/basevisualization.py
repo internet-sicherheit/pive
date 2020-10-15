@@ -196,9 +196,12 @@ class BaseVisualization:
 
         # Default dataset url is used when nothing was explicitly passed.
         data_output_path = destination_folder.joinpath('%s.json' % self._title)
+        if self._dataset_url:
+            dataset_url = self._dataset_url
+        else:
+            dataset_url = data_output_path
 
-
-        js = self.create_js(js_template, data_output_path)
+        js = self.create_js(js_template, dataset_url)
         html = self.create_html(html_template)
 
         self.write_file(html, destination_folder, '%s.html' % self._title)

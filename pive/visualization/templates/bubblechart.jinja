@@ -41,7 +41,7 @@ var iconheight = {{ t_iconheight }};
 var iconcolor = '{{ t_iconcolor }}';
 var iconhighlight = '{{ t_iconhighlight }}';
 var url = '{{ t_url }}';
-var iso = d3.time.format.utc('{{ t_iso }}');
+var iso = d3.utcFormat('{{ t_iso }}');
 var scales = {{ t_scales }};
 var colors = {{ t_colors }};
 var tickrotation = -45;
@@ -90,7 +90,7 @@ root_div.appendChild(style);
 {# Begin of D3.js Visualization. #}
 {# ############################# #}
 
-d3.json(url, function(data){
+d3.json(url).then(function(data) {
 	//The complete dataset.
 	var dataset = data;
 	//The current offset starting at zero.
@@ -153,7 +153,7 @@ d3.json(url, function(data){
     function scaleCircle(minradius, maxradius){
 
     	var circlerange = [minradius, maxradius];
-    	circleScale = d3.scale.linear()
+    	circleScale = d3.scaleLinear()
     					.range(circlerange)
     					.domain(radius_extent);
     };
@@ -179,17 +179,17 @@ d3.json(url, function(data){
 
     	if (scales[0] == 'linear') {
     		//Provide a linear scaling.
-    		xScale = d3.scale.linear()
+    		xScale = d3.scaleLinear()
         			   .range(xrange)
         			   .domain(x_extent);
 
     	} else if (scales[0] == 'log') {
     		if (x_extent[0] <= 0){
-    			xScale = d3.scale.linear()
+    			xScale = d3.scaleLinear()
         			   .range(xrange)
         			   .domain(x_extent);
     		} else {
-    			xScale = d3.scale.log()
+    			xScale = d3.scaleLog()
         			   .range(xrange)
         			   .domain(x_extent);
     		}
@@ -202,7 +202,7 @@ d3.json(url, function(data){
     		exp = parseInt(scales[0].substring(3, scales[0].length));
 
     		//Provide a power scaling.
-    		xScale = d3.scale.pow()
+    		xScale = d3.scalePow()
     				   .exponent(exp)
         			   .range(xrange)
         			   .domain(x_extent);
@@ -224,27 +224,27 @@ d3.json(url, function(data){
     	//###################################
     	if (scales[1] == 'linear') {
     		//Provide a linear scaling.
-    		yScale = d3.scale.linear()
+    		yScale = d3.scaleLinear()
     			   .range([padding + labelsize, height - padding])
     			   .domain(y_extent);
-		    yAxisScale = d3.scale.linear()
+		    yAxisScale = d3.scaleLinear()
     			   .range([height - padding, padding + labelsize])
     			   .domain(y_extent);
 
     	} else if (scales[1] == 'log') {
 
     		if (y_extent[0] <= 0){
-    			yScale = d3.scale.linear()
+    			yScale = d3.scaleLinear()
     			   .range([padding + labelsize, height - padding])
     			   .domain(y_extent);
-		    	yAxisScale = d3.scale.linear()
+		    	yAxisScale = d3.scaleLinear()
     			   .range([height - padding, padding + labelsize])
     			   .domain(y_extent);
     		} else {
-    			yScale = d3.scale.log()
+    			yScale = d3.scaleLog()
         			   .range([padding + labelsize, height - padding])
         			   .domain(y_extent);
-		   		 yAxisScale = d3.scale.log()
+		   		 yAxisScale = d3.scaleLog()
         			   .range([height - padding, padding + labelsize])
         			   .domain(y_extent);
     		}
@@ -257,11 +257,11 @@ d3.json(url, function(data){
     		exp = parseInt(scales[1].substring(3, scales[1].length));
 
     		//Provide a power scaling.
-    		yScale = d3.scale.pow()
+    		yScale = d3.scalePow()
     				   .exponent(exp)
         			   .range([padding + labelsize, height - padding])
         			   .domain(y_extent);
-		    yAxisScale = d3.scale.pow()
+		    yAxisScale = d3.scalePow()
     				   .exponent(exp)
         			   .range([height - padding, padding + labelsize])
         			   .domain(y_extent);
@@ -292,8 +292,8 @@ d3.json(url, function(data){
 			    .style("opacity", "0.0")
 			    .style("top", 0 + "px");
 
-	var xaxis = d3.svg.axis();
-	var yaxis = d3.svg.axis();
+	var xaxis = d3.axisBottom();
+	var yaxis = d3.axisLeft();
 
 	//X Axis initialization.
 	function initializeXAxis() {
@@ -311,8 +311,7 @@ d3.json(url, function(data){
 	};
 
 	function initializeYAxis() {
-		yaxis.orient('left')
-    		 .scale(yAxisScale);
+		yaxis.scale(yAxisScale);
 
 	};
 
@@ -555,7 +554,7 @@ d3.json(url, function(data){
         var current_r = 0;
 
 	    svg.selectAll("circle")
-	    	.on("mouseover", function(){
+	    	.on("mouseover", function(d,i){
 		    	var xvalue = d3.select(this).attr("xvalue");
 		    	var yvalue = d3.select(this).attr("yvalue");
 		    	var circlex = d3.select(this).attr("cx");
@@ -566,13 +565,13 @@ d3.json(url, function(data){
 
 		    	var values = [xvalue, yvalue];
 		    	var position = [circlex, circley];
-		    	var coords = d3.mouse(this);
+		    	var coords = d3.pointer(d);
 
 		    	d3.select(this).transition()
 		    	.duration(200)
 		    	.attr('opacity', (circleopacity / 2))
 		    	.attr('r', current_r * highlightfactor)
-		    	.each('end', showTooltip(coords, values, position, accessor));
+		    	.on('end', showTooltip(coords, values, position, accessor));
 		    })
 		    .on("mouseout", function(){
 		    	d3.select(this).transition()
