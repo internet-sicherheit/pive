@@ -137,6 +137,38 @@ def is_date(item):
     return False
 
 
+def is_string(item):
+    """Determines if the item is a string type for Python 3 and
+    Python 2.7."""
+    is_string = False
+
+    if sys.version_info[0] >= 3:
+    # Python 3 string determination.
+        if isinstance(item, str):
+            is_string = True
+
+    # Python 2.7 workaround to determine strings.
+    # Basestring was deprecated with Python 3.
+    if sys.version_info[0] < 3:
+        try:
+            if isinstance(item, basestring):
+                is_string = True
+        except TypeError:
+            pass
+
+    return is_string
+
+
+def is_date(item):
+    """Checks if the item is a date."""
+    try:
+        if ISO8601_REGEX.match(item) is not None and parse(item) is not None:
+            return True
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return False
+
+
 def is_float(value):
     try:
         number = float(value)

@@ -99,6 +99,7 @@ class Environment(object):
             inputdata = self.__inputmanager.read(source)
             self.__suitables = self.__inputmanager.map(inputdata)
             self.__data = inputdata
+            #print("after try (inpurtdata): ", inputdata)
         except ValueError as e:
             print ("Failed to load the dataset: %s" % e)
             raise
