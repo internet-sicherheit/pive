@@ -228,7 +228,7 @@ d3.json(url).then(function(data) {
 	                return d.source.index != i &&
 	                       d.target.index != i;
 	            })
-	            .transition()
+	            .transition("fade")
 	            .duration(transistionSpeed)
 	            .style("opacity", opacity);
 	    };
@@ -284,7 +284,7 @@ d3.json(url).then(function(data) {
 			// .attr("transform", "translate(0," + (detailheight - padding) + ")")
 			.attr("transform", "translate("+ padding + "," + (detailheight - padding) + ")")
 			.call(xAxis)
-			.transition()
+			.transition("createXAxis")
 			.duration(transistionSpeed)
 			.attr("opacity", 1.0);
 
@@ -294,7 +294,7 @@ d3.json(url).then(function(data) {
 			.attr("class", "y axis")
 			.attr("transform", "translate(" + padding + ",0)")
 			.call(yAxis)
-			.transition()
+			.transition("createYAxis")
 			.duration(transistionSpeed)
 			.attr("opacity", 1.0);
 
@@ -305,7 +305,7 @@ d3.json(url).then(function(data) {
 	       .attr("opacity", 0.0)
 	       .attr("fill", color)
 		   .on("click", generateChord)
-	       .transition()
+	       .transition("drawBars")
 	       .duration(transistionSpeed)
 	       .attr("class", "bar")
 	       .attr("opacity", 1.0)

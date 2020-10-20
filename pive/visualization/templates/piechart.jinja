@@ -125,13 +125,13 @@ d3.json(url).then(function(data) {
         .on("mouseover", function(d, i){
         	var tx = d3.pointer(d)[0];
         	var ty = d3.pointer(d)[1];
-        	d3.select(this).transition()
+        	d3.select(this).transition("arcMouseover")
         		           .attr("opacity", highlightopacity);
         	showTooltip([i.data.value, i.data.label], [tx, ty], i);
         })
         .on("mouseout", function(){
 		    	hideTooltip();
-		    	d3.select(this).transition()
+		    	d3.select(this).transition("arcMouseout")
         		           .attr("opacity", 1.0);
 		    });
 
@@ -151,7 +151,7 @@ d3.json(url).then(function(data) {
 
 
    function hideTooltip(){
-    	tooltip.transition()
+    	tooltip.transition("hideTooltip")
     	.duration(200)
     	.style("opacity", 0.0)
     	.style("top", 0 + "px");
@@ -161,7 +161,7 @@ d3.json(url).then(function(data) {
 
 	    	tooltip.html((values[1] + ": " + values[0] + "<br><br><center>" + percentformat(values[0] / total)))
 	    		   .style("left", ((position[0] + radius) +  "px"))
-	    		   .transition()
+	    		   .transition("showTooltip")
 	    		   .delay(600)
 	    		   .duration(400)
 	    		   .style("opacity", 1.0)

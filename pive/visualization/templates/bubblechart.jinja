@@ -474,7 +474,7 @@ d3.json(url).then(function(data) {
 	function updateView(){
 
 		svg.select(".x.axis")
-    		.transition()
+    		.transition("updateView")
     		.duration(250)
     		.call(xaxis)
 
@@ -524,7 +524,7 @@ d3.json(url).then(function(data) {
 	    			 .datum(viewdata)
 	    			 .attr("class", "circle")
 	    			 .attr('fill', 'white')
-	    			 .transition()
+	    			 .transition("drawCircles")
 	    			 .duration(200)
 	    			 .attr("cx", function(d) {
 	    			 	return xScale(d[index].x);
@@ -567,14 +567,14 @@ d3.json(url).then(function(data) {
 		    	var position = [circlex, circley];
 		    	var coords = d3.pointer(d);
 
-		    	d3.select(this).transition()
+		    	d3.select(this).transition("drawDataMouseover")
 		    	.duration(200)
 		    	.attr('opacity', (circleopacity / 2))
 		    	.attr('r', current_r * highlightfactor)
 		    	.on('end', showTooltip(coords, values, position, accessor));
 		    })
 		    .on("mouseout", function(){
-		    	d3.select(this).transition()
+		    	d3.select(this).transition("drawDataMouseout")
 		    	.attr('opacity', circleopacity)
 		    	//.attr('r', d3.select(this).attr('r') / highlightfactor);
 		    	.attr('r', current_r);
@@ -583,7 +583,7 @@ d3.json(url).then(function(data) {
     };
 
    function hideTooltip(){
-    	tooltip.transition()
+    	tooltip.transition("hideTooltip")
     	.duration(100)
     	.style("opacity", 0.0)
     	.style("top", 0 + "px");
@@ -594,7 +594,7 @@ d3.json(url).then(function(data) {
 
 	    	tooltip.text(datakeys[0] + ": " + values[0] + " " + datakeys[keyindex] + ": " + values[1])
 	    		   .style("left", (position[0] + "px"))
-	    		   .transition()
+	    		   .transition("showTooltip")
 	    		   .delay(600)
 	    		   .duration(400)
 	    		   .style("opacity", 1.0)

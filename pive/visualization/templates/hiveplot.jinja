@@ -70,13 +70,14 @@ var css_line = '#{{ t_div_hook }} .line { stroke: {{ t_line_stroke }}; fill: non
     css_xlabel_text = '#{{ t_div_hook }} .xlabel {font-family: helvetica; font-size: {{ t_axis_label_size }}px }\n',
     css_ylabel_text = '#{{ t_div_hook }} .ylabel {font-family: helvetica; font-size: {{ t_axis_label_size }}px }\n',
     css_x_axis_line = '#{{ t_div_hook }} .x.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n',
-    css_y_axis_line = '#{{ t_div_hook }} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}',
-    css_axis = '.axis { stroke: #000; stroke-width:1.5px; }',
-    css_node = '.node { stroke:#000; }',
-    css_link = '.link { fill: none; stroke-width: 1.5px; , stroke-opacity: 0.8; }',
-    css_link_turnedOn = '.link .turnedOn { stroke-width: 3px; }',
-    css_link_turnedOff = '.link .turnedOff { stroke-opacity: 0.3, stroke-width: 1px; }',
-    css_node_turnedOn = '.node .turnedON { stroke: red; stroke-width: 3px; }';
+    css_y_axis_line = '#{{ t_div_hook }} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n',
+    css_axis = '.axis { stroke: #000; stroke-width:1.5px; }\n',
+    css_node = '.node { stroke:#000; }\n',
+    css_link = '.link { fill: none; stroke-width: 1.5px; , stroke-opacity: 0.8; }\n',
+    css_link_turnedOn = '.link.turnedOn { stroke-width: 3px; }\n',
+    css_link_turnedOff = '.link.turnedOff { stroke-opacity: 0.3, stroke-width: 1px; }\n',
+    css_node_turnedOn = '.node.turnedOn { stroke: red; stroke-width: 3px; }\n';
+
 
 {# The style definitions are concatinated into a single string. #}
 var css = css_line.concat(css_tooltip).concat(css_axis_path).concat(css_axis_line).concat(css_path_area).concat(css_axis_text)
@@ -173,26 +174,25 @@ d3.json(url).then(function(data) {
 	}
 
 	/* node-hover stati and changes from on and off. */
-	function nodeMouseover(d, d2) {
-      //FIXME: This broke, but i dont understand what it does
+	function nodeMouseover(d) {
 	  svg.selectAll(".link")
-	    .classed("turnedOn", function(dl) {
-	      return dl.source === d || dl.target === d;
-	    })
-	    .classed("turnedOff", function(dl) {
-	      return !(dl.source === d || dl.target === d)
-	    });    
+      .classed("turnedOn", function(dl) {
+        return (dl.source.WEIGHT === d.srcElement.__data__.WEIGHT && dl.source.TYPE === d.srcElement.__data__.TYPE)|| (dl.target.WEIGHT === d.target.__data__.WEIGHT && dl.target.TYPE === d.target.__data__.TYPE);
+      })
+      .classed("turnedOff", function(dl) {
+        return (dl.source.WEIGHT === d.srcElement.__data__.WEIGHT && dl.source.TYPE === d.srcElement.__data__.TYPE)|| (dl.target.WEIGHT === d.target.__data__.WEIGHT && dl.target.TYPE === d.target.__data__.TYPE);
+      });
     var tx = d3.pointer(d)[0];
 	 	var ty = d3.pointer(d)[1];
 	 	var ind;
-	 	
+
 	 	for(var i = 0; i < nodes.length; i++) {
-      if(nodes[i].ID == d.ID) {
+      if(nodes[i].ID == d.srcElement.__data__.ID) {
       		ind = i;
         }
     }
 
-	  showTooltip(["ID: " + d.ID, "WEIGHT: " + d.WEIGHT], [tx, ty], ind);
+	  showTooltip(["ID: " + d.srcElement.__data__.ID, "WEIGHT: " + d.srcElement.__data__.WEIGHT], [tx, ty], ind);
 
 	  d3.select(this)
 	    .classed("turnedOn", true);
@@ -272,7 +272,7 @@ function getColorIndex(y_accessor){
   
   
   function hideTooltip(){
-  	tooltip.transition()
+  	tooltip.transition("hideTooltip")
   	.duration(200)
   	.style("opacity", 0.0)
   	.style("top", 0 + "px");
@@ -284,7 +284,7 @@ function getColorIndex(y_accessor){
     	
     	tooltip.text(values[1] + ": " + values[0])
     		   .style("left", (position[0] + "px"))
-    		   .transition()
+    		   .transition("showTooltip")
     		   .delay(600)
     		   .duration(400)
     		   .style("opacity", 1.0)
