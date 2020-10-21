@@ -287,8 +287,8 @@ class Map(mv.MapVisualization):
         """Basic Method. Creates the JavaScript code based on the template."""
         template_vars = {'t_width': self._width,
                          't_height': self._height,
-                         't_filename': dataset_url,
-                         't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
+                         't_shape': Path(dataset_url).parent.joinpath("heatmap_shape.json"),
+                         't_filename': Path(dataset_url).parent.joinpath("heatmap.json"),
                          't_city': self._city,
                          't_scale_extent': self._scale_extent,
                          't_legendwidth': self._legendwidth,

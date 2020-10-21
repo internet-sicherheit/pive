@@ -211,8 +211,8 @@ class Map(mv.MapVisualization):
         """Basic Method. Creates the JavaScript code based on the template."""
         template_vars = {'t_width': self._width,
                          't_height': self._height,
-                         't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
-                         't_inner': "polygon.json",
+                         't_shape': Path(dataset_url).parent.joinpath("polygon_shape.json"),
+                         't_inner': Path(dataset_url).parent.joinpath("polygon.json"),
                          't_city': self._city,
                          't_scale_extent': self._scale_extent,
                          't_zoom_threshold': self._zoom_threshold,

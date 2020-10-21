@@ -45,13 +45,12 @@ class BaseVisualization:
         self._dataset_url = ''
         self.dataset = []
         self._title = ''
+        self._colors = []
 
         self._shape_rendering = default.shape_rendering
         self._line_stroke = default.line_stroke
         self._font_size = default.font_size
         self._label_size = default.label_size
-
-        self._colors = []
 
     def set_div_hook(self, div_hook):
         assert isinstance(div_hook, str)
@@ -178,7 +177,7 @@ class BaseVisualization:
 
     def write_file(self, output, destination_folder, filename):
 
-        dest_path = Path(destination_folder).joinpath(filename)
+        dest_path = destination_folder.joinpath(filename)
 
         if not destination_folder.exists():
             print ("Folder does not exist. Creating folder '%s'. " % destination_folder)
@@ -198,9 +197,12 @@ class BaseVisualization:
 
         # Default dataset url is used when nothing was explicitly passed.
         data_output_path = destination_folder.joinpath('%s.json' % self._title)
+        if self._dataset_url:
+            dataset_url = self._dataset_url
+        else:
+            dataset_url = data_output_path
 
-
-        js = self.create_js(js_template, data_output_path)
+        js = self.create_js(js_template, dataset_url)
         html = self.create_html(html_template)
 
         self.write_file(html, destination_folder, '%s.html' % self._title)

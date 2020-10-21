@@ -254,8 +254,8 @@ class Map(mv.MapVisualization):
         """Basic Method. Creates the JavaScript code based on the template."""
         template_vars = {'t_width': self._width,
                          't_height': self._height,
-                         't_filename': "poi.json",
-                         't_shape': self.get_shapefile_path(Path(dataset_url).resolve().parent),
+                         't_shape': Path(dataset_url).parent.joinpath("poi_shape.json"),
+                         't_filename': Path(dataset_url).parent.joinpath("poi.json"),
                          't_city': self._city,
                          't_scale_extent': self._scale_extent,
                          't_max_poi': self._max_poi,
