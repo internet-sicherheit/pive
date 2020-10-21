@@ -118,12 +118,12 @@ function configMap() {
         .scaleExtent(scaleExtent)
         .duration(10)
         .translateExtent(transExtent)
-        .on("zoom", function (d) {
-                map.selectAll("path").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
-                map.selectAll("text").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
-                svg.selectAll(".label").attr("font-size", fontsize/d3.event.transform.k)
+        .on("zoom", function (event) {
+                map.selectAll("path").attr("transform", "translate(" + event.transform.x + "," + event.transform.y + ") scale(" + event.transform.k + ")");
+                map.selectAll("text").attr("transform", "translate(" + event.transform.x + "," + event.transform.y + ") scale(" + event.transform.k + ")");
+                svg.selectAll(".label").attr("font-size", fontsize/event.transform.k)
                     .text(function(d) {
-                        if(d3.event.transform.k < zoom_threshold) {
+                        if(event.transform.k < zoom_threshold) {
                             return d.properties.id;
                         } else {
                             return d.properties.name;
@@ -153,9 +153,10 @@ function configMap() {
 function vizHeatmap(filename, json_file) {
 
     // Load in JSON data
-    d3.json(filename, function(data) {
+    d3.json(filename).then(async function(data) {
         // Read header from CSV
         var header = getHeader();
+
 
         // Parse min and max from data to int for d3 min/max function
         var min = d3.min(data, function (d) { return parseInt(d[header[1]]); });
@@ -164,88 +165,89 @@ function vizHeatmap(filename, json_file) {
         // Set input domain for color scale
         color.domain([min, max]);
         // color.domain(d3.extent(data));
+        let json = await d3.json(json_file)
 
-        // Load in GeoJSON data
-        d3.json(json_file, function(json) {
+        for (feature of json.features) {
+            d3ify_polygon(feature)
+        }
 
-            projection.fitExtent([[width*0.1,height*0.1],[width*0.9,height*0.9]], json);
+        projection.fitExtent([[width*0.1,height*0.1],[width*0.9,height*0.9]], json);
 
-            // Merge the CSV data and GeoJSON
-            // Loop through once for each CSV data value
-            for(var i = 0; i < data.length; i++) {
+        // Merge the CSV data and GeoJSON
+        // Loop through once for each CSV data value
+        for(var i = 0; i < data.length; i++) {
 
-                var dataDistrict = data[i][header[0]];
-                var dataValue = data[i][header[1]];
+            var dataDistrict = data[i][header[0]];
+            var dataValue = data[i][header[1]];
 
-                // Find the corresponding district inside the GeoJSON
-                for(var j = 0; j < json.features.length; j++) {
+            // Find the corresponding district inside the GeoJSON
+            for(var j = 0; j < json.features.length; j++) {
 
-                    var jsonDistrict = json.features[j].properties.name;
+                var jsonDistrict = json.features[j].properties.name;
 
-                    if(dataDistrict == jsonDistrict) {
+                if(dataDistrict == jsonDistrict) {
 
-                        // Copy the data value into the JSON
-                        json.features[j].properties.value = dataValue;
+                    // Copy the data value into the JSON
+                    json.features[j].properties.value = dataValue;
 
-                        // Stop looking through the JSON
-                        break;
-                    }
+                    // Stop looking through the JSON
+                    break;
                 }
             }
+        }
 
-            // Bind data and create one path per GeoJSON feature
-            map.selectAll("path")
-                .data(json.features)
-                .enter()
-                .append("path")
-                .attr("class", "json_path")
-                .attr("d", path)
-                .style("fill", function(d) {
-                    // Get data value
-                    var value = d.properties.value;
+        // Bind data and create one path per GeoJSON feature
+        map.selectAll("path")
+            .data(json.features)
+            .enter()
+            .append("path")
+            .attr("class", "json_path")
+            .attr("d", path)
+            .style("fill", function(d) {
+                // Get data value
+                var value = d.properties.value;
 
-                    if(value) {
-                        return color(value);
-                    } else {
-                        return "#ccc";
-                    }
-                })
-                .style("stroke", map_stroke)
-                .style("fill-opacity", fill_opacity)
-                .style("stroke-opacity", stroke_opacity)
-                // Increase opacity while hovering over a district, and show a tooltip after clicking it
-                .on("mouseover", function() {
-                    d3.select(this).style("fill-opacity", mouseover_opacity);
-                })
-                .on("mouseout", function() {
-                    d3.select(this).style("fill-opacity", mouseout_opacity);
-                })
-                .on("click", function(d) {
-                    var header = getHeader();
-                    showTooltip(d.properties, header);
-                });
+                if(value) {
+                    return color(value);
+                } else {
+                    return "#ccc";
+                }
+            })
+            .style("stroke", map_stroke)
+            .style("fill-opacity", fill_opacity)
+            .style("stroke-opacity", stroke_opacity)
+            // Increase opacity while hovering over a district, and show a tooltip after clicking it
+            .on("mouseover", function() {
+                d3.select(this).style("fill-opacity", mouseover_opacity);
+            })
+            .on("mouseout", function() {
+                d3.select(this).style("fill-opacity", mouseout_opacity);
+            })
+            .on("click", function(event, d) {
+                var header = getHeader();
+                showTooltip(d.properties, header);
+            });
 
-            // Create one label per district to display its name
-            map.selectAll("text")
-                .data(json.features)
-                .enter()
-                .append("text")
-                .attr("class", "label")
-                .attr("x", function (d) {
-                    return path.centroid(d)[0];
-                })
-                .attr("y", function (d) {
-                    return path.centroid(d)[1];
-                })
-                .text(function (d) {
-                    if (d.properties.name) {
-                        return d.properties.id;
-                    }
-                });
+        // Create one label per district to display its name
+        map.selectAll("text")
+            .data(json.features)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", function (d) {
+                return path.centroid(d)[0];
+            })
+            .attr("y", function (d) {
+                return path.centroid(d)[1];
+            })
+            .text(function (d) {
+                if (d.properties.name) {
+                    return d.properties.id;
+                }
+            });
 
-            // Call function to initialize the color legend
-            continuousLegend();
-        });
+        // Call function to initialize the color legend
+        continuousLegend();
     });
 }
 
@@ -598,4 +600,50 @@ function continuousLegend() {
 // Parameter: Data of CSV or JSON file
 function getHeader() {
     return headers;
+}
+
+function is_clockwise(coordinates) {
+    let summed_orientation = 0;
+    for(let index=0; index < coordinates.length; index++) {
+        const p1 = coordinates[index];
+        const p2 = coordinates[(index+1) % coordinates.length];
+        summed_orientation += ((p2[0] - p1[0]) * (p2[1] + p1[1]));
+    }
+    return summed_orientation > 0.0;
+}
+
+function d3ify_polygon(polygon) {
+    /* GeoJSON objects have the wrong winding order (RFC7946) and need to be wound the clockwise for outer rings
+    */
+    if (polygon["geometry"]["type"] == "Polygon") {
+        for (index in polygon["geometry"]["coordinates"]) {
+            if (index == 0) {
+                if (!is_clockwise(polygon["geometry"]["coordinates"][index])) {
+                    polygon["geometry"]["coordinates"][index].reverse()
+                }
+            }
+            else {
+                if (is_clockwise(polygon["geometry"]["coordinates"][index])) {
+                    polygon["geometry"]["coordinates"][index].reverse()
+                }
+            }
+        }
+    }
+    else { if (polygon["geometry"]["type"] == "MultiPolygon") {
+        for (polygon_index in polygon["geometry"]["coordinates"]) {
+            for (index in polygon["geometry"]["coordinates"][polygon_index]) {
+                if (index == 0) {
+                    if (!is_clockwise(polygon["geometry"]["coordinates"][polygon_index][index])) {
+                        polygon["geometry"]["coordinates"][polygon_index][index].reverse()
+                    }
+                }
+                else {
+                    if (is_clockwise(polygon["geometry"]["coordinates"][polygon_index][index])) {
+                        polygon["geometry"]["coordinates"][polygon_index][index].reverse()
+                    }
+                }
+            }
+        }
+    }}
+    return polygon
 }

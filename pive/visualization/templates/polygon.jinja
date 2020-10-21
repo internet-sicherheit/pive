@@ -108,13 +108,13 @@ function configMap() {
     zoom = d3.zoom()
         .scaleExtent(scaleExtent)
         .translateExtent(transExtent)
-        .on("zoom", function (d) {
-                map.selectAll("path").attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")");
+        .on("zoom", function (event) {
+                map.selectAll("path").attr("transform", "translate(" + event.transform.x + "," + event.transform.y + ") scale(" + event.transform.k + ")");
                 map.selectAll("text")
-                    .attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ") scale(" + d3.event.transform.k + ")")
-                    .attr("font-size", fontsize/d3.event.transform.k)
+                    .attr("transform", "translate(" + event.transform.x + "," + event.transform.y + ") scale(" + event.transform.k + ")")
+                    .attr("font-size", fontsize/event.transform.k)
                     .text(function(d) {
-                        if(d3.event.transform.k < zoom_threshold) {
+                        if(event.transform.k < zoom_threshold) {
                             return d.properties.id;
                         } else {
                             return d.properties.name;
@@ -147,7 +147,11 @@ function vizPolygon(json_file, inner_shape) {
         .attr("id", "inner_map")
 
     // Load in GeoJSON data
-    d3.json(json_file, function(json) {
+    d3.json(json_file).then(function(json) {
+
+        for (feature of json.features) {
+            d3ify_polygon(feature)
+        }
 
         projection.fitExtent([[width*0.1,height*0.1],[width*0.9,height*0.9]], json);
 
@@ -178,48 +182,50 @@ function vizPolygon(json_file, inner_shape) {
             .text(function (d) {
                     return d.properties.id;
             });
-        // Load in GeoJSON data
-        // Must be inside the other d3.json call or inside a following Promise, otherwise the projection update gets lost in a race condition
-        d3.json(inner_shape, function(inner_json) {
+    }).then(function() {return d3.json(inner_shape)
+    }).then(function(inner_json) {
 
-            // Bind data and create one path per GeoJSON feature
-            inner_map.selectAll("path")
-                .data(inner_json)
-                .enter()
-                .append("path")
-                .attr("class", "json_path")
-                .attr("d", path)
-                .style("fill", map_fill)
-                .style("stroke", map_stroke)
-                .style("fill-opacity", fill_opacity)
-                .style("stroke-opacity", stroke_opacity)
-                // Increase opacity while hovering over a polygon
-                .on("mouseover", function() {
-                    d3.select(this).style("fill-opacity", mouseover_opacity);
-                })
-                .on("mouseout", function() {
-                    d3.select(this).style("fill-opacity", mouseout_opacity);
-                })
-                .on("click", function(d) {
-                    var header = getHeader(d.properties);
-                    showTooltip(d.properties, header);
-                })
+        for (feature of inner_json) {
+            d3ify_polygon(feature)
+        }
 
-            inner_map.selectAll("text")
-                .data(inner_json)
-                .enter()
-                .append("text")
-                .attr("class", "label")
-                .attr("x", function (d) {
-                    return path.centroid(d)[0];
-                })
-                .attr("y", function (d) {
-                    return path.centroid(d)[1];
-                })
-                .text(function (d) {
-                        return d.properties.id;
-                });
-        });
+        // Bind data and create one path per GeoJSON feature
+        inner_map.selectAll("path")
+            .data(inner_json)
+            .enter()
+            .append("path")
+            .attr("class", "json_path")
+            .attr("d", path)
+            .style("fill", map_fill)
+            .style("stroke", map_stroke)
+            .style("fill-opacity", fill_opacity)
+            .style("stroke-opacity", stroke_opacity)
+            // Increase opacity while hovering over a polygon
+            .on("mouseover", function() {
+                d3.select(this).style("fill-opacity", mouseover_opacity);
+            })
+            .on("mouseout", function() {
+                d3.select(this).style("fill-opacity", mouseout_opacity);
+            })
+            .on("click", function(event, d) {
+                var header = getHeader(d.properties);
+                showTooltip(d.properties, header);
+            })
+
+        inner_map.selectAll("text")
+            .data(inner_json)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", function (d) {
+                return path.centroid(d)[0];
+            })
+            .attr("y", function (d) {
+                return path.centroid(d)[1];
+            })
+            .text(function (d) {
+                    return d.properties.id;
+            });
     });
 
 }
@@ -253,7 +259,7 @@ function getLatLon(header) {
         var name = lon[i].toLowerCase();
         lonLC.push(name);
     }
-    
+
     for(i = 0; i < header.length; i++) {
         var columnName = header[i];
         if(latLC.includes(columnName.toLowerCase())) {
@@ -261,7 +267,7 @@ function getLatLon(header) {
             break;
         }
     }
-    
+
     for(i = 0; i < header.length; i++) {
         var columnName = header[i];
         if(lonLC.includes(columnName.toLowerCase())) {
@@ -281,7 +287,7 @@ function createPanButtons() {
     //North
     var north = svg.append("g")
         .attr("class", "pan")   //All share the 'pan' class
-        .attr("id", "north");   //The ID will tell us which direction to head   
+        .attr("id", "north");   //The ID will tell us which direction to head
 
     north.append("rect")
         .attr("x", 0)
@@ -468,7 +474,7 @@ function showTooltip(data, header) {
                 text = text + "\n" + name + ": " + value;
             } else {
                 text = name + ": " + value;
-            }  
+            }
         }
     }
     if(div.innerHTML != text) {
@@ -484,15 +490,62 @@ function showTooltip(data, header) {
 // Parameter: Data of CSV or JSON file
 function getHeader(data) {
     var header = [];
-    
+
     for(var key in data) {
         if(Array.isArray(data)) {
             header.push(data[key]);
         } else {
             header.push(key);
         }
-        
+
     }
 
     return header;
+}
+
+
+function is_clockwise(coordinates) {
+    let summed_orientation = 0;
+    for(let index=0; index < coordinates.length; index++) {
+        const p1 = coordinates[index];
+        const p2 = coordinates[(index+1) % coordinates.length];
+        summed_orientation += ((p2[0] - p1[0]) * (p2[1] + p1[1]));
+    }
+    return summed_orientation > 0.0;
+}
+
+function d3ify_polygon(polygon) {
+    /* GeoJSON objects have the wrong winding order (RFC7946) and need to be wound the clockwise for outer rings
+    */
+    if (polygon["geometry"]["type"] == "Polygon") {
+        for (index in polygon["geometry"]["coordinates"]) {
+            if (index == 0) {
+                if (!is_clockwise(polygon["geometry"]["coordinates"][index])) {
+                    polygon["geometry"]["coordinates"][index].reverse()
+                }
+            }
+            else {
+                if (is_clockwise(polygon["geometry"]["coordinates"][index])) {
+                    polygon["geometry"]["coordinates"][index].reverse()
+                }
+            }
+        }
+    }
+    else { if (polygon["geometry"]["type"] == "MultiPolygon") {
+        for (polygon_index in polygon["geometry"]["coordinates"]) {
+            for (index in polygon["geometry"]["coordinates"][polygon_index]) {
+                if (index == 0) {
+                    if (!is_clockwise(polygon["geometry"]["coordinates"][polygon_index][index])) {
+                        polygon["geometry"]["coordinates"][polygon_index][index].reverse()
+                    }
+                }
+                else {
+                    if (is_clockwise(polygon["geometry"]["coordinates"][polygon_index][index])) {
+                        polygon["geometry"]["coordinates"][polygon_index][index].reverse()
+                    }
+                }
+            }
+        }
+    }}
+    return polygon
 }
