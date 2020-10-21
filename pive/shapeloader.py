@@ -56,8 +56,8 @@ class Shapeloader(object):
 
         features = []
         if city_name != shape_name:
-            features.append(create_geojson_feature(overpass.geojsonify(smallest_shape, ccw=False), shape_name, shortend_names[shape_name]))
-        features.append(create_geojson_feature(overpass.geojsonify(city_shape, ccw=False), city_name, shortend_names[city_name]))
+            features.append(create_geojson_feature(overpass.geojsonify(smallest_shape), shape_name, shortend_names[shape_name]))
+        features.append(create_geojson_feature(overpass.geojsonify(city_shape), city_name, shortend_names[city_name]))
         shape_json = add_geojson_header(features)
 
         return (shape_json, city_name, shortend_names)
@@ -74,7 +74,7 @@ class Shapeloader(object):
         for district in districts:
             name = district["tags"]['name']
             if name in district_names:
-                shape = overpass.geojsonify(district, ccw=False)
+                shape = overpass.geojsonify(district)
                 features.append(create_geojson_feature(shape, name, shortened_names[name]))
 
         shape = add_geojson_header(features)
