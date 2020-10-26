@@ -225,8 +225,8 @@ d3.json(url).then(function(data) {
 	    return function(d, i) {
 	        svg.selectAll(".chord path")
 	            .filter(function(d) {
-	                return d.source.index != i &&
-	                       d.target.index != i;
+	                return d.source.index != i.index &&
+	                       d.target.index != i.index;
 	            })
 	            .transition("fade")
 	            .duration(transistionSpeed)
