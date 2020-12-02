@@ -45,6 +45,7 @@ class BaseVisualization:
         self._dataset_url = ''
         self.dataset = []
         self._title = ''
+        self._colors = []
 
         self._shape_rendering = default.shape_rendering
         self._line_stroke = default.line_stroke
@@ -161,7 +162,7 @@ class BaseVisualization:
         }
 
     def create_html(self, template):
-        templateVars = {'t_div_hook': self._div_hook}
+        templateVars = { "t" + key:self.__dict__[key] for key in self.__dict__.keys() if key.startswith("_") }
         templateVars.update(self.get_modifiable_template_variables())
         # Add dictionaries of user modifiable variables
         templateVars.update({'i_variables': self.get_modifiable_template_variables(),

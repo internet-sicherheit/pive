@@ -36,6 +36,7 @@ VISTYPE_NUMERICAL = 1;
 VISTYPE_DATETIME = 2;
 
 ISO8601_REGEX = re.compile(r"^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$")
+COORD_REGEX = re.compile(r'^-?[0-9]{1,3}(?:\.[0-9]{1,20})+$') #FIXME: Only works for GPS-Coordinates
 
 def get_datapoint_types(datapoint):
     """Determines the datas visualization-types of a given datapoint.
@@ -48,24 +49,92 @@ def get_datapoint_types(datapoint):
 
         if isinstance(item, list):
             typeset.add("list")
+            if is_polygon(item):
+                typeset.add("polygon")
 
         # If the datapoint contains a float or int it will
         # be considered as a numerical datapoint.
         if is_int(item) or is_float(item):
-            #types.append("number")
             typeset.add("number")
+
+        if is_gps_latitude(item):
+            typeset.add("latitude")
+        if is_gps_longitude(item):
+            typeset.add("longitude")
 
         # If the item is a string, it may also be formatted as
         # a datetime item.
         if is_string(item):
-            #types.append("string")
             typeset.add("string")
-            #Strings might also be dates
             if is_date(item):
-                #types.append("time")
                 typeset.add("time")
         types.append(typeset)
     return types
+
+def is_gps_latitude(value):
+    """Checks if the passed value is a coordinate."""
+    try:
+        if isinstance(value, str):
+            value = float(value)
+        return -90 <= value <= 90
+    except Exception as e:
+        return False
+
+def is_gps_longitude(value):
+    """Checks if the passed value is a coordinate."""
+    try:
+        if isinstance(value, str):
+            value = float(value)
+        return -180 <= value <= 180
+    except Exception as e:
+        return False
+
+def is_polygon(gps_list):
+    try:
+        matches_mapshape = True
+        if len(gps_list) >= 3:
+           for point in gps_list:
+               matches_mapshape = matches_mapshape & is_gps_latitude(point[0]) & is_gps_longitude(point[1])
+        else:
+            matches_mapshape = False
+    except Exception as e:
+        matches_mapshape = False
+        print(e)
+    return matches_mapshape
+
+def is_coordinate(item):
+    return is_gps_longitude(item) or is_gps_latitude(item)
+
+def is_string(item):
+    """Determines if the item is a string type for Python 3 and
+    Python 2.7."""
+    is_string = False
+
+    if sys.version_info[0] >= 3:
+    # Python 3 string determination.
+        if isinstance(item, str):
+            is_string = True
+
+    # Python 2.7 workaround to determine strings.
+    # Basestring was deprecated with Python 3.
+    if sys.version_info[0] < 3:
+        try:
+            if isinstance(item, basestring):
+                is_string = True
+        except TypeError:
+            pass
+
+    return is_string
+
+
+def is_date(item):
+    """Checks if the item is a date."""
+    try:
+        if ISO8601_REGEX.match(item) is not None and parse(item) is not None:
+            return True
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return False
 
 
 def is_string(item):

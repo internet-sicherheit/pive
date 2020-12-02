@@ -218,9 +218,12 @@ def checkInputOrder(elem, config, props, supportsMultiData):
     # Subract 1 for X-value from both sets
     # Number of required datapoint-values per element must fit N times
     #       into the available data without rest
-    eachValCount = len(req_vtypes) - 1
-    dataValCount = len(props["viz_types"]) - 1
-    if ((dataValCount % eachValCount) != 0):
+
+    mapping_parameter_count = config.get("mapping_parameter_count", 1)
+    eachValCount = len(req_vtypes) - mapping_parameter_count
+    dataValCount = len(props["viz_types"]) - mapping_parameter_count
+    #FIXME: eachValCount == 0 avoids divisionByZero errors, but why is it necessary in the first place?
+    if (eachValCount == 0 or (dataValCount % eachValCount) != 0):
         isPossible = False
 
     # Determines the given types.

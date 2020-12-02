@@ -29,6 +29,8 @@
  processing the visualizations. """
 import importlib
 from .visualization import defaults as default
+from .overpass import API_URL
+import pive.shapeloader as shapeloader
 
 # Accessor to choose the charts. Corresponding with
 # the config files 'title' attribute in
@@ -40,6 +42,9 @@ CHART_BAR = 'barchart'
 CHART_PIE = 'piechart'
 CHART_CHORD = 'chordchart'
 CHART_HIVE = 'hiveplot'
+MAP_HEAT = 'heatmap'
+MAP_POI = 'poi'
+MAP_POLYGON = 'polygon'
 
 # Bundles all essential access methods to render visualizations.
 class Environment(object):
@@ -57,12 +62,27 @@ class Environment(object):
     __datakeys = []
 
 
-    def __init__(self, inputmanager=None, outputpath=default.output_path):
+    def __init__(self, inputmanager=None, outputpath=default.output_path, country="DE", overpass_endpoint=API_URL):
         """ The Environment needs an input manager instance to work, but is
         optional at creation. Leaving the user to configure the
         input manager first. """
         self.__inputmanager = inputmanager
         self.__outputpath = outputpath
+        self.__country = country
+        self.__endpoint = overpass_endpoint
+        self.__shapeloader = None
+        self.reset_map_config()
+
+    def set_map_country(self, country):
+        self.__country = country
+        self.reset_map_config()
+
+    def set_map_api_endpoint(self, endpoint):
+        self.__endpoint = endpoint
+        self.reset_map_config()
+
+    def reset_map_config(self):
+        self.__shapeloader = shapeloader.Shapeloader(self.__country, self.__endpoint)
 
     def set_output_path(self, outputpath):
         """Set the output path of all visualization files."""
@@ -92,7 +112,7 @@ class Environment(object):
 
         # Converting the datakeys into strings.
         self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
-        #print("ENVIRONMENT.PY: self.__data: ", self.__data)
+
         return self.__suitables
 
     @staticmethod
@@ -114,7 +134,14 @@ class Environment(object):
     def choose(self, chart):
         """Choose a chart from the suitable visualizations."""
         if chart not in self.__suitables:
-            raise ValueError("Visualization not possible.")
+            raise ValueError('Visualization not possible.')
+
+        # Depending on the users choice mark the visualization method as geodata
+        #TODO: Check class if it is geodata class instead of hardcoding
+        if chart in ['heatmap', 'poi', 'polygon']:
+            self.__is_geodata = True
+        else:
+            self.__is_geodata = False
 
         # Automatically create the chart instance and
         # return it to the user.
@@ -122,10 +149,16 @@ class Environment(object):
         modname = self.__suitables[index]
         module = self.__modules[index]
 
-        class_ = getattr(module, "Chart")
+        if self.__is_geodata:
+            class_ = getattr(module, 'Map')
+        else:
+            class_ = getattr(module, 'Chart')
 
         # When dates occur the constructor is called differently.
-        if self.__has_datefields:
+        if self.__is_geodata:
+            chart_decision = class_(self.__data, modname, self.__shapeloader)
+            chart_decision.get_map_shape()
+        elif self.__has_datefields:
             chart_decision = class_(self.__data, modname, times=True)
         else:
             chart_decision = class_(self.__data, modname)

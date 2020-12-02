@@ -1,0 +1,649 @@
+{# Copyright (c) 2019 - 2020, Tobias Stratmann                                  #}
+{# All rights reserved.                                                         #}
+{#                                                                              #}
+{# Redistribution and use in source and binary forms, with or without           #}
+{# modification, are permitted provided that the following conditions are met:  #}
+{#                                                                              #}
+{# 1. Redistributions of source code must retain the above copyright notice,    #}
+{# this list of conditions and the following disclaimer.                        #}
+{#                                                                              #}
+{# 2. Redistributions in binary form must reproduce the above copyright notice, #}
+{# this list of conditions and the following disclaimer in the documentation    #}
+{# and/or other materials provided with the distribution.                       #}
+{#                                                                              #}
+{# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"  #}
+{# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE    #}
+{# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE   #}
+{# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE    #}
+{# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR          #}
+{# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF         #}
+{# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS     #}
+{# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN      #}
+{# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)      #}
+{# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE   #}
+{# POSSIBILITY OF SUCH DAMAGE.                                                  #}
+
+//Created with pive {{ t_pive_version }} - the python interactive visualization environment.
+//Visit https://github.com/daboth/pive for more information.
+
+var width = "{{ t_width }}"
+var height = "{{ t_height }}"
+var filename = "{{ t_filename }}";
+var map_shape = "{{ t_shape }}";
+var city = "{{ t_city }}";
+var scaleExtent = {{ t_scale_extent }};
+var transExtent = [[0,0],[width,height]]
+var zoom_threshold = {{ t_zoom_threshold }};
+var div_hook_map = "{{ t_div_hook_map }}";
+var div_hook_legend = "{{ t_div_hook_legend }}";
+var div_hook_tooltip = "{{ t_div_hook_tooltip }}";
+var tooltip_div_border = "{{ t_tooltip_div_border }}";
+var map_stroke = "{{ t_map_stroke }}";
+var fill_opacity = {{ t_fill_opacity }};
+var stroke_opacity = {{ t_stroke_opacity }};
+var mouseover_opacity = {{ t_mouseover_opacity }};
+var mouseout_opacity = {{ t_mouseout_opacity }};
+var legendwidth = {{ t_legendwidth }};
+var legendheight = {{ t_legendheight }};
+var legendmargin = {{ t_legendmargin }};
+var legendticksize = {{ t_legendticksize }};
+var legendborder = "{{ t_legendborder }}";
+var headers = {{ t_headers }};
+var fontsize = 12; {# TODO: Set dynamically #}
+var moveAmount = 20; {# TODO: Set dynamically #}
+var color = d3.scaleQuantize()
+    .range({{ t_colors }});
+//Colors taken from colorbrewer.js, included in the D3 download  
+
+
+var hashtag = "#";
+var hash_div_hook_map = hashtag.concat(div_hook_map);
+var hash_div_hook_legend = hashtag.concat(div_hook_legend);
+
+var root_div_hook_map = document.getElementById(div_hook_map);
+var root_div_hook_tooltip = document.getElementById(div_hook_tooltip);
+
+
+{# JavaScript String is immutable, so single strings are defined for readability. #}
+var css_pan_zoom_rect = "#{{ t_div_hook_map }} .pan rect, .zoom rect { fill: black; opacity: 0.2; }\n",
+    css_pan_zoom_text = "#{{ t_div_hook_map }} .pan text, .zoom text { fill: black; font-size: 18px; text-anchor: middle; }\n",
+    css_pan_zoom_hover = "#{{ t_div_hook_map }} .pan:hover rect, .pan:hover text, .zoom:hover rect, .zoom:hover text { fill:blue; }\n",
+    css_text_label = "#{{ t_div_hook_map }} .label { font-family: Helvetica, sans-serif; text-anchor: middle; fill: black; }\n",
+    css_tooltip = "#{{ t_div_hook_tooltip }} { font-family: Helvetica, sans-serif; margin-top: 10px; padding: 5px; white-space: pre-wrap; width: 590px; }\n";
+
+{# The style definitions are concatinated into a single string. #}
+var css = css_pan_zoom_rect.concat(css_pan_zoom_text).concat(css_pan_zoom_hover).concat(css_text_label).concat(css_tooltip);
+
+{# The style element in the dom is created and included into the root div. #}
+var style = document.createElement("style");
+style.type = "text/css";
+style.appendChild(document.createTextNode(css));
+root_div_hook_map.appendChild(style);
+
+
+
+// Svg, map, path, projection and zooming
+var svg;
+var map;
+var path;
+var projection;
+var zoom;
+
+
+// Configure the map
+configMap();
+
+// Determine and execute the method for visualization
+visualize(filename, map_shape);
+
+
+// Set up the map
+// Parameters: Scale factor for zooming, translate extent for panning borders and translate value for starting viewpoint
+function configMap() {
+    // Define map projection
+    projection = d3.geoMercator();
+
+    // Define path generator
+    path = d3.geoPath()
+        .projection(projection);
+
+    // Create SVG element
+    svg = d3.select(hash_div_hook_map)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    // Then define the zoom behavior
+    zoom = d3.zoom()
+        .scaleExtent(scaleExtent)
+        .duration(10)
+        .translateExtent(transExtent)
+        .on("zoom", function (event) {
+                map.selectAll("path").attr("transform", "translate(" + event.transform.x + "," + event.transform.y + ") scale(" + event.transform.k + ")");
+                map.selectAll("text").attr("transform", "translate(" + event.transform.x + "," + event.transform.y + ") scale(" + event.transform.k + ")");
+                svg.selectAll(".label").attr("font-size", fontsize/event.transform.k)
+                    .text(function(d) {
+                        if(event.transform.k < zoom_threshold) {
+                            return d.properties.id;
+                        } else {
+                            return d.properties.name;
+                        }
+                    });
+            })
+
+    // Create a container in which all pan-able elements will live
+    map = svg.append("g")
+        .attr("id", "map")
+        //.call(drag)
+        .call(zoom)
+
+
+    // Create a new, invisible background rect to catch drag events
+    map.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("opacity", 0);
+}
+
+
+// Heatmap method selected
+// Parameters: CSV file, GeoJSON file
+function vizHeatmap(filename, json_file) {
+
+    // Load in JSON data
+    d3.json(filename).then(async function(data) {
+        // Read header from CSV
+        var header = getHeader();
+
+
+        // Parse min and max from data to int for d3 min/max function
+        var min = d3.min(data, function (d) { return parseInt(d[header[1]]); });
+        var max = d3.max(data, function (d) { return parseInt(d[header[1]]); });
+
+        // Set input domain for color scale
+        color.domain([min, max]);
+        // color.domain(d3.extent(data));
+        let json = await d3.json(json_file)
+
+        for (feature of json.features) {
+            d3ify_polygon(feature)
+        }
+
+        projection.fitExtent([[width*0.1,height*0.1],[width*0.9,height*0.9]], json);
+
+        // Merge the CSV data and GeoJSON
+        // Loop through once for each CSV data value
+        for(var i = 0; i < data.length; i++) {
+
+            var dataDistrict = data[i][header[0]];
+            var dataValue = data[i][header[1]];
+
+            // Find the corresponding district inside the GeoJSON
+            for(var j = 0; j < json.features.length; j++) {
+
+                var jsonDistrict = json.features[j].properties.name;
+
+                if(dataDistrict == jsonDistrict) {
+
+                    // Copy the data value into the JSON
+                    json.features[j].properties.value = dataValue;
+
+                    // Stop looking through the JSON
+                    break;
+                }
+            }
+        }
+
+        // Bind data and create one path per GeoJSON feature
+        map.selectAll("path")
+            .data(json.features)
+            .enter()
+            .append("path")
+            .attr("class", "json_path")
+            .attr("d", path)
+            .style("fill", function(d) {
+                // Get data value
+                var value = d.properties.value;
+
+                if(value) {
+                    return color(value);
+                } else {
+                    return "#ccc";
+                }
+            })
+            .style("stroke", map_stroke)
+            .style("fill-opacity", fill_opacity)
+            .style("stroke-opacity", stroke_opacity)
+            // Increase opacity while hovering over a district, and show a tooltip after clicking it
+            .on("mouseover", function() {
+                d3.select(this).style("fill-opacity", mouseover_opacity);
+            })
+            .on("mouseout", function() {
+                d3.select(this).style("fill-opacity", mouseout_opacity);
+            })
+            .on("click", function(event, d) {
+                var header = getHeader();
+                showTooltip(d.properties, header);
+            });
+
+        // Create one label per district to display its name
+        map.selectAll("text")
+            .data(json.features)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", function (d) {
+                return path.centroid(d)[0];
+            })
+            .attr("y", function (d) {
+                return path.centroid(d)[1];
+            })
+            .text(function (d) {
+                if (d.properties.name) {
+                    return d.properties.id;
+                }
+            });
+
+        // Call function to initialize the color legend
+        continuousLegend();
+    });
+}
+
+
+// Determine method for visualization
+// Parameters: Selected file, GeoJSON files and visualization type
+function visualize(filename, json_file) {
+
+    vizHeatmap(filename, json_file);
+
+    // Call functions to initialize pan and zoom buttons
+    createPanButtons();
+    createZoomButtons();
+}
+
+
+// Read CSV header to check if columns for lat and lon data exist
+// Parameters: Header of CSV
+function getLatLon(header) {
+    var latLon = [];
+    var lat = ["Latitude", "Lat"];
+    var latLC = [];
+    var lon = ["Longitude", "Lon"];
+    var lonLC = [];
+
+    for(i = 0; i < lat.length; i++) {
+        var name = lat[i].toLowerCase();
+        latLC.push(name);
+    }
+
+    for(i = 0; i < lon.length; i++) {
+        var name = lon[i].toLowerCase();
+        lonLC.push(name);
+    }
+
+    for(i = 0; i < header.length; i++) {
+        var columnName = header[i];
+        if(latLC.includes(columnName.toLowerCase())) {
+            latLon.push(columnName);
+            break;
+        }
+    }
+
+    for(i = 0; i < header.length; i++) {
+        var columnName = header[i];
+        if(lonLC.includes(columnName.toLowerCase())) {
+            latLon.push(columnName);
+            break;
+        }
+    }
+
+    return latLon;
+}
+
+// Create pan buttons
+function createPanButtons() {
+
+    //Create the clickable groups
+
+    //North
+    var north = svg.append("g")
+        .attr("class", "pan")   //All share the 'pan' class
+        .attr("id", "north");   //The ID will tell us which direction to head
+
+    north.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width)
+        .attr("height", 30);
+
+    north.append("text")
+        .attr("x", width / 2)
+        .attr("y", 20)
+        .html("&uarr;");
+
+    //South
+    var south = svg.append("g")
+        .attr("class", "pan")
+        .attr("id", "south");
+
+    south.append("rect")
+        .attr("x", 0)
+        .attr("y", height - 30)
+        .attr("width", width)
+        .attr("height", 30);
+
+    south.append("text")
+        .attr("x", width / 2)
+        .attr("y", height - 10)
+        .html("&darr;");
+
+    //West
+    var west = svg.append("g")
+        .attr("class", "pan")
+        .attr("id", "west");
+
+    west.append("rect")
+        .attr("x", 0)
+        .attr("y", 30)
+        .attr("width", 30)
+        .attr("height", height - 60);
+
+    west.append("text")
+        .attr("x", 15)
+        .attr("y", height / 2)
+        .html("&larr;");
+
+    //East
+    var east = svg.append("g")
+        .attr("class", "pan")
+        .attr("id", "east");
+
+    east.append("rect")
+        .attr("x", width - 30)
+        .attr("y", 30)
+        .attr("width", 30)
+        .attr("height", height - 60);
+
+    east.append("text")
+        .attr("x", width - 15)
+        .attr("y", height / 2)
+        .html("&rarr;");
+
+
+    // Panning interaction
+
+    d3.selectAll(".pan")
+        .on("click", function () {
+
+            // Set x/y to zero for now
+            var x = 0;
+            var y = 0;
+
+            // Which way are we headed?
+            var direction = d3.select(this).attr("id");
+
+            // Modify the offset, depending on the direction
+            switch (direction) {
+                case "north":
+                    y += moveAmount;
+                    break;
+                case "south":
+                    y -= moveAmount;
+                    break;
+                case "west":
+                    x += moveAmount;
+                    break;
+                case "east":
+                    x -= moveAmount;
+                    break;
+                default:
+                    break;
+            }
+
+            // This triggers a zoom event, translating by x, y
+            map.transition()
+                .call(zoom.translateBy, x, y);
+        });
+};
+
+// Create zoom buttons
+function createZoomButtons() {
+
+    // Create the clickable groups
+
+    // Zoom in button
+    var zoomIn = svg.append("g")
+        .attr("class", "zoom")
+        .attr("id", "in")
+        .attr("transform", "translate(" + (width - 110) + "," + (height - 70) + ")");
+
+    zoomIn.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 30)
+        .attr("height", 30)
+        .attr("rx", 5)
+        .attr("ry", 5);
+
+    zoomIn.append("text")
+        .attr("x", 15)
+        .attr("y", 20)
+        .text("+");
+
+    // Zoom out button
+    var zoomOut = svg.append("g")
+        .attr("class", "zoom")
+        .attr("id", "out")
+        .attr("transform", "translate(" + (width - 70) + "," + (height - 70) + ")");
+
+    zoomOut.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 30)
+        .attr("height", 30)
+        .attr("rx", 5)
+        .attr("ry", 5);
+
+    zoomOut.append("text")
+        .attr("x", 15)
+        .attr("y", 20)
+        .html("&ndash;");
+
+    // Zooming interaction
+    d3.selectAll(".zoom")
+        .on("click", function () {
+
+            // Set how much to scale on each click
+            var scaleFactor;
+
+            // Which way are we headed?
+            var direction = d3.select(this).attr("id");
+
+            // Modify the k scale value, depending on the direction
+            switch (direction) {
+                case "in":
+                    scaleFactor = 1.5;
+                    break;
+                case "out":
+                    scaleFactor = 0.75;
+                    break;
+                default:
+                    break;
+            }
+
+            // This triggers a zoom event, scaling by 'scaleFactor'
+            map.transition()
+                .call(zoom.scaleBy, scaleFactor);
+        });
+};
+
+// Display tooltip for heatmap or POIs showing the explicit values
+// Parameter: Selected district or point of interest to show tooltip for and header names
+function showTooltip(data, header) {
+    // Get column names for lat and lon data to hide these columns in the tooltip
+    var latLon = getLatLon(header);
+    var lat = latLon[0];
+    var lon = latLon[1];
+    var div = root_div_hook_tooltip;
+    var text = "";
+
+    text += header[0] + ": " + data.name +"\n";
+    text += header[1] + ": " + data.value;
+    for(i = 2; i < header.length; i++) {
+        var name = header[i];
+        if(name != lat && name != lon && name != "id") {
+            var value = data[name];
+            if(text) {
+                text = text + "\n" + name + ": " + value;
+            } else {
+                text = name + ": " + value;
+            }
+        }
+    }
+    if(div.innerHTML != text) {
+        div.style.border = tooltip_div_border;
+        div.innerHTML = text;
+    } else {
+        div.style.border = "none";
+        div.innerHTML = "";
+    }
+}
+
+// Create continous color legend
+function continuousLegend() {
+    var canvas = d3.select(hash_div_hook_legend)
+        // Width, height and position of div element
+        .style("height", legendheight + "px")
+        .style("width", legendwidth + "px")
+        .style("position", "relative")
+        .append("canvas")
+        // Dimension of pixels in canvas element
+        .attr("height", legendheight - legendmargin.top - legendmargin.bottom)
+        .attr("width", 1)
+        // Display size of canvas element
+        .style("height", (legendheight - legendmargin.top - legendmargin.bottom) + "px")
+        .style("width", (legendwidth - legendmargin.left - legendmargin.right) + "px")
+        // Border and position with margin of canvas element
+        .style("border", legendborder)
+        .style("position", "absolute")
+        .style("top", (legendmargin.top) + "px")
+        .style("left", (legendmargin.left) + "px")
+        // Get the canvas element of this selection
+        .node();
+
+    // Get a two-dimensional rendering context for canvas element (CanvasRenderingContext2D object)
+    var ctx = canvas.getContext("2d");
+
+    // Set range and domain for the linear color scale
+    var legendscale = d3.scaleLinear()
+        .range([1, legendheight - legendmargin.top - legendmargin.bottom])
+        .domain(color.domain());
+
+    // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
+    // Create ImageData object with specified dimensions
+    var image = ctx.createImageData(1, legendheight);
+    // Determine the color for each pixel within the height of the legend
+    d3.range(legendheight).forEach(function(i) {
+        // Based on the number of each pixel within the range give the RGB color for the corresponding value of the domain
+        var c = d3.rgb(color(legendscale.invert(i)));
+        // Store four values for each pixel in the data array of the image
+        image.data[4 * i] = c.r;
+        image.data[4 * i + 1] = c.g;
+        image.data[4 * i + 2] = c.b;
+        //RGBa, alpha value, opacity
+        image.data[4 * i + 3] = 200;
+    });
+    // Paint image data onto the canvas element
+    ctx.putImageData(image, 0, 0);
+
+    // Store tick values for the axis of the legend in array
+    var tickVal = [];
+    // Determine min and max of domain and calculate values where the color changes
+    var tickMin = color.domain()[0];
+    var tickMax = color.domain()[1];
+    var tickIncrement = (tickMax - tickMin) / color.range().length;
+    // Start with minimum value
+    var n = tickMin;
+    // Ticks for min and max values of the domain and one tick for each color change in the legend
+    for(i = 0; i <= color.range().length; i++) {
+        // Push value to array
+        tickVal.push(parseInt(n));
+        // Increase by increment value
+        n += tickIncrement;
+    }
+
+    // Construct a right-oriented axis generator for the given scale with specified tick values
+    var legendaxis = d3.axisRight()
+        .scale(legendscale)
+        .tickSize(legendticksize)
+        .tickValues(tickVal);
+
+    // Append SVG element to DIV element for the legend
+    var legendSvg = d3.select(hash_div_hook_legend)
+        .append("svg")
+        .attr("height", (legendheight) + "px")
+        .attr("width", (legendwidth) + "px")
+        .style("position", "absolute")
+        .style("left", "0px")
+        .style("top", "0px")
+
+    // Append group element to SVG and position legendaxis in the group element
+    legendSvg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + (legendwidth - legendmargin.left - legendmargin.right + 3) + "," + (legendmargin.top) + ")")
+        .call(legendaxis);
+};
+
+// Access data to get column names/names of properties
+// Parameter: Data of CSV or JSON file
+function getHeader() {
+    return headers;
+}
+
+function is_clockwise(coordinates) {
+    let summed_orientation = 0;
+    for(let index=0; index < coordinates.length; index++) {
+        const p1 = coordinates[index];
+        const p2 = coordinates[(index+1) % coordinates.length];
+        summed_orientation += ((p2[0] - p1[0]) * (p2[1] + p1[1]));
+    }
+    return summed_orientation > 0.0;
+}
+
+function d3ify_polygon(polygon) {
+    /* GeoJSON objects have the wrong winding order (RFC7946) and need to be wound the clockwise for outer rings
+    */
+    if (polygon["geometry"]["type"] == "Polygon") {
+        for (index in polygon["geometry"]["coordinates"]) {
+            if (index == 0) {
+                if (!is_clockwise(polygon["geometry"]["coordinates"][index])) {
+                    polygon["geometry"]["coordinates"][index].reverse()
+                }
+            }
+            else {
+                if (is_clockwise(polygon["geometry"]["coordinates"][index])) {
+                    polygon["geometry"]["coordinates"][index].reverse()
+                }
+            }
+        }
+    }
+    else { if (polygon["geometry"]["type"] == "MultiPolygon") {
+        for (polygon_index in polygon["geometry"]["coordinates"]) {
+            for (index in polygon["geometry"]["coordinates"][polygon_index]) {
+                if (index == 0) {
+                    if (!is_clockwise(polygon["geometry"]["coordinates"][polygon_index][index])) {
+                        polygon["geometry"]["coordinates"][polygon_index][index].reverse()
+                    }
+                }
+                else {
+                    if (is_clockwise(polygon["geometry"]["coordinates"][polygon_index][index])) {
+                        polygon["geometry"]["coordinates"][polygon_index][index].reverse()
+                    }
+                }
+            }
+        }
+    }}
+    return polygon
+}

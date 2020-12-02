@@ -1,0 +1,16 @@
+{
+    "title": "heatmap",
+    "min_datapoints": 2,
+    "max_datapoints": 100,
+    "multiple_data": true,
+    "datesupport": false,
+    "lexical_required": false,
+    "vistypes": [
+        {
+            "label": "string"
+        },
+        {
+            "value": "number"
+        }
+    ]
+}
