@@ -45,6 +45,7 @@ class Chart(bv.BaseVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Hiveplot"
 
         # Visualization properties.
         self._width = width
@@ -160,14 +161,6 @@ class Chart(bv.BaseVisualization):
         """ Return the index of the type because hive can only handle numbers as type. """
         t = ['A', 'B', 'C', 'D', 'E']
         return t.index(type) + 1
-
-
-    def create_html(self, template):
-        templateVars = {'t_title': self._title,
-                        't_div_hook': self._div_hook}
-
-        outputText = template.render(templateVars)
-        return outputText
 
 
     def create_js(self, template, dataset_url):

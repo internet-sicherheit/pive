@@ -55,6 +55,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Barchart"
 
 
         # Visualization properties.

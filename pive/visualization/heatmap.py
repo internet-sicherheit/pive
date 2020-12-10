@@ -54,6 +54,8 @@ class Map(mv.MapVisualization):
         self._datakeys = []
         self._headers = list(dataset[0].keys())
         self._version = default.p_version
+        self._js_name = "Heatmap"
+        self._map_shape_url = "heatmap_shape.json"
 
         self.__shapeloader = shapeloader
 
@@ -195,6 +197,10 @@ class Map(mv.MapVisualization):
     def get_map_shape(self):
         (self._shape, self._city) = self.__shapeloader.build_heatmap(self._dataset)
 
+    def set_map_data(self, data):
+        self._shape = data["shape"]
+        self._city = data["city"]
+
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""
         self._datakeys = datakeys
@@ -273,15 +279,15 @@ class Map(mv.MapVisualization):
         # return vis_dataset
         return dataset
 
-    def create_html(self, template):
-        """Basic Method."""
-        template_vars = {'t_title': self._title,
-                         't_div_hook_map': self._div_hook_map,
-                         't_div_hook_legend': self._div_hook_legend,
-                         't_div_hook_tooltip': self._div_hook_tooltip}
-
-        output_text = template.render(template_vars)
-        return output_text
+    # def create_html(self, template):
+    #     """Basic Method."""
+    #     template_vars = {'t_title': self._title,
+    #                      't_div_hook_map': self._div_hook_map,
+    #                      't_div_hook_legend': self._div_hook_legend,
+    #                      't_div_hook_tooltip': self._div_hook_tooltip}
+    #
+    #     output_text = template.render(template_vars)
+    #     return output_text
 
     def create_js(self, template, dataset_url):
         """Basic Method. Creates the JavaScript code based on the template."""

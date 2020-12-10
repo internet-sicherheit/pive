@@ -57,6 +57,7 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
 
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Scatterchart"
 
         # Visualization properties.
         self._width = width

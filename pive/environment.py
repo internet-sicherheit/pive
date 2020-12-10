@@ -30,6 +30,7 @@
 import importlib
 from .visualization import defaults as default
 from .overpass import API_URL
+from .outputmanager import FolderOutputManager
 import pive.shapeloader as shapeloader
 
 # Accessor to choose the charts. Corresponding with
@@ -62,12 +63,12 @@ class Environment(object):
     __datakeys = []
 
 
-    def __init__(self, inputmanager=None, outputpath=default.output_path, country="DE", overpass_endpoint=API_URL):
+    def __init__(self, inputmanager=None, outputmanager=FolderOutputManager(default.output_path), country="DE", overpass_endpoint=API_URL):
         """ The Environment needs an input manager instance to work, but is
         optional at creation. Leaving the user to configure the
         input manager first. """
         self.__inputmanager = inputmanager
-        self.__outputpath = outputpath
+        self.__outputmanager = outputmanager
         self.__country = country
         self.__endpoint = overpass_endpoint
         self.__shapeloader = None
@@ -86,7 +87,7 @@ class Environment(object):
 
     def set_output_path(self, outputpath):
         """Set the output path of all visualization files."""
-        self.__outputpath = outputpath
+        self.__outputmanager = FolderOutputManager(outputpath)
 
     def set_input_manager(self, inputmanager):
         """Change the internal input manager instance."""
@@ -166,12 +167,33 @@ class Environment(object):
         chart_decision.setDataKeys(self.__datakeys)
         return chart_decision
 
+    def load_raw(self, chart, processed_data, shape_data = None):
+        """Load preprocessed data and skip validation."""
 
-    def render(self, chart):
-        """Renders the chart and creates
-        all files to display the visualization
-        under the environments output path."""
-        chart.create_visualization_files(self.__outputpath)
+        self.__data = processed_data
+        self.__is_geodata = (shape_data != None)
+        self.__suitables = [chart]
+        self.__modules = self.import_suitable_visualizations(self.__suitables)
+        module = self.__modules[0]
+        if self.__is_geodata:
+            class_ = getattr(module, 'Map')
+        else:
+            class_ = getattr(module, 'Chart')
+        if self.__is_geodata:
+            chart_decision = class_(self.__data, chart, self.__shapeloader)
+            chart_decision.set_map_shape(shape_data)
+        elif self.__has_datefields:
+            chart_decision = class_(self.__data, chart, times=True)
+        else:
+            chart_decision = class_(self.__data, chart)
+
+        chart_decision.setDataKeys(self.__datakeys)
+        return chart_decision
+
+
+    def render(self, chart, **options):
+        """Creates all the output data and hands it to the output manager."""
+        self.__outputmanager.output(data=chart.create_visualization_files(), **options)
 
     def render_code(self, chart):
         """Renders the chart and returns the javascript

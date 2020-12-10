@@ -94,6 +94,7 @@ def is_polygon(gps_list):
         matches_mapshape = True
         if len(gps_list) >= 3:
            for point in gps_list:
+               #TODO Check if point object is subscriptable, has elements 0 and 1
                matches_mapshape = matches_mapshape & is_gps_latitude(point[0]) & is_gps_longitude(point[1])
         else:
             matches_mapshape = False

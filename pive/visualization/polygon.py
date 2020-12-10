@@ -55,6 +55,8 @@ class Map(mv.MapVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Polygon"
+        self._map_shape_url = "polygon_shape.json"
 
         self.__shapeloader = shapeloader
 
@@ -177,6 +179,10 @@ class Map(mv.MapVisualization):
         coordinates = shapeloader.get_all_coordinates_polygon(self._dataset)
         (self._shape, self._city, self._shortend_names) = self.__shapeloader.find_map_shape(coordinates, [datapoint['name'] for datapoint in self._dataset])
 
+    def set_map_data(self, data):
+        self._shape = data["shape"]
+        self._city = data["city"]
+        self._shortend_names = data["shortened_names"]
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""

@@ -2,6 +2,7 @@ import requests
 from time import sleep
 import csv
 import pive.visualization.nuts2osm as nuts2osm
+from sys import stderr
 
 API_URL = 'http://overpass-api.de/api/interpreter'
 
@@ -11,12 +12,21 @@ class Client(object):
         self.country = country
         self.endpoint = endpoint
 
-    def execute_query(self, query, output_format="json"):
+    def execute_query(self, query, output_format="json", retries= 5, timeout=30):
         """Executes a query against the an Overpass and parses the result."""
 
-        response = requests.post(self.endpoint, data=query)
-        if response.status_code != 200:
-            pass
+        try:
+            response = requests.post(self.endpoint, data=query, timeout=timeout)
+            if response.status_code != 200:
+                raise ValueError(f"Unexpeced response from server {self.endpoint}: {response.status_code}")
+        except Exception as e:
+            if retries <= 0:
+                print(f"ERROR: {e}", file=stderr)
+                raise e
+            else:
+                print(f"WARNING: {e}", file=stderr)
+                sleep(5)
+                return self.execute_query(query, output_format=output_format, retries=retries-1, timeout=timeout)
         try:
             if output_format:
                 if output_format == "json":
@@ -27,20 +37,10 @@ class Client(object):
                     raise ValueError("Unsupported format")
             else:
                 data = response.content
-        except:
-            # Workaround, if any error happens, retry.
-            # Rate-Limit returns 200 too, so it cannot easily be discerned from regular payload
-            sleep(5)
-            response = requests.post(self.endpoint, data=query)
-            if output_format:
-                if output_format == "json":
-                    data = response.json()
-                elif output_format == "csv":
-                    data = csv.reader(response.content.decode('utf-8').splitlines(), delimiter='\t')
-                else:
-                    raise ValueError("Unsupported format")
-            else:
-                data = response.content
+        except Exception as e:
+            print(f"ERROR: {e}", file=stderr)
+            print(response.content, file=stderr)
+            raise e
         return data
 
 
@@ -117,9 +117,6 @@ out center;"""
     def get_city_candidates_for_districts(self, districts):
         """Get city candidates for a list of districts.
         The more often a city occurs in the returned list, the more likely it is to be the sought after city."""
-
-        # TODO: Create a single-call version that outputs cheaper CSV
-        # TODO: Get admin_level for city depending on which country this is in
 
         """Set output to CSV
         For each district

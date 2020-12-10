@@ -63,10 +63,15 @@ class MapVisualization(BaseVisualization):
     def get_shapefile_path(self, output_folder):
         return output_folder.joinpath('%s_shape.json' % self._title)
 
-    def create_visualization_files(self, destination_folder):
-        super().create_visualization_files(destination_folder)
-        self.write_file(dumps(self._shape), Path(destination_folder), '%s_shape.json' % self._title)
+    def create_visualization_files(self):
+        rendered_data = super().create_visualization_files()
+        rendered_data[f'{self._title}_shape.json'] = dumps(self._shape)
+        return rendered_data
 
     @abstractmethod
     def get_map_shape(self):
+        pass
+
+    @abstractmethod
+    def set_map_data(self, data):
         pass
