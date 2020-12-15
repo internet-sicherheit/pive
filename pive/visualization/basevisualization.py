@@ -91,7 +91,10 @@ class BaseVisualization:
         self._colors = colors
 
     def get_persisted_data(self):
-        return {'dataset': self._dataset}
+        return {
+            'dataset': self._dataset,
+            'chart_name': self._template_name
+        }
 
     def load_persisted_data(self, data):
         pass
@@ -180,7 +183,7 @@ class BaseVisualization:
 
     def create_html(self, template):
         if not self._config_url:
-            self._config_url = f"{self._title}_config.json"
+            self._config_url = f"{self._template_name}_config.json"
 
         templateVars = { "t" + key:self.__dict__[key] for key in self.__dict__.keys() if key.startswith("_") }
         templateVars.update(self.get_modifiable_template_variables())
@@ -211,13 +214,13 @@ class BaseVisualization:
     def create_visualization_files(self):
 
         rendered_data = {}
-        rendered_data[f'{self._title}_config.json'] = self.create_config()
+        rendered_data[f'{self._template_name}_config.json'] = self.create_config()
         html_template = self.load_html_template(self._html_template)
-        rendered_data[f'{self._title}.html'] = self.create_html(html_template)
+        rendered_data[f'{self._template_name}.html'] = self.create_html(html_template)
         with open(self._static_url.joinpath('%s.js' % self._template_name), mode="r") as js_file:
-            rendered_data[f'{self._title}.js'] = js_file.read()
-        rendered_data[f'{self._title}.json'] = json.dumps(self.generate_visualization_dataset(self._dataset))
-        rendered_data[f'{self._title}_persisted.json'] = json.dumps(self.get_persisted_data())
+            rendered_data[f'{self._template_name}.js'] = js_file.read()
+        rendered_data[f'{self._template_name}.json'] = json.dumps(self.generate_visualization_dataset(self._dataset))
+        rendered_data[f'{self._template_name}_persisted.json'] = json.dumps(self.get_persisted_data())
         return rendered_data
 
 
