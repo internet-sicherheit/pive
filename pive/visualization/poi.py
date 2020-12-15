@@ -211,10 +211,20 @@ class Map(mv.MapVisualization):
         coordinates = shapeloader.get_all_coordinates_poi(self._dataset)
         (self._shape, self._city, self._shortend_names) = self.__shapeloader.find_map_shape(coordinates)
 
-    def set_map_data(self, data):
-        self._shape = data["shape"]
-        self._city = data["city"]
-        self._shortend_names = data["shortened_names"]
+    def get_persisted_data(self):
+        data = super().get_persisted_data()
+        data.update({
+            'shape': self._shape,
+            'city': self._city,
+            'names': self._shortend_names
+                           })
+        return data
+
+    def load_persisted_data(self, data):
+        super().load_persisted_data(data)
+        self._shape = data['shape']
+        self._city = data['city']
+        self._shortend_names = data['names']
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""

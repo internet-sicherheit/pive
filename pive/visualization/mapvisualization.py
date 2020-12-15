@@ -40,6 +40,7 @@ class MapVisualization(BaseVisualization):
         self._div_hook_map = default.div_hook_map
         self._div_hook_legend = default.div_hook_legend
         self._div_hook_tooltip = default.div_hook_tooltip
+        self._config_blacklist.append("_shape")
 
     #FIXME: Compatibility funtion, codebase needs to adhere to uniform naming standard
     def setDataKeys(self, datakeys):
@@ -68,10 +69,13 @@ class MapVisualization(BaseVisualization):
         rendered_data[f'{self._title}_shape.json'] = dumps(self._shape)
         return rendered_data
 
-    @abstractmethod
-    def get_map_shape(self):
-        pass
+    def get_persisted_data(self):
+        data = super().get_persisted_data()
+        data.update({
+            'is_geodata': True
+                           })
+        return data
 
     @abstractmethod
-    def set_map_data(self, data):
+    def get_map_shape(self):
         pass

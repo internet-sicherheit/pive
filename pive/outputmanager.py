@@ -28,10 +28,13 @@ class FolderOutputManager(AbstractOutputManager):
 class NullOutputManager(AbstractOutputManager):
 
     def __init__(self, **kwargs):
-        pass
+        self.verbose = kwargs.get('verbose', False)
 
     def output(self, data, **options):
         #Check if arguments are strings and dump them
         for key in data:
             if type(data[key]) != str:
-                print(f"WARNING: Error for {key}; expected str but found {type(type(data[key]))}", file=stderr)
+                print(f"WARNING: Error for {key}; expected str but found {type(data[key])}", file=stderr)
+            elif self.verbose:
+                print(f"VERBOSE: {key}: {data[key]}", file=stderr)
+

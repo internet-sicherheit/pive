@@ -112,9 +112,13 @@ class Environment(object):
 
 
         # Converting the datakeys into strings.
-        self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
+        self.set_datakeys()
+
 
         return self.__suitables
+
+    def set_datakeys(self):
+        self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
 
     @staticmethod
     def import_suitable_visualizations(suitable_visualization_list):
@@ -167,11 +171,12 @@ class Environment(object):
         chart_decision.setDataKeys(self.__datakeys)
         return chart_decision
 
-    def load_raw(self, chart, processed_data, shape_data = None):
+    def load_raw(self, chart, persisted_data):
         """Load preprocessed data and skip validation."""
 
-        self.__data = processed_data
-        self.__is_geodata = (shape_data != None)
+        self.__data = persisted_data['dataset']
+        self.set_datakeys()
+        self.__is_geodata = persisted_data.get('is_geodata', False)
         self.__suitables = [chart]
         self.__modules = self.import_suitable_visualizations(self.__suitables)
         module = self.__modules[0]
@@ -181,13 +186,12 @@ class Environment(object):
             class_ = getattr(module, 'Chart')
         if self.__is_geodata:
             chart_decision = class_(self.__data, chart, self.__shapeloader)
-            chart_decision.set_map_shape(shape_data)
         elif self.__has_datefields:
             chart_decision = class_(self.__data, chart, times=True)
         else:
             chart_decision = class_(self.__data, chart)
-
         chart_decision.setDataKeys(self.__datakeys)
+        chart_decision.load_persisted_data(persisted_data)
         return chart_decision
 
 

@@ -44,7 +44,7 @@ class BaseVisualization:
         self._html_template = Path(__file__).resolve().parent.joinpath(default.template_path, "html.jinja")
         self._template_name = ''
         self._dataset_url = ''
-        self.dataset = []
+        self._dataset = []
         self._title = ''
         self._colors = []
         self._config_url = None
@@ -89,6 +89,12 @@ class BaseVisualization:
     def set_chart_colors(self, colors):
         """Basic Method."""
         self._colors = colors
+
+    def get_persisted_data(self):
+        return {'dataset': self._dataset}
+
+    def load_persisted_data(self, data):
+        pass
 
     @abstractmethod
     def generate_visualization_dataset(self, dataset):
@@ -211,6 +217,7 @@ class BaseVisualization:
         with open(self._static_url.joinpath('%s.js' % self._template_name), mode="r") as js_file:
             rendered_data[f'{self._title}.js'] = js_file.read()
         rendered_data[f'{self._title}.json'] = json.dumps(self.generate_visualization_dataset(self._dataset))
+        rendered_data[f'{self._title}_persisted.json'] = json.dumps(self.get_persisted_data())
         return rendered_data
 
 
