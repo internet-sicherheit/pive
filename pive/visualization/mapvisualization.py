@@ -66,7 +66,7 @@ class MapVisualization(BaseVisualization):
 
     def create_visualization_files(self):
         rendered_data = super().create_visualization_files()
-        rendered_data[f'{self._title}_shape.json'] = dumps(self._shape)
+        rendered_data['shape.json'] = dumps(self._shape)
         return rendered_data
 
     def get_persisted_data(self):
