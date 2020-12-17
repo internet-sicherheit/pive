@@ -83,6 +83,10 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         self._barwidth = default.barwidth
         self._verticalscale = 'linear'
 
+    @classmethod
+    def get_chart_type(cls):
+        return 'barchart'
+
     def set_threshold(self, threshold):
         self._threshold = threshold
 

@@ -91,6 +91,10 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
         self._line_stroke = default.line_stroke
         self._font_size = default.font_size
 
+    @classmethod
+    def get_chart_type(cls):
+        return 'scatterchart'
+
     def getViewport(self):
         return self._viewport
 

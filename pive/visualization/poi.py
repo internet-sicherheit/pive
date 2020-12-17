@@ -85,6 +85,10 @@ class Map(mv.MapVisualization):
         self._circle_stroke_width = default.circle_stroke_width
         self._headers = ['Longitude','Latitude'] + list(dataset[0].keys())[2:]
 
+    @classmethod
+    def get_chart_type(cls):
+        return 'poi'
+
     def get_modifiable_template_variables(self):
         """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
         Subclasses should override this method and add their own variables.

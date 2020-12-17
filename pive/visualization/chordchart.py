@@ -72,6 +72,10 @@ class Chart(bv.BaseVisualization):
         self._ticksteps = default.ticksteps
         self._tickprefix = default.prefix
 
+    @classmethod
+    def get_chart_type(cls):
+        return 'chordchart'
+
     def set_title(self, title):
         self._title = title
 

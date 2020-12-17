@@ -39,7 +39,6 @@ class BaseVisualization:
     def __init__(self):
         self._div_hook = default.div_hook
         self._template_url = ''
-        self._static_url = Path(__file__).resolve().parent.joinpath(default.static_path)
 
         self._html_template = Path(__file__).resolve().parent.joinpath(default.template_path, "html.jinja")
         self._template_name = ''
@@ -57,14 +56,20 @@ class BaseVisualization:
         self._label_size = default.label_size
         self._padding = default.padding
 
+    @classmethod
+    @abstractmethod
+    def get_chart_type(cls):
+        raise NotImplementedError()
+
     def set_div_hook(self, div_hook):
         assert isinstance(div_hook, str)
         self._div_hook = div_hook
 
-    def get_js_code(self):
-        js_template = self.load_js_template(Path(self._template_url).joinpath('%s.jinja' % self._template_name))
-        js = self.create_js(js_template, self._dataset_url)
-        return js
+    @classmethod
+    def get_js_code(cls, version=None):
+        #TODO: Make path to static files variable
+        with open(Path(__file__).resolve().parent.joinpath(default.static_path).joinpath('%s.js' % cls.get_chart_type()), mode="r") as js_file:
+            return  js_file.read()
 
     def get_json_dataset(self):
         return self.generate_visualization_dataset(self._dataset)
@@ -217,8 +222,7 @@ class BaseVisualization:
         rendered_data['config.json'] = self.create_config()
         html_template = self.load_html_template(self._html_template)
         rendered_data['site.html'] = self.create_html(html_template)
-        with open(self._static_url.joinpath('%s.js' % self._template_name), mode="r") as js_file:
-            rendered_data['chart.js'] = js_file.read()
+        rendered_data['chart.js'] = self.__class__.get_js_code()
         rendered_data['data.json'] = json.dumps(self.generate_visualization_dataset(self._dataset))
         rendered_data[f'persisted.json'] = json.dumps(self.get_persisted_data())
         return rendered_data

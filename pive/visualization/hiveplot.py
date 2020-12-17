@@ -62,6 +62,10 @@ class Chart(bv.BaseVisualization):
         self._innerRadius = 40
         self._outerRadius = 240
 
+    @classmethod
+    def get_chart_type(cls):
+        return 'hiveplot'
+
     def setDataKeys(self, datakeys):
         self._datakeys = datakeys;
 
