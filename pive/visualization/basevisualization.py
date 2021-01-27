@@ -68,8 +68,14 @@ class BaseVisualization:
     @classmethod
     def get_js_code(cls, version=None):
         #TODO: Make path to static files variable
+        if version is None:
+            version = cls.get_version()
         with open(Path(__file__).resolve().parent.joinpath(default.static_path).joinpath('%s.js' % cls.get_chart_type()), mode="r") as js_file:
             return  js_file.read()
+
+    @classmethod
+    def get_version(cls):
+        return default.p_version
 
     def get_json_dataset(self):
         return self.generate_visualization_dataset(self._dataset)
@@ -186,7 +192,7 @@ class BaseVisualization:
             }
         }
 
-    def create_html(self, template):
+    def create_html(self, template, template_variables):
         if not self._config_url:
             self._config_url = f"{self._template_name}_config.json"
 
@@ -196,6 +202,7 @@ class BaseVisualization:
         templateVars.update({'i_variables': self.get_modifiable_template_variables(),
                              'i_typehints': self.get_modifiable_template_variables_typehints()
                              })
+        templateVars.update(template_variables)
         outputText = template.render(templateVars)
         return outputText
 
@@ -216,12 +223,12 @@ class BaseVisualization:
             for line in output:
                 f.write(line)
 
-    def create_visualization_files(self):
+    def create_visualization_files(self, template_variables):
 
         rendered_data = {}
         rendered_data['config.json'] = self.create_config()
         html_template = self.load_html_template(self._html_template)
-        rendered_data['site.html'] = self.create_html(html_template)
+        rendered_data['site.html'] = self.create_html(html_template, template_variables)
         rendered_data['chart.js'] = self.__class__.get_js_code()
         rendered_data['data.json'] = json.dumps(self.generate_visualization_dataset(self._dataset))
         rendered_data[f'persisted.json'] = json.dumps(self.get_persisted_data())

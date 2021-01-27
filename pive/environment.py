@@ -28,6 +28,8 @@
  relies on a given input manager to read data before
  processing the visualizations. """
 import importlib
+import pkgutil
+
 from .visualization import defaults as default
 from .overpass import API_URL
 from .outputmanager import FolderOutputManager
@@ -135,6 +137,37 @@ class Environment(object):
                                                    package=default.module_path))
         return modules
 
+    @staticmethod
+    def import_visualisations(package, recursive=True):
+        """ Import all submodules of a module, recursively, including subpackages
+        https://gist.github.com/breeze1990/0253cb96ce04c00cb7a67feb2221e95e
+
+        :param recursive: bool
+        :param package: package (name or actual module)
+        :type package: str | module
+        :rtype: dict[str, types.ModuleType]
+        """
+        if isinstance(package, str):
+            package = importlib.import_module(package)
+        results = {}
+        for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+            full_name = package.__name__ + '.' + name
+            try:
+                module = importlib.import_module(full_name)
+                if hasattr(module, 'Chart'):
+                    results[full_name.split('.')[-1]] = module.Chart
+                if hasattr(module, 'Map'):
+                    results[full_name.split('.')[-1]] = module.Map
+            except:
+                pass
+            if recursive and is_pkg:
+                results.update(Environment.import_visualisations(full_name))
+        return results
+
+    @staticmethod
+    def import_all_visualisations():
+        return Environment.import_visualisations(default.module_path)
+
     # Choose a chart to start modifying or render it.
     def choose(self, chart):
         """Choose a chart from the suitable visualizations."""
@@ -196,11 +229,12 @@ class Environment(object):
         return chart_decision
 
 
-    def render(self, chart, **options):
+    def render(self, chart, template_variables={}, **options):
         """Creates all the output data and hands it to the output manager."""
-        self.__outputmanager.output(data=chart.create_visualization_files(), **options)
+        self.__outputmanager.output(data=chart.create_visualization_files(template_variables), **options)
 
-    def render_code(self, chart):
+    @staticmethod
+    def render_code(chart):
         """Renders the chart and returns the javascript
         code and its json dataset to include the
         visualization in another document."""
