@@ -59,6 +59,8 @@ manager = inputmanager.InputManager(mergedata=False)
 env = environment.Environment(inputmanager=manager)
 supported = env.load(input_path)
 for x in supported:
+    if x == 'scatterchart':
+        continue
     chart = env.choose(x)
     chart.set_width(900)
     chart.set_height(500)
@@ -71,6 +73,8 @@ manager = inputmanager.InputManager(mergedata=False)
 env = environment.Environment(inputmanager=manager)
 supported = env.load(input_path)
 for x in supported:
+    if x == 'scatterchart':
+        continue
     chart = env.choose(x)
     chart.set_width(900)
     chart.set_height(500)
@@ -83,6 +87,8 @@ manager = inputmanager.InputManager(mergedata=False)
 env = environment.Environment(inputmanager=manager)
 supported = env.load(input_path)
 for x in supported:
+    if x == 'scatterchart':
+        continue
     chart = env.choose(x)
     chart.set_width(900)
     chart.set_height(500)
