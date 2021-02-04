@@ -29,6 +29,11 @@ class Bubblechart {
 
 	constructor(config) {
 		this.config = config;
+		this.serialisable_elements = [
+			'width', 'height', 'padding', 'label_size', 'viewport', 'jumplength', 'xlabel', 'ylabel', 'datakeys',
+			'timeformat', 'iconwidth', 'iconheight', 'iconcolor', 'iconhighlight', 'iso', 'scales', 'colors',
+			'div_hook', 'circleopacity', 'highlightfactor', 'minradius', 'maxradius'
+		];
 		this.width = config.width;
 		this.height = config.height;
 		this.padding	= config.padding;
@@ -43,7 +48,7 @@ class Bubblechart {
 		this.iconheight = config.iconheight
 		this.iconcolor = config.iconcolor;
 		this.iconhighlight = config.iconhighlight;
-		this.url = config.dataset_url;
+		this.dataset_url = config.dataset_url;
 		this.iso = d3.utcFormat(config.iso);
 		this.scales = config.scales;
 		this.colors = config.colors;
@@ -55,8 +60,19 @@ class Bubblechart {
 		this.div_hook = config.div_hook;
 	}
 
+	get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
+
 	render() {
 		var root_div = document.getElementById(this.div_hook);
+		root_div.innerHTML = "";
+
 		const css_line = `#${this.div_hook} .line { stroke: ${this.config.line_stroke}; fill: none; stroke-width: 2.5px}\n`,
 			css_tooltip = `#${this.div_hook} .tooltip {color: white; line-height: 1; padding: 12px; font-weight: italic; font-family: arial; border-radius: 5px;}\n`,
 			css_axis_path = `#${this.div_hook} .axis path { fill: none; stroke: ${this.config.line_stroke}; shape-rendering: crispEdges;}\n`,
@@ -76,7 +92,7 @@ class Bubblechart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.url).then(function (data) {
+		d3.json(chart_object.dataset_url).then(function (data) {
 			//The complete dataset.
 			var dataset = data;
 			//The current offset starting at zero.

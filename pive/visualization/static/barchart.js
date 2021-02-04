@@ -29,10 +29,14 @@ class Barchart {
 
 	constructor(config) {
 		this.config = config
+		this.serialisable_elements = [
+			'width', 'height', 'padding', 'label_size', 'viewport', 'jumplength', 'xlabel', 'ylabel', 'datakeys',
+			'timeformat', 'iconwidth', 'iconheight', 'iconcolor', 'iconhighlight', 'verticalscale', 'colors', 'div_hook'
+		];
 		this.width = config.width;
 		this.height = config.height;
 		this.padding	= config.padding;
-		this.labelsize = config.label_size;
+		this.label_size = config.label_size;
 		this.viewport = config.viewport;
 		this.jumplength = config.jumplength;
 		this.xlabel = config.xlabel;
@@ -47,7 +51,7 @@ class Barchart {
 		this.barbreak = 0.2;
 		this.div_hook = config.div_hook;
 
-		this.url = config.dataset_url;
+		this.dataset_url = config.dataset_url;
 		this.threshold = config.threshold;
 		this.filter;
 
@@ -59,17 +63,27 @@ class Barchart {
 		this.tickrotation = -45;
 	}
 
+	get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
 
 	render() {
 		var root_div = document.getElementById(this.div_hook);
+		root_div.innerHTML = "";
+
 		const css_line = `#${this.div_hook} .line { stroke: ${this.config.line_stroke}; fill: none; stroke-width: 2.5px}\n`,
 			css_tooltip = `#${this.div_hook} .tooltip {color: white; line-height: 1; padding: 12px; font-weight: italic; font-family: arial; border-radius: 5px;}\n`,
 			css_axis_path = `#${this.div_hook} .axis path { fill: none; stroke: ${this.config.line_stroke}; shape-rendering: crispEdges;}\n`,
 			css_axis_line = `#${this.div_hook} .axis line { stroke: ${this.config.line_stroke}; shape-rendering: ${this.config.shape_rendering };}\n`,
 			css_path_area = `#${this.div_hook} .path area { fill: blue; }\n`,
 			css_axis_text = `#${this.div_hook} .axis text {font-family: sans-serif; font-size: ${this.config.font_size }px }\n`,
-			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
-			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
+			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
+			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
 			css_x_axis_line = `#${this.div_hook} .x.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n`,
 			css_y_axis_line = `#${this.div_hook} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}`;
 
@@ -81,7 +95,7 @@ class Barchart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(this.url).then(function (data) {
+		d3.json(this.dataset_url).then(function (data) {
 			//The complete dataset.
 			var dataset = data;
 			//The current offset starting at zero.
@@ -98,7 +112,7 @@ class Barchart {
 
 			var barScale = d3.scaleBand()
 				.domain(d3.range(viewdata.length))
-				.rangeRound([chart_object.padding + chart_object.iconwidth + chart_object.labelsize, chart_object.width - chart_object.padding - chart_object.iconwidth])
+				.rangeRound([chart_object.padding + chart_object.iconwidth + chart_object.label_size, chart_object.width - chart_object.padding - chart_object.iconwidth])
 				.padding(chart_object.barbreak);
 
 			barScale.domain(viewdata.map(function (d) {
@@ -114,27 +128,27 @@ class Barchart {
 				if (chart_object.verticalscale == 'linear') {
 					//Provide a linear scaling.
 					yScale = d3.scaleLinear()
-						.range([chart_object.padding + chart_object.labelsize, chart_object.height - ((2 * chart_object.padding) + chart_object.labelsize)])
+						.range([chart_object.padding + chart_object.label_size, chart_object.height - ((2 * chart_object.padding) + chart_object.label_size)])
 						.domain(vertical_extent);
 					yAxisScale = d3.scaleLinear()
-						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 						.domain(vertical_extent);
 
 				} else if (chart_object.verticalscale == 'log') {
 					if (vertical_extent[0] <= 0) {
 						yScale = d3.scaleLinear()
-							.range([chart_object.padding + chart_object.labelsize, chart_object.height - ((2 * chart_object.padding) + chart_object.labelsize)])
+							.range([chart_object.padding + chart_object.label_size, chart_object.height - ((2 * chart_object.padding) + chart_object.label_size)])
 							.domain(vertical_extent);
 						yAxisScale = d3.scaleLinear()
-							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 							.domain(vertical_extent);
 
 					} else {
 						yScale = d3.scaleLog()
-							.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+							.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 							.domain(vertical_extent);
 						yAxisScale = d3.scaleLog()
-							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 							.domain(vertical_extent);
 					}
 
@@ -148,11 +162,11 @@ class Barchart {
 					//Provide a power scaling.
 					yScale = d3.scalePow()
 						.exponent(exp)
-						.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+						.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 						.domain(vertical_extent);
 					yAxisScale = d3.scalePow()
 						.exponent(exp)
-						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 						.domain(vertical_extent);
 				}
 				;
@@ -217,7 +231,7 @@ class Barchart {
 						return barScale(d.label);
 					})
 					.attr("y", function (d) {
-						return (chart_object.height - chart_object.padding - chart_object.labelsize) - yScale(d.value);
+						return (chart_object.height - chart_object.padding - chart_object.label_size) - yScale(d.value);
 					})
 					.attr("height", function (d) {
 						return yScale(d.value);
@@ -238,7 +252,7 @@ class Barchart {
 
 			var xa = svg.append('g')
 				.attr('class', 'x axis')
-				.attr('transform', 'translate(0, ' + (chart_object.height - chart_object.padding - chart_object.labelsize) + ')')
+				.attr('transform', 'translate(0, ' + (chart_object.height - chart_object.padding - chart_object.label_size) + ')')
 				.data(viewdata)
 				.call(xaxis)
 				.selectAll("text")
@@ -251,7 +265,7 @@ class Barchart {
 
 			var ya = svg.append('g')
 				.attr('class', 'y axis')
-				.attr('transform', 'translate(' + (chart_object.padding + chart_object.labelsize + chart_object.iconwidth) + ', ' + (-chart_object.labelsize) + ')')
+				.attr('transform', 'translate(' + (chart_object.padding + chart_object.label_size + chart_object.iconwidth) + ', ' + (-chart_object.label_size) + ')')
 				.data(viewdata)
 				.call(yaxis);
 
@@ -260,7 +274,7 @@ class Barchart {
 				.attr("x", (chart_object.width / 2) + (chart_object.padding / 2))
 				.attr("y", chart_object.height)
 				.style("text-anchor", "middle")
-				.style("font-size", chart_object.labelsize)
+				.style("font-size", chart_object.label_size)
 				.text(chart_object.xlabel);
 
 			var left_label = svg.append("text")
@@ -270,7 +284,7 @@ class Barchart {
 				.attr("y", 0)
 				.attr("dy", "1em")
 				.style("text-anchor", "middle")
-				.style("font-size", chart_object.labelsize)
+				.style("font-size", chart_object.label_size)
 				.text(chart_object.ylabel);
 
 
@@ -283,7 +297,7 @@ class Barchart {
 
 				//Prepare the transformation.
 				var right_translation = 'translate(' + (chart_object.width - chart_object.iconwidth) + ',' + (vertical_center) + ')';
-				var left_translation = 'translate(' + (chart_object.iconwidth + 10 + chart_object.labelsize) + ',' + (vertical_center) + ')';
+				var left_translation = 'translate(' + (chart_object.iconwidth + 10 + chart_object.label_size) + ',' + (vertical_center) + ')';
 
 				//Append the right arrow button and apply its transformation.
 				buttons.append("path")

@@ -29,16 +29,24 @@ class POI {
 
     constructor(config) {
         this.config = config;
+
+        this.serialisable_elements = [
+			'width', 'height', 'scale_extent', 'zoom_threshold', 'div_hook_map',
+            'div_hook_legend', 'div_hook_tooltip', 'tooltip_div_border', 'map_fill', 'map_stroke', 'fill_opacity', 'stroke_opacity',
+            'mouseover_opacity', 'mouseout_opacity', 'circle_fill', 'circle_stroke', 'circle_radius', 'circle_stroke_width',
+            'max_poi', 'file_extension','headers', 'colors'
+		];
         this.width = config.width;
         this.height = config.height;
-        this.filename = config.dataset_url;
-        this.map_shape = config.map_shape_url;
+        this.dataset_url = config.dataset_url;
+        this.map_shape_url = config.map_shape_url;
         this.city = config.city;
-        this.scaleExtent = config.scale_extent;
+        this.scale_extent = config.scale_extent;
         this.transExtent = [[0,0],[config.width,config.height]];
         this.zoom_threshold = config.zoom_threshold;
         this.div_hook_map = config.div_hook_map;
         this.div_hook_tooltip = config.div_hook_tooltip;
+        this.div_hook_legend = config.div_hook_legend;
         this.tooltip_div_border = config.tooltip_div_border;
         this.map_fill = config.map_fill;
         this.map_stroke = config.map_stroke;
@@ -63,13 +71,27 @@ class POI {
         this.zoom = null;
     }
 
+    get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
     render() {
 
         this.hash_div_hook_map = '#'.concat(this.div_hook_map);
         this.hash_div_hook_legend = '#'.concat(this.div_hook_legend);
 
         this.root_div_hook_map = document.getElementById(this.div_hook_map);
+        this.root_div_hook_map.innerHTML = "";
         this.root_div_hook_tooltip = document.getElementById(this.div_hook_tooltip);
+        this.root_div_hook_tooltip.innerHTML = "";
+        this.root_div_hook_tooltip.style.border = "none"
+
+        //FIXME: Clear all 3 div hooks before rendering
+
         const css_pan_zoom_rect = `#${this.div_hook_map} .pan rect, .zoom rect { fill: black; opacity: 0.2; }\n`,
             css_pan_zoom_text = `#${this.div_hook_map} .pan text, .zoom text { fill: black; font-size: 18px; text-anchor: middle; }\n`,
             css_pan_zoom_hover = `#${this.div_hook_map} .pan:hover rect, .pan:hover text, .zoom:hover rect, .zoom:hover text { fill:blue; }\n`,
@@ -89,7 +111,7 @@ class POI {
         configMap();
 
 // Determine and execute the method for visualization
-        visualize(chart_object.filename, chart_object.map_shape);
+        visualize(chart_object.dataset_url, chart_object.map_shape_url);
 
 
 // Set up the map
@@ -111,7 +133,7 @@ class POI {
 
             // Then define the zoom behavior
             chart_object.zoom = d3.zoom()
-                .scaleExtent(chart_object.scaleExtent)
+                .scaleExtent(chart_object.scale_extent)
                 .translateExtent(chart_object.transExtent)
                 .on("zoom", function (event) {
                     chart_object.map.selectAll("path")

@@ -28,11 +28,15 @@
 class Hiveplot {
 	constructor(config) {
 		this.config = config;
+		this.serialisable_elements = [
+			'width', 'height', 'label_size', 'div_hook', 'colors', 'tickrotation', 'line_stroke', 'shape_rendering',
+			'font_size', 'axis_label_size'
+		];
 		this.width = config.width;
 		this.height= config.height;
-		this.labelsize = config.label_size;
+		this.label_size = config.label_size;
 		this.div_hook= config.div_hook;
-		this.url= config.dataset_url;
+		this.dataset_url= config.dataset_url;
 		this.colors= config.colors;
 		this.tickrotation= config.tickrotation;
 		this.line_stroke= config.line_stroke;
@@ -40,16 +44,28 @@ class Hiveplot {
 		this.font_size= config.font_size;
 		this.axis_label_size= config.axis_label_size;
 	}
+
+	get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
+
 	render() {
 		var root_div = document.getElementById(this.div_hook);
+		root_div.innerHTML = "";
+		
 		const css_line = `#${this.div_hook} .line { stroke: ${this.config.line_stroke}; fill: none; stroke-width: 2.5px}\n`,
 			css_tooltip = `#${this.div_hook} .tooltip {color: white; line-height: 1; padding: 12px; font-weight: italic; font-family: arial; border-radius: 5px;}\n`,
 			css_axis_path = `#${this.div_hook} .axis path { fill: none; stroke: ${this.config.line_stroke}; shape-rendering: crispEdges;}\n`,
 			css_axis_line = `#${this.div_hook} .axis line { stroke: ${this.config.line_stroke}; shape-rendering: ${this.config.shape_rendering };}\n`,
 			css_path_area = `#${this.div_hook} .path area { fill: blue; }\n`,
 			css_axis_text = `#${this.div_hook} .axis text {font-family: sans-serif; font-size: ${this.config.font_size }px }\n`,
-			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
-			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
+			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
+			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
 			css_x_axis_line = `#${this.div_hook} .x.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n`,
 			css_y_axis_line = `#${this.div_hook} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}`,
 			css_axis = '.axis { stroke: #000; stroke-width:1.5px; }\n',
@@ -69,7 +85,7 @@ class Hiveplot {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.url).then(function (data) {
+		d3.json(chart_object.dataset_url).then(function (data) {
 
 			var innerRadius = 40,
 				outerRadius = 240,

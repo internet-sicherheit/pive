@@ -28,18 +28,23 @@
 class Chordchart {
 	constructor(config) {
 		this.config = config;
+		this.serialisable_elements = [
+			'width', 'height', 'padding', 'textpadding', 'elementfontsize', 'tickfontsize', 'ticksteps', 'tickprefix', 'div_hook',
+			'timeformat', 'iconwidth', 'iconheight', 'iconcolor', 'iconhighlight', 'iso', 'scales', 'colors',
+			'label_size'
+		];
 		this.width = config.width;
 		this.height = config.height;
 		this.padding	= config.padding;
 		this.textpadding = config.textpadding;
-		this.elementFontSize = config.elementfontsizse;
-		this.tickFontSize = config.tickfontsize;
-		this.tickSteps = config.ticksteps;
-		this.prefix = config.tickprefix;
+		this.elementfontsize = config.elementfontsize;
+		this.tickfontsize = config.tickfontsize;
+		this.ticksteps = config.ticksteps;
+		this.tickprefix = config.tickprefix;
 		this.url = config.dataset_url;
 		this.div_hook = config.div_hook;
-		this.fill = config.colors;
-		this.labelsize = config.label_size;
+		this.colors = config.colors;
+		this.label_size = config.label_size;
 
 		this.innerRadius = Math.min(this.width, this.height) * .32;
 		this.outerRadius = this.innerRadius * 1.2;
@@ -47,16 +52,27 @@ class Chordchart {
 		this.transistionSpeed = 500;
 	}
 
+	get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
+
 	render() {
 		var root_div = document.getElementById(this.div_hook);
+		root_div.innerHTML = "";
+		
 		const css_line = `#${this.div_hook} .line { stroke: ${this.config.line_stroke}; fill: none; stroke-width: 2.5px}\n`,
 			css_tooltip = `#${this.div_hook} .tooltip {color: white; line-height: 1; padding: 12px; font-weight: italic; font-family: arial; border-radius: 5px;}\n`,
 			css_axis_path = `#${this.div_hook} .axis path { fill: none; stroke: ${this.config.line_stroke}; shape-rendering: crispEdges;}\n`,
 			css_axis_line = `#${this.div_hook} .axis line { stroke: ${this.config.line_stroke}; shape-rendering: ${this.config.shape_rendering };}\n`,
 			css_path_area = `#${this.div_hook} .path area { fill: blue; }\n`,
 			css_axis_text = `#${this.div_hook} .axis text {font-family: sans-serif; font-size: ${this.config.font_size }px }\n`,
-			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
-			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
+			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
+			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
 			css_x_axis_line = `#${this.div_hook} .x.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n`,
 			css_y_axis_line = `#${this.div_hook} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}`;
 
@@ -82,12 +98,12 @@ class Chordchart {
 				var colorindex = index;
 				var color;
 
-				while (colorindex > chart_object.fill.length - 1) {
-					colorindex = colorindex - chart_object.fill.length;
+				while (colorindex > chart_object.colors.length - 1) {
+					colorindex = colorindex - chart_object.colors.length;
 
 				}
 
-				color = chart_object.fill[colorindex];
+				color = chart_object.colors[colorindex];
 				return color;
 			}
 
@@ -133,7 +149,7 @@ class Chordchart {
 						d.angle = (d.startAngle + d.endAngle) / 2;
 					})
 					.attr("dy", ".35em")
-					.attr("font-size", chart_object.elementFontSize)
+					.attr("font-size", chart_object.elementfontsize)
 					.attr("font-family", chart_object.labelFont)
 					.attr("transform", function (d) {
 						return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
@@ -192,7 +208,7 @@ class Chordchart {
 				ticks.append("text")
 					.attr("x", 8)
 					.attr("dy", ".35em")
-					.attr("font-size", chart_object.tickFontSize)
+					.attr("font-size", chart_object.tickfontsize)
 					.attr("font-family", chart_object.labelFont)
 					.attr("transform", function (d) {
 						return d.angle > Math.PI ? "rotate(180)translate(-16)" : null;
@@ -319,10 +335,10 @@ class Chordchart {
 			function chordTicks(d) {
 				var k = (d.endAngle - d.startAngle) / d.value;
 
-				return d3.range(0, d.value, chart_object.tickSteps).map(function (v, i) {
+				return d3.range(0, d.value, chart_object.ticksteps).map(function (v, i) {
 					return {
 						angle: v * k + d.startAngle,
-						label: i % 5 ? null : v / chart_object.tickSteps + chart_object.prefix
+						label: i % 5 ? null : v / chart_object.ticksteps + chart_object.tickprefix
 					};
 				});
 			};

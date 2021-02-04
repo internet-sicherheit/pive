@@ -29,10 +29,15 @@ class Linechart {
 
 	constructor(config) {
 		this.config = config;
+		this.serialisable_elements = [
+			'width', 'height', 'padding', 'label_size', 'viewport', 'jumplength', 'xlabel', 'ylabel', 'datakeys',
+			'timeformat', 'iconwidth', 'iconheight', 'iconcolor', 'iconhighlight', 'interpolation', 'iso', 'scales', 'colors',
+			'div_hook', 'circleopacity', 'highlightfactor', 'minradius', 'maxradius'
+		];
 		this.width = config.width;
 		this.height = config.height;
 		this.padding	= config.padding;
-		this.labelsize = config.label_size;
+		this.label_size = config.label_size;
 		this.viewport = config.viewport;
 		this.jumplength = config.jumplength;
 		this.xlabel = config.xlabel;
@@ -44,7 +49,7 @@ class Linechart {
 		this.iconcolor = config.iconcolor;
 		this.iconhighlight = config.iconhighlight;
 		this.interpolation = config.interpolation;
-		this.url = config.dataset_url;
+		this.dataset_url = config.dataset_url;
 		this.iso = d3.utcFormat(config.iso);
 		this.scales = config.scales;
 		this.colors = config.colors;
@@ -53,16 +58,27 @@ class Linechart {
 		this.highlightradius = 8;
 	}
 
+	get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
+
 	render() {
 		var root_div = document.getElementById(this.div_hook);
+		root_div.innerHTML = "";
+
 		const css_line = `#${this.div_hook} .line { stroke: ${this.config.line_stroke}; fill: none; stroke-width: 2.5px}\n`,
 			css_tooltip = `#${this.div_hook} .tooltip {color: white; line-height: 1; padding: 12px; font-weight: italic; font-family: arial; border-radius: 5px;}\n`,
 			css_axis_path = `#${this.div_hook} .axis path { fill: none; stroke: ${this.config.line_stroke}; shape-rendering: crispEdges;}\n`,
 			css_axis_line = `#${this.div_hook} .axis line { stroke: ${this.config.line_stroke}; shape-rendering: ${this.config.shape_rendering };}\n`,
 			css_path_area = `#${this.div_hook} .path area { fill: blue; }\n`,
 			css_axis_text = `#${this.div_hook} .axis text {font-family: sans-serif; font-size: ${this.config.font_size }px }\n`,
-			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
-			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.labelsize }px }\n`,
+			css_xlabel_text = `#${this.div_hook} .xlabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
+			css_ylabel_text = `#${this.div_hook} .ylabel {font-family: helvetica; font-size: ${this.label_size }px }\n`,
 			css_x_axis_line = `#${this.div_hook} .x.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}\n`,
 			css_y_axis_line = `#${this.div_hook} .y.axis line { stroke: grey; stroke-opacity: 0.25; stroke-width: 2.5px}`;
 
@@ -74,7 +90,7 @@ class Linechart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.url).then(function (data) {
+		d3.json(chart_object.dataset_url).then(function (data) {
 
 			var dataset = data;
 
@@ -126,7 +142,7 @@ class Linechart {
 				//###################################
 				//######## scale the x-axis. ########
 				//###################################
-				var xrange = [chart_object.padding + chart_object.labelsize + chart_object.iconwidth, chart_object.width - chart_object.padding];
+				var xrange = [chart_object.padding + chart_object.label_size + chart_object.iconwidth, chart_object.width - chart_object.padding];
 
 				if (chart_object.scales[0] == 'linear') {
 					//Provide a linear scaling.
@@ -177,26 +193,26 @@ class Linechart {
 				if (chart_object.scales[1] == 'linear') {
 					//Provide a linear scaling.
 					yScale = d3.scaleLinear()
-						.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+						.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 						.domain(y_extent);
 					yAxisScale = d3.scaleLinear()
-						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 						.domain(y_extent);
 
 				} else if (chart_object.scales[1] == 'log') {
 					if (y_extent[0] <= 0) {
 						yScale = d3.scaleLinear()
-							.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+							.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 							.domain(y_extent);
 						yAxisScale = d3.scaleLinear()
-							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 							.domain(y_extent);
 					} else {
 						yScale = d3.scaleLog()
-							.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+							.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 							.domain(y_extent);
 						yAxisScale = d3.scaleLog()
-							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+							.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 							.domain(y_extent);
 					}
 
@@ -210,11 +226,11 @@ class Linechart {
 					//Provide a power scaling.
 					yScale = d3.scalePow()
 						.exponent(exp)
-						.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+						.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 						.domain(y_extent);
 					yAxisScale = d3.scalePow()
 						.exponent(exp)
-						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 						.domain(y_extent);
 
 				} else if (chart_object.scales[1] == 'date') {
@@ -222,10 +238,10 @@ class Linechart {
 					var minDate = getDateFromTime(y_extent[0]);
 					var maxDate = getDateFromTime(y_extent[1]);
 					yScale = d3.time.scale()
-						.range([chart_object.padding + chart_object.labelsize, chart_object.height - chart_object.padding])
+						.range([chart_object.padding + chart_object.label_size, chart_object.height - chart_object.padding])
 						.domain([minDate, maxDate]);
 					yAxisScale = d3.time.scale()
-						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.labelsize])
+						.range([chart_object.height - chart_object.padding, chart_object.padding + chart_object.label_size])
 						.domain([minDate, maxDate]);
 				}
 				;
@@ -247,11 +263,11 @@ class Linechart {
 				if (chart_object.scales[0] == 'date') {
 					xaxis.ticks(d3.time.milliseconds, 10)
 						.tickFormat(d3.time.format(chart_object.timeformat))
-						.tickSize(-(chart_object.height - chart_object.padding * 2 - chart_object.labelsize), 0, 0)
+						.tickSize(-(chart_object.height - chart_object.padding * 2 - chart_object.label_size), 0, 0)
 						.scale(xScale);
 				} else {
 
-					xaxis.tickSize(-(chart_object.height - chart_object.padding * 2 - chart_object.labelsize), 0, 0)
+					xaxis.tickSize(-(chart_object.height - chart_object.padding * 2 - chart_object.label_size), 0, 0)
 						.scale(xScale);
 				}
 				;
@@ -266,7 +282,7 @@ class Linechart {
 
 			var xa = svg.append('g')
 				.attr('class', 'x axis')
-				.attr('transform', 'translate(0, ' + (chart_object.height - chart_object.padding - chart_object.labelsize) + ')')
+				.attr('transform', 'translate(0, ' + (chart_object.height - chart_object.padding - chart_object.label_size) + ')')
 				.data(viewdata)
 				.call(xaxis)
 				.selectAll("text")
@@ -279,7 +295,7 @@ class Linechart {
 
 			var ya = svg.append('g')
 				.attr('class', 'y axis')
-				.attr('transform', 'translate(' + (chart_object.padding + chart_object.labelsize + chart_object.iconwidth) + ', ' + (-chart_object.labelsize) + ')')
+				.attr('transform', 'translate(' + (chart_object.padding + chart_object.label_size + chart_object.iconwidth) + ', ' + (-chart_object.label_size) + ')')
 				.data(viewdata)
 				.call(yaxis);
 
@@ -308,7 +324,7 @@ class Linechart {
 
 				//Prepare the transformation.
 				var right_translation = 'translate(' + (chart_object.width - chart_object.iconwidth) + ',' + (vertical_center) + ')';
-				var left_translation = 'translate(' + (chart_object.iconwidth + 10 + chart_object.labelsize) + ',' + (vertical_center) + ')';
+				var left_translation = 'translate(' + (chart_object.iconwidth + 10 + chart_object.label_size) + ',' + (vertical_center) + ')';
 
 				//Append the right arrow button and apply its transformation.
 				buttons.append("path")

@@ -27,12 +27,19 @@
 
 class Heatmap {
     constructor(config) {
+
+        this.serialisable_elements = [
+			'width', 'height', 'scale_extent', 'zoom_threshold', 'div_hook_map',
+            'div_hook_legend', 'div_hook_tooltip', 'tooltip_div_border', 'map_stroke', 'fill_opacity', 'stroke_opacity',
+            'mouseover_opacity', 'mouseout_opacity', 'legendwidth', 'legendheight', 'legendmargin', 'legendticksize',
+            'legendborder', 'headers', 'colors'
+		];
         this.width = config.width;
         this.height = config.height;
-        this.filename = config.dataset_url;
-        this.map_shape = config.map_shape_url;
-        this.city = config.city;
-        this.scaleExtent = config.scale_extent;
+        this.dataset_url = config.dataset_url;
+        this.map_shape_url = config.map_shape_url;
+        this.city = config.city;  //Should this be serialisable too?
+        this.scale_extent = config.scale_extent;
         this.transExtent = [[0, 0], [config.width, config.height]]
         this.zoom_threshold = config.zoom_threshold;
         this.div_hook_map = config.div_hook_map;
@@ -53,7 +60,7 @@ class Heatmap {
         this.fontsize = 12;
         this.moveAmount = 20;
 
-        this.color = d3.scaleQuantize().range(config.colors);
+        this.colors = d3.scaleQuantize().range(config.colors);
 
         this.svg = null;
         this.map = null;
@@ -62,13 +69,26 @@ class Heatmap {
         this.zoom = null;
     }
 
+    get_current_config() {
+		let config = {};
+		for (let element_name of this.serialisable_elements) {
+			config[element_name] = this[element_name];
+		}
+		return config;
+	}
+
     render() {
 
         this.hash_div_hook_map = '#'.concat(this.div_hook_map);
         this.hash_div_hook_legend = '#'.concat(this.div_hook_legend);
 
         this.root_div_hook_map = document.getElementById(this.div_hook_map);
+        this.root_div_hook_map.innerHTML = "";
         this.root_div_hook_tooltip = document.getElementById(this.div_hook_tooltip);
+        this.root_div_hook_tooltip.innerHTML = "";
+        this.root_div_hook_tooltip.style.border = "none"
+
+
         const css_pan_zoom_rect = `#${this.div_hook_map} .pan rect, .zoom rect { fill: black; opacity: 0.2; }\n`,
             css_pan_zoom_text = `#${this.div_hook_map} .pan text, .zoom text { fill: black; font-size: 18px; text-anchor: middle; }\n`,
             css_pan_zoom_hover = `#${this.div_hook_map} .pan:hover rect, .pan:hover text, .zoom:hover rect, .zoom:hover text { fill:blue; }\n`,
@@ -85,7 +105,7 @@ class Heatmap {
         this.configMap();
 
         // Determine and execute the method for visualization
-        this.visualize(this.filename, this.map_shape);
+        this.visualize(this.dataset_url, this.map_shape_url);
 
     }
 
@@ -111,7 +131,7 @@ class Heatmap {
 
         // Then define the zoom behavior
         chart_object.zoom = d3.zoom()
-            .scaleExtent(chart_object.scaleExtent)
+            .scaleExtent(chart_object.scale_extent)
             .duration(10)
             .translateExtent(chart_object.transExtent)
             .on("zoom", function (event) {
@@ -163,7 +183,7 @@ class Heatmap {
             });
 
             // Set input domain for color scale
-            chart_object.color.domain([min, max]);
+            chart_object.colors.domain([min, max]);
             // color.domain(d3.extent(data));
             let json = await d3.json(json_file)
 
@@ -208,7 +228,7 @@ class Heatmap {
                     var value = d.properties.value;
 
                     if (value) {
-                        return chart_object.color(value);
+                        return chart_object.colors(value);
                     } else {
                         return "#ccc";
                     }
@@ -541,7 +561,7 @@ class Heatmap {
         // Set range and domain for the linear color scale
         var legendscale = d3.scaleLinear()
             .range([1, chart_object.legendheight - chart_object.legendmargin.top - chart_object.legendmargin.bottom])
-            .domain(chart_object.color.domain());
+            .domain(chart_object.colors.domain());
 
         // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
         // Create ImageData object with specified dimensions
@@ -549,7 +569,7 @@ class Heatmap {
         // Determine the color for each pixel within the height of the legend
         d3.range(chart_object.legendheight).forEach(function (i) {
             // Based on the number of each pixel within the range give the RGB color for the corresponding value of the domain
-            var c = d3.rgb(chart_object.color(legendscale.invert(i)));
+            var c = d3.rgb(chart_object.colors(legendscale.invert(i)));
             // Store four values for each pixel in the data array of the image
             image.data[4 * i] = c.r;
             image.data[4 * i + 1] = c.g;
@@ -563,13 +583,13 @@ class Heatmap {
         // Store tick values for the axis of the legend in array
         var tickVal = [];
         // Determine min and max of domain and calculate values where the color changes
-        var tickMin = chart_object.color.domain()[0];
-        var tickMax = chart_object.color.domain()[1];
-        var tickIncrement = (tickMax - tickMin) / chart_object.color.range().length;
+        var tickMin = chart_object.colors.domain()[0];
+        var tickMax = chart_object.colors.domain()[1];
+        var tickIncrement = (tickMax - tickMin) / chart_object.colors.range().length;
         // Start with minimum value
         var n = tickMin;
         // Ticks for min and max values of the domain and one tick for each color change in the legend
-        for (let i = 0; i <= chart_object.color.range().length; i++) {
+        for (let i = 0; i <= chart_object.colors.range().length; i++) {
             // Push value to array
             tickVal.push(parseInt(n));
             // Increase by increment value
