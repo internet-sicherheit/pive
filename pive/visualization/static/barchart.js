@@ -27,7 +27,7 @@
 
 class Barchart {
 
-	constructor(config) {
+	constructor(config, init) {
 		this.config = config
 		this.serialisable_elements = [
 			'width', 'height', 'padding', 'label_size', 'viewport', 'jumplength', 'xlabel', 'ylabel', 'datakeys',
@@ -54,6 +54,8 @@ class Barchart {
 		this.dataset_url = config.dataset_url;
 		this.threshold = config.threshold;
 		this.filter;
+
+		this.init = init;
 
 		if ((this.width / this.viewport) < this.threshold){
 			this.filter = parseInt(this.threshold * (this.viewport / this.width));
@@ -95,7 +97,7 @@ class Barchart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(this.dataset_url).then(function (data) {
+		d3.json(this.dataset_url, this.init).then(function (data) {
 			//The complete dataset.
 			var dataset = data;
 			//The current offset starting at zero.

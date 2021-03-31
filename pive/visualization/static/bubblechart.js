@@ -27,7 +27,7 @@
 
 class Bubblechart {
 
-	constructor(config) {
+	constructor(config, init) {
 		this.config = config;
 		this.serialisable_elements = [
 			'width', 'height', 'padding', 'label_size', 'viewport', 'jumplength', 'xlabel', 'ylabel', 'datakeys',
@@ -58,6 +58,8 @@ class Bubblechart {
 		this.minradius = config.minradius;
 		this.maxradius = config.maxradius;
 		this.div_hook = config.div_hook;
+
+		this.init = init;
 	}
 
 	get_current_config() {
@@ -92,7 +94,7 @@ class Bubblechart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.dataset_url).then(function (data) {
+		d3.json(chart_object.dataset_url, this.init).then(function (data) {
 			//The complete dataset.
 			var dataset = data;
 			//The current offset starting at zero.

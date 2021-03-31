@@ -27,7 +27,7 @@
 
 class Linechart {
 
-	constructor(config) {
+	constructor(config, init) {
 		this.config = config;
 		this.serialisable_elements = [
 			'width', 'height', 'padding', 'label_size', 'viewport', 'jumplength', 'xlabel', 'ylabel', 'datakeys',
@@ -56,6 +56,8 @@ class Linechart {
 		this.div_hook = config.div_hook;
 		this.tickrotation = -45;
 		this.highlightradius = 8;
+
+		this.init = itit;
 	}
 
 	get_current_config() {
@@ -90,7 +92,7 @@ class Linechart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.dataset_url).then(function (data) {
+		d3.json(chart_object.dataset_url, chart_object.init).then(function (data) {
 
 			var dataset = data;
 

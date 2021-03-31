@@ -27,7 +27,7 @@
 
 class Polygon {
 
-    constructor(config) {
+    constructor(config, init) {
         this.config = config;
 
         this.serialisable_elements = [
@@ -55,6 +55,8 @@ class Polygon {
         this.outer_map_fill = config.outer_map_fill;
         this.fontsize = 12;
         this.moveAmount = 20;
+
+        this.init = init;
     }
 
     get_current_config() {
@@ -157,7 +159,7 @@ class Polygon {
                 .attr("id", "inner_map")
 
             // Load in GeoJSON data
-            d3.json(json_file).then(function (json) {
+            d3.json(json_file, chart_object.init).then(function (json) {
 
                 for (let feature of json.features) {
                     d3ify_polygon(feature)
@@ -193,7 +195,7 @@ class Polygon {
                         return d.properties.id;
                     });
             }).then(function () {
-                return d3.json(inner_shape)
+                return d3.json(inner_shape, chart_object.init)
             }).then(function (inner_json) {
 
                 for (let feature of inner_json) {

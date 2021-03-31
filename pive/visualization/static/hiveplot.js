@@ -26,7 +26,7 @@
 */
 
 class Hiveplot {
-	constructor(config) {
+	constructor(config, init) {
 		this.config = config;
 		this.serialisable_elements = [
 			'width', 'height', 'label_size', 'div_hook', 'colors', 'tickrotation', 'line_stroke', 'shape_rendering',
@@ -43,6 +43,8 @@ class Hiveplot {
 		this.shape_rendering= config.shape_rendering;
 		this.font_size= config.font_size;
 		this.axis_label_size= config.axis_label_size;
+
+		this.init = init;
 	}
 
 	get_current_config() {
@@ -85,7 +87,7 @@ class Hiveplot {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.dataset_url).then(function (data) {
+		d3.json(chart_object.dataset_url, chart_object.init).then(function (data) {
 
 			var innerRadius = 40,
 				outerRadius = 240,

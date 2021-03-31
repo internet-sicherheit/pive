@@ -26,7 +26,7 @@
 */
 
 class Heatmap {
-    constructor(config) {
+    constructor(config, init) {
 
         this.serialisable_elements = [
 			'width', 'height', 'scale_extent', 'zoom_threshold', 'div_hook_map',
@@ -67,6 +67,8 @@ class Heatmap {
         this.path = null;
         this.projection = null;
         this.zoom = null;
+
+        this.init = init;
     }
 
     get_current_config() {
@@ -169,7 +171,7 @@ class Heatmap {
     vizHeatmap(filename, json_file) {
         const chart_object = this;
         // Load in JSON data
-        d3.json(filename).then(async function (data) {
+        d3.json(filename, chart_object.init).then(async function (data) {
             // Read header from CSV
             var header = chart_object.getHeader();
 
@@ -185,7 +187,7 @@ class Heatmap {
             // Set input domain for color scale
             chart_object.colors.domain([min, max]);
             // color.domain(d3.extent(data));
-            let json = await d3.json(json_file)
+            let json = await d3.json(json_file, chart_object.init)
 
             for (let feature of json.features) {
                 Heatmap.d3ify_polygon(feature)

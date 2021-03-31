@@ -27,7 +27,7 @@
 
 class POI {
 
-    constructor(config) {
+    constructor(config, init) {
         this.config = config;
 
         this.serialisable_elements = [
@@ -69,6 +69,8 @@ class POI {
         this.path = null;
         this.projection = null;
         this.zoom = null;
+
+        this.init = init;
     }
 
     get_current_config() {
@@ -175,7 +177,8 @@ class POI {
 // Parameters: Selected file and GeoJSON file
         function vizPoi(filename, json_file) {
             // Load in GeoJSON data
-            d3.json(json_file).then(function (json) {
+            const chart_object = this;
+            d3.json(json_file, chart_object.init).then(function (json) {
 
                 for (let feature of json.features) {
                     d3ify_polygon(feature)
@@ -211,7 +214,7 @@ class POI {
                         return d.properties.id;
                     })
             }).then(function () {
-                return d3.json(filename)
+                return d3.json(filename, chart_object.init)
             }).then(function (data) {
                 // Store points of interest
                 var poi = [];

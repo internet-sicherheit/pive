@@ -26,7 +26,7 @@
 */
 
 class Chordchart {
-	constructor(config) {
+	constructor(config, init) {
 		this.config = config;
 		this.serialisable_elements = [
 			'width', 'height', 'padding', 'textpadding', 'elementfontsize', 'tickfontsize', 'ticksteps', 'tickprefix', 'div_hook',
@@ -50,6 +50,8 @@ class Chordchart {
 		this.outerRadius = this.innerRadius * 1.2;
 		this.labelFont = "Helvetica";
 		this.transistionSpeed = 500;
+
+		this.init = init;
 	}
 
 	get_current_config() {
@@ -84,7 +86,7 @@ class Chordchart {
 		style.appendChild(document.createTextNode(css));
 		root_div.appendChild(style);
 		const chart_object = this;
-		d3.json(chart_object.url).then(function (data) {
+		d3.json(chart_object.url, chart_object.init).then(function (data) {
 			var svg = d3.select('#'.concat(chart_object.div_hook)).append("svg")
 			.attr("width", chart_object.width)
 			.attr("height", chart_object.height)
