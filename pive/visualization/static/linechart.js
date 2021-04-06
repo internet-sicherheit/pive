@@ -57,7 +57,7 @@ class Linechart {
 		this.tickrotation = -45;
 		this.highlightradius = 8;
 
-		this.init = itit;
+		this.init = init;
 	}
 
 	get_current_config() {
