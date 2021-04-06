@@ -349,3 +349,5 @@ class Chordchart {
 
 	}
 }
+
+pive.addChartVersion("chordchart", "0.3.4", Chordchart);

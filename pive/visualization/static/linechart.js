@@ -611,3 +611,5 @@ class Linechart {
 
 	}
 }
+
+pive.addChartVersion("linechart", "0.3.4", Linechart);

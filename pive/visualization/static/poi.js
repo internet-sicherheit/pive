@@ -573,3 +573,5 @@ class POI {
 
     }
 }
+
+pive.addChartVersion("poi", "0.3.4", POI);

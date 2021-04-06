@@ -25,6 +25,7 @@
 
 */
 
+
 class Barchart {
 
 	constructor(config, init) {
@@ -450,3 +451,5 @@ class Barchart {
 
 	}
 }
+
+pive.addChartVersion("barchart", "0.3.4", Barchart);

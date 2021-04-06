@@ -620,3 +620,5 @@ class Bubblechart {
 		});
 	}
 }
+
+pive.addChartVersion("bubblechart", "0.3.4", Bubblechart);

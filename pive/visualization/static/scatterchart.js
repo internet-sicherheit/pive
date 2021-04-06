@@ -579,3 +579,5 @@ class Scatterchart {
 		});
 	}
 }
+
+pive.addChartVersion("scatterchart", "0.3.4", Scatterchart);

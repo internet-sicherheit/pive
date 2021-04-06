@@ -304,3 +304,5 @@ class Hiveplot {
 
 	}
 }
+
+pive.addChartVersion("hiveplot", "0.3.4", Hiveplot);

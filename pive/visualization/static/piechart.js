@@ -174,3 +174,5 @@ class Piechart {
 		});
 	}
 }
+
+pive.addChartVersion("piechart", "0.3.4", Piechart);

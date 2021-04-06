@@ -671,3 +671,5 @@ class Heatmap {
     }
 
 }
+
+pive.addChartVersion("heatmap", "0.3.4", Heatmap);
