@@ -57,6 +57,7 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
 
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Scatterchart"
 
         # Visualization properties.
         self._width = width
@@ -89,6 +90,10 @@ class Chart(bv.BaseVisualization, csv.CustomScalesVisualization, vv.ViewportVisu
         self._shape_rendering = default.shape_rendering
         self._line_stroke = default.line_stroke
         self._font_size = default.font_size
+
+    @classmethod
+    def get_chart_type(cls):
+        return 'scatterchart'
 
     def getViewport(self):
         return self._viewport

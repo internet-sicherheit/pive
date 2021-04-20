@@ -43,23 +43,39 @@ class BaseVisualization:
         self._html_template = Path(__file__).resolve().parent.joinpath(default.template_path, "html.jinja")
         self._template_name = ''
         self._dataset_url = ''
-        self.dataset = []
+        self._dataset = []
         self._title = ''
         self._colors = []
+        self._config_url = None
+        # Protected members that should not end up in the config file
+        self._config_blacklist = ['_config_blacklist', '_template_url', '_static_url', '_dataset']
 
         self._shape_rendering = default.shape_rendering
         self._line_stroke = default.line_stroke
         self._font_size = default.font_size
         self._label_size = default.label_size
+        self._padding = default.padding
+
+    @classmethod
+    @abstractmethod
+    def get_chart_type(cls):
+        raise NotImplementedError()
 
     def set_div_hook(self, div_hook):
         assert isinstance(div_hook, str)
         self._div_hook = div_hook
 
-    def get_js_code(self):
-        js_template = self.load_js_template(Path(self._template_url).joinpath('%s.jinja' % self._template_name))
-        js = self.create_js(js_template, self._dataset_url)
-        return js
+    @classmethod
+    def get_js_code(cls, version=None):
+        #TODO: Make path to static files variable
+        if version is None:
+            version = cls.get_version()
+        with open(Path(__file__).resolve().parent.joinpath(default.static_path).joinpath('%s.js' % cls.get_chart_type()), mode="r") as js_file:
+            return  js_file.read()
+
+    @classmethod
+    def get_version(cls):
+        return default.p_version
 
     def get_json_dataset(self):
         return self.generate_visualization_dataset(self._dataset)
@@ -84,6 +100,15 @@ class BaseVisualization:
     def set_chart_colors(self, colors):
         """Basic Method."""
         self._colors = colors
+
+    def get_persisted_data(self):
+        return {
+            'dataset': self._dataset,
+            'chart_name': self._template_name
+        }
+
+    def load_persisted_data(self, data):
+        pass
 
     @abstractmethod
     def generate_visualization_dataset(self, dataset):
@@ -110,6 +135,12 @@ class BaseVisualization:
                 "t_label_size": self._label_size,
                 "t_padding": self._padding
                 }
+
+    def create_config(self):
+        config = {key[1:]: self.__dict__[key] for key in self.__dict__.keys() if key.startswith("_") and not key in self._config_blacklist}
+        config.update(self.get_modifiable_template_variables())
+        return json.dumps(config, default=lambda o: str(o))
+
 
     def get_modifiable_template_variables_typehints(self):
         """Returns a dictionary of typehints for variables that are modifiable by the client.
@@ -161,13 +192,17 @@ class BaseVisualization:
             }
         }
 
-    def create_html(self, template):
+    def create_html(self, template, template_variables):
+        if not self._config_url:
+            self._config_url = f"{self._template_name}_config.json"
+
         templateVars = { "t" + key:self.__dict__[key] for key in self.__dict__.keys() if key.startswith("_") }
         templateVars.update(self.get_modifiable_template_variables())
         # Add dictionaries of user modifiable variables
         templateVars.update({'i_variables': self.get_modifiable_template_variables(),
                              'i_typehints': self.get_modifiable_template_variables_typehints()
                              })
+        templateVars.update(template_variables)
         outputText = template.render(templateVars)
         return outputText
 
@@ -188,28 +223,17 @@ class BaseVisualization:
             for line in output:
                 f.write(line)
 
-    def create_visualization_files(self, destination_folder):
+    def create_visualization_files(self, template_variables):
 
-        destination_folder = Path(destination_folder)
-
+        rendered_data = {}
+        rendered_data['config.json'] = self.create_config()
         html_template = self.load_html_template(self._html_template)
-        js_template = self.load_js_template(Path(self._template_url).joinpath('%s.jinja' % self._template_name))
+        rendered_data['site.html'] = self.create_html(html_template, template_variables)
+        rendered_data['chart.js'] = self.__class__.get_js_code()
+        rendered_data['data.json'] = json.dumps(self.generate_visualization_dataset(self._dataset))
+        rendered_data[f'persisted.json'] = json.dumps(self.get_persisted_data())
+        return rendered_data
 
-        # Default dataset url is used when nothing was explicitly passed.
-        data_output_path = destination_folder.joinpath('%s.json' % self._title)
-        if self._dataset_url:
-            dataset_url = self._dataset_url
-        else:
-            dataset_url = data_output_path
-
-        js = self.create_js(js_template, dataset_url)
-        html = self.create_html(html_template)
-
-        self.write_file(html, destination_folder, '%s.html' % self._title)
-        self.write_file(js, destination_folder, '%s.js' % self._title)
-
-        visdata = self.generate_visualization_dataset(self._dataset)
-        self.write_dataset_file(visdata, data_output_path)
 
     def set_height(self, height):
         """Basic method for height driven data."""

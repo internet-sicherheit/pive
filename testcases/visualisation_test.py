@@ -4,6 +4,7 @@ from traceback import print_exc
 
 import pive.environment as environment
 import pive.inputmanager as inputmanager
+from pive.outputmanager import FolderOutputManager
 
 import os
 import shutil
@@ -16,7 +17,7 @@ class TestChartGeneration(unittest.TestCase):
 
     def setUp(self):
         self.manager = inputmanager.InputManager(mergedata=False)
-        self.env = environment.Environment(inputmanager=self.manager, outputpath=self.output_path())
+        self.env = environment.Environment(inputmanager=self.manager, outputmanager=FolderOutputManager(self.output_path()))
 
     def tearDown(self):
         self.manager = None

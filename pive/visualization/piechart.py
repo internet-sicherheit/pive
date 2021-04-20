@@ -52,6 +52,7 @@ class Chart(bv.BaseVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Piechart"
 
         # Visualization properties.
         self._width = width
@@ -59,6 +60,10 @@ class Chart(bv.BaseVisualization):
         self._padding = padding
         self._colors = default.chartcolors
         self._highlightopacity = default.circleopacity
+
+    @classmethod
+    def get_chart_type(cls):
+        return 'piechart'
 
     def get_modifiable_template_variables(self):
         """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.

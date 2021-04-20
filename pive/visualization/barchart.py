@@ -55,6 +55,7 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Barchart"
 
 
         # Visualization properties.
@@ -81,6 +82,10 @@ class Chart(bv.BaseVisualization, vv.ViewportVisualization):
 
         self._barwidth = default.barwidth
         self._verticalscale = 'linear'
+
+    @classmethod
+    def get_chart_type(cls):
+        return 'barchart'
 
     def set_threshold(self, threshold):
         self._threshold = threshold

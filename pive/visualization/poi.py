@@ -56,6 +56,8 @@ class Map(mv.MapVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "POI"
+        self._map_shape_url = "poi_shape.json"
 
         self.__shapeloader = shapeloader
 
@@ -82,6 +84,10 @@ class Map(mv.MapVisualization):
         self._circle_radius = default.circle_radius
         self._circle_stroke_width = default.circle_stroke_width
         self._headers = ['Longitude','Latitude'] + list(dataset[0].keys())[2:]
+
+    @classmethod
+    def get_chart_type(cls):
+        return 'poi'
 
     def get_modifiable_template_variables(self):
         """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
@@ -208,6 +214,21 @@ class Map(mv.MapVisualization):
     def get_map_shape(self):
         coordinates = shapeloader.get_all_coordinates_poi(self._dataset)
         (self._shape, self._city, self._shortend_names) = self.__shapeloader.find_map_shape(coordinates)
+
+    def get_persisted_data(self):
+        data = super().get_persisted_data()
+        data.update({
+            'shape': self._shape,
+            'city': self._city,
+            'names': self._shortend_names
+                           })
+        return data
+
+    def load_persisted_data(self, data):
+        super().load_persisted_data(data)
+        self._shape = data['shape']
+        self._city = data['city']
+        self._shortend_names = data['names']
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""

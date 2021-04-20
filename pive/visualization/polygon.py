@@ -55,6 +55,8 @@ class Map(mv.MapVisualization):
         self._template_url = Path(__file__).resolve().parent.joinpath(default.template_path)
         self._datakeys = []
         self._version = default.p_version
+        self._js_name = "Polygon"
+        self._map_shape_url = "polygon_shape.json"
 
         self.__shapeloader = shapeloader
 
@@ -76,6 +78,10 @@ class Map(mv.MapVisualization):
         self._mouseover_opacity = default.mouseover_opacity
         self._mouseout_opacity = default.mouseout_opacity
         self._outer_map_fill = default.outer_map_fill
+
+    @classmethod
+    def get_chart_type(cls):
+        return 'polygon'
 
     def get_modifiable_template_variables(self):
         """Returns a dictionary of all template variables, that are supposed to be modifiable by the client.
@@ -177,6 +183,20 @@ class Map(mv.MapVisualization):
         coordinates = shapeloader.get_all_coordinates_polygon(self._dataset)
         (self._shape, self._city, self._shortend_names) = self.__shapeloader.find_map_shape(coordinates, [datapoint['name'] for datapoint in self._dataset])
 
+    def get_persisted_data(self):
+        data = super().get_persisted_data()
+        data.update({
+            'shape': self._shape,
+            'city': self._city,
+            'names': self._shortend_names
+                           })
+        return data
+
+    def load_persisted_data(self, data):
+        super().load_persisted_data(data)
+        self._shape = data['shape']
+        self._city = data['city']
+        self._shortend_names = data['names']
 
     def set_data_keys(self, datakeys):
         """Setting the data keys for the visualization."""

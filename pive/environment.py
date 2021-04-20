@@ -28,8 +28,11 @@
  relies on a given input manager to read data before
  processing the visualizations. """
 import importlib
+import pkgutil
+
 from .visualization import defaults as default
 from .overpass import API_URL
+from .outputmanager import FolderOutputManager
 import pive.shapeloader as shapeloader
 
 # Accessor to choose the charts. Corresponding with
@@ -62,12 +65,12 @@ class Environment(object):
     __datakeys = []
 
 
-    def __init__(self, inputmanager=None, outputpath=default.output_path, country="DE", overpass_endpoint=API_URL):
+    def __init__(self, inputmanager=None, outputmanager=FolderOutputManager(default.output_path), country="DE", overpass_endpoint=API_URL):
         """ The Environment needs an input manager instance to work, but is
         optional at creation. Leaving the user to configure the
         input manager first. """
         self.__inputmanager = inputmanager
-        self.__outputpath = outputpath
+        self.__outputmanager = outputmanager
         self.__country = country
         self.__endpoint = overpass_endpoint
         self.__shapeloader = None
@@ -86,7 +89,7 @@ class Environment(object):
 
     def set_output_path(self, outputpath):
         """Set the output path of all visualization files."""
-        self.__outputpath = outputpath
+        self.__outputmanager = FolderOutputManager(outputpath)
 
     def set_input_manager(self, inputmanager):
         """Change the internal input manager instance."""
@@ -111,9 +114,13 @@ class Environment(object):
 
 
         # Converting the datakeys into strings.
-        self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
+        self.set_datakeys()
+
 
         return self.__suitables
+
+    def set_datakeys(self):
+        self.__datakeys = [str(i) for i in list(self.__data[0].keys())]
 
     @staticmethod
     def import_suitable_visualizations(suitable_visualization_list):
@@ -129,6 +136,37 @@ class Environment(object):
             modules.append(importlib.import_module(item,
                                                    package=default.module_path))
         return modules
+
+    @staticmethod
+    def import_visualisations(package, recursive=True):
+        """ Import all submodules of a module, recursively, including subpackages
+        https://gist.github.com/breeze1990/0253cb96ce04c00cb7a67feb2221e95e
+
+        :param recursive: bool
+        :param package: package (name or actual module)
+        :type package: str | module
+        :rtype: dict[str, types.ModuleType]
+        """
+        if isinstance(package, str):
+            package = importlib.import_module(package)
+        results = {}
+        for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+            full_name = package.__name__ + '.' + name
+            try:
+                module = importlib.import_module(full_name)
+                if hasattr(module, 'Chart'):
+                    results[full_name.split('.')[-1]] = module.Chart
+                if hasattr(module, 'Map'):
+                    results[full_name.split('.')[-1]] = module.Map
+            except:
+                pass
+            if recursive and is_pkg:
+                results.update(Environment.import_visualisations(full_name))
+        return results
+
+    @staticmethod
+    def import_all_visualisations():
+        return Environment.import_visualisations(default.module_path)
 
     # Choose a chart to start modifying or render it.
     def choose(self, chart):
@@ -166,14 +204,37 @@ class Environment(object):
         chart_decision.setDataKeys(self.__datakeys)
         return chart_decision
 
+    def load_raw(self, persisted_data):
+        """Load preprocessed data and skip validation."""
 
-    def render(self, chart):
-        """Renders the chart and creates
-        all files to display the visualization
-        under the environments output path."""
-        chart.create_visualization_files(self.__outputpath)
+        self.__data = persisted_data['dataset']
+        chart_name = persisted_data['chart_name']
+        self.set_datakeys()
+        self.__is_geodata = persisted_data.get('is_geodata', False)
+        self.__suitables = [chart_name]
+        self.__modules = self.import_suitable_visualizations(self.__suitables)
+        module = self.__modules[0]
+        if self.__is_geodata:
+            class_ = getattr(module, 'Map')
+        else:
+            class_ = getattr(module, 'Chart')
+        if self.__is_geodata:
+            chart_decision = class_(self.__data, chart_name, self.__shapeloader)
+        elif self.__has_datefields:
+            chart_decision = class_(self.__data, chart_name, times=True)
+        else:
+            chart_decision = class_(self.__data, chart_name)
+        chart_decision.setDataKeys(self.__datakeys)
+        chart_decision.load_persisted_data(persisted_data)
+        return chart_decision
 
-    def render_code(self, chart):
+
+    def render(self, chart, template_variables={}, **options):
+        """Creates all the output data and hands it to the output manager."""
+        self.__outputmanager.output(data=chart.create_visualization_files(template_variables), **options)
+
+    @staticmethod
+    def render_code(chart):
         """Renders the chart and returns the javascript
         code and its json dataset to include the
         visualization in another document."""

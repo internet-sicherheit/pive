@@ -35,6 +35,7 @@ title = 'pivechart'
 module_path = 'pive.visualization'
 # Filepath to the template folder.
 template_path = Path('templates')
+static_path = Path('static')
 # Path where pive will create the standard output.
 output_path = Path(sys.argv[0]).resolve().parent.joinpath("output")
 # Path where pive locates the visualizations config file.
