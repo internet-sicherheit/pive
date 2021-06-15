@@ -95,7 +95,7 @@ class BaseVisualization:
 
     def set_dataset_url(self, dataset_url):
         assert (isinstance(dataset_url, str) or isinstance(dataset_url, Path))
-        self._dataset_url = Path(dataset_url)
+        self._dataset_url = dataset_url if isinstance(dataset_url, str) else str(dataset_url)
 
     def set_chart_colors(self, colors):
         """Basic Method."""
