@@ -174,6 +174,26 @@ class TestInputmanager(unittest.TestCase):
         except Exception as e:
             self.fail(e)
 
+    def test_read_unordered_object_files(self):
+
+        self.inputmanager = im.InputManager(accept_unordered=True)
+        try:
+            dataset = self.inputmanager.read(Path("./samples/data/old/groupdata.json"))
+            suitables = self.inputmanager.map(dataset)
+            self.assertIn("chordchart", suitables)
+            dataset = self.inputmanager.read(Path("./samples/data/old/numerical.json"))
+            suitables = self.inputmanager.map(dataset)
+            self.assertIn("scatterchart", suitables)
+            self.assertIn("bubblechart", suitables)
+            self.assertIn("linechart", suitables)
+            dataset = self.inputmanager.read(Path("./samples/data/old/simple_series.json"))
+            suitables = self.inputmanager.map(dataset)
+            self.assertIn("piechart", suitables)
+            self.assertIn("barchart", suitables)
+
+        except Exception as e:
+            self.fail(e)
+
     def test_mapping(self):
 
         # Check if expected chart types are chart types for sample data are still available

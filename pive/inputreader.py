@@ -28,13 +28,13 @@ import csv
 from collections import OrderedDict
 
 
-def load_input_source(input_source):
+def load_input_source(input_source, accept_unordered=False):
     """Load data from an arbitrary input source. Currently supported:
 	JSON, JSON-String, CSV, CSV-String. Returns an empty list if no data
 	is available."""
     input_data = None
     try:
-        input_data = load_json_from_file(input_source)
+        input_data = load_json_from_file(input_source, accept_unordered)
     except ValueError as e:
         pass
     except IOError as e:
@@ -45,7 +45,7 @@ def load_input_source(input_source):
         return input_data
     if not input_data:
         try:
-            input_data = load_json_string(input_source)
+            input_data = load_json_string(input_source, accept_unordered)
         except AttributeError as e:
             pass
         except ValueError as e:
@@ -68,18 +68,23 @@ def load_input_source(input_source):
             pass
     return input_data
 
-def load_json_from_file(json_input):
+def load_json_from_file(json_input, allow_unordered=False):
     """Load a JSON File."""
     with open(json_input, 'r') as fp:
-        inpt = json.load(fp)
-        return parse_json_to_internal(inpt)
+        return load_json_string(fp.read(), allow_unordered)
 
 
-def load_json_string(json_input):
+def load_json_string(json_input, allow_unordered=False):
     """Load a JSON-String."""
-    inpt = json.loads(json_input)
-    return parse_json_to_internal(inpt)
-
+    try:
+        inpt = json.loads(json_input)
+        return parse_json_to_internal(inpt)
+    except ValueError as e:
+        if allow_unordered:
+            #TODO: Warn user about unsafe operation
+            return json.loads(json_input, object_pairs_hook=OrderedDict)
+        else:
+            raise e
 
 def load_csv_string(csv_input):
     """Load a CSV-String."""

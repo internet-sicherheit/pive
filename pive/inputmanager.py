@@ -28,6 +28,7 @@
 datasets in json and csv format. The data is automatically
 validated and corrected if necessary."""
 from collections import OrderedDict
+from pathlib import Path
 
 from . import inputreader as reader
 from . import datavalidater as validater
@@ -44,15 +45,16 @@ class InputManager(object):
     isHive = False
 
     # Input Managers can try to merge false datapoints or not.
-    def __init__(self, mergedata=False):
+    def __init__(self, mergedata=False, accept_unordered=False):
         self.__mergedata = mergedata
         #TODO: Should __contains_datefields be a property of InputManager
         #   and if yes, should it be set the way it is
         self.__contains_datefields = False
+        self.__accept_unordered = accept_unordered
 
     def read(self, source):
         """Reads the input source."""
-        inputdata = reader.load_input_source(source)
+        inputdata = reader.load_input_source(source, self.__accept_unordered)
 
         # Raise an error if the data source is empty or nor readable.
         if not inputdata:
@@ -189,6 +191,6 @@ class InputManager(object):
 
     def __get_file_extension(self, source):
         """Returns the file extension of the passed source."""
-        extension = pathlib.Path(source).suffix
+        extension = Path(source).suffix
 
         return extension

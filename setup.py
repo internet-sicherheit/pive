@@ -5,7 +5,7 @@ setup(
     packages=['pive', 'pive/visualization'],
     use_2to3=True,
     include_package_data=True,
-    version='0.3.202106151220',
+    version='0.3.202106161145',
     url='https://github.com/daboth/pive',
     download_url='https://github.com/daboth/pive/tarball/0.3.4',
     license='BSD',
